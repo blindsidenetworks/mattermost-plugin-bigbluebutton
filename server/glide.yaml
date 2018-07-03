@@ -1,0 +1,16 @@
+package: github.com/mattermost/mattermost-plugin-bigbluebutton/server
+import:
+- package: github.com/dgrijalva/jwt-go
+  version: ^3.2.0
+- package: github.com/gorilla/mux
+  version: ^1.6.2
+- package: github.com/mattermost/mattermost-server
+  version: ^5.0.0
+  subpackages:
+  - model
+  - plugin
+  - plugin/rpcplugin
+- package: github.com/robfig/cron
+  version: ^1.1.0
+- package: github.com/segmentio/ksuid
+  version: ^1.0.1
