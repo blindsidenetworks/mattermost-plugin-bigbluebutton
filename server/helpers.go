@@ -139,11 +139,10 @@ func (p *Plugin) DeleteMeeting(meeting_id string) {
 			break
 		}
 	}
-	//TODO: much easier now
 	p.Meetings = append(p.Meetings[:index], p.Meetings[index+1:]...)
 }
 
-//
+// check if an attendee is a MODERATOR, useful feature decided not to include
 // func (p *Plugin) IsModerator(meeting_id string, modpw string, fullname string) bool {
 // 	var meetinginfo dataStructs.GetMeetingInfoResponse
 // 	resp := bbbAPI.GetMeetingInfo(meeting_id, modpw, &meetinginfo)
@@ -198,4 +197,13 @@ func FormatSeconds(seconds int64) string {
 func GenerateRandomID() string {
 	id := ksuid.New()
 	return id.String()
+}
+
+func IsItemInArray(name string, array []string) bool {
+    for _, word := range array {
+        if word == name {
+            return true
+        }
+    }
+    return false
 }

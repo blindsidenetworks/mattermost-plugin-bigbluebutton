@@ -7,13 +7,12 @@ import {getCurrentChannel} from 'mattermost-redux/selectors/entities/channels';
 
 import Client from '../client';
 
+
 export function startMeeting(channelId, description = '', topic = '', meetingId = 0) {
     return async (dispatch, getState) => {
         try {
             await Client.startMeeting(getState().entities.users.currentUserId, channelId,topic,description);
         } catch (error) {
-          // we see the following happen when Client.startMeeting returns an error
-          // if it does throw an error, we make a server side post
             const post = {
                 id: 'bbbPlugin' + Date.now(),
                 create_at: Date.now(),
@@ -26,7 +25,7 @@ export function startMeeting(channelId, description = '', topic = '', meetingId 
                 root_id: '',
                 parent_id: '',
                 original_id: '',
-                message: 'Big blue button plugin not working correctly ahhhhhhhhh',
+                message: 'BigBlueButton did not successfully start a meeting',
                 type: 'system_ephemeral',
                 props: {},
                 hashtags: '',

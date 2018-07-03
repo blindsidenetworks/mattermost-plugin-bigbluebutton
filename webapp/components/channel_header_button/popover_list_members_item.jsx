@@ -31,9 +31,6 @@ export default class PopoverListMembersItem extends React.PureComponent {
     rowStartHideHover = () => {
         this.setState({rowStartHover: false});
     }
-    resetHover = () => {
-        this.rowStartHideHover();
-    }
 
     render(){
       const style = getStyle(this.props.theme);

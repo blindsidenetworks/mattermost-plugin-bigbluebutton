@@ -6,9 +6,6 @@ import {viewChannel, getChannelStats} from 'mattermost-redux/actions/channels';
 import {isDirectChannel} from 'mattermost-redux/utils/channel_utils';
 import {Well,Glyphicon,Button, ButtonGroup,ButtonToolbar, Tooltip, OverlayTrigger,Modal,Thumbnail,
 Grid, Col, Row, Image}  from 'react-bootstrap';
-//import {getChannel} from 'mattermost-redux/selectors/entities/channels';
-// const dispatch = window.store.dispatch;
-// const getState = window.store.getState;
 import {browserHistory} from '../../utils/browser_history.jsx';
 import {Client4} from 'mattermost-redux/client';
 import {getUser} from 'mattermost-redux/selectors/entities/users';
@@ -19,24 +16,13 @@ import {getChannel} from 'mattermost-redux/selectors/entities/channels';
 export default class Root extends React.PureComponent {
     static propTypes = {
 
-        /*
-         * Source URL from the image to display in the popover
-         */
 
         cur_user:  PropTypes.object.isRequired,
-        //directChannel: PropTypes.object.isRequired,
         state: PropTypes.object.isRequired,
         teamname: PropTypes.string.isRequired,
-        /*
-         * Status for the user, either 'offline', 'away' or 'online'
-         */
-         lastpostperchannel: PropTypes.object.isRequired,
-         unreadChannelIds: PropTypes.array.isRequired,
-        /*
-         * Logged in user's theme
-         */
-         theme: PropTypes.object.isRequired,
-
+        lastpostperchannel: PropTypes.object.isRequired,
+        unreadChannelIds: PropTypes.array.isRequired,
+        theme: PropTypes.object.isRequired,
          actions: PropTypes.shape({
              getJoinURL: PropTypes.func.isRequired,
 
@@ -86,42 +72,23 @@ export default class Root extends React.PureComponent {
       });
     };
 
-    goToChannelById = async () => {
-      //get channel doesnt work since its a direct meeting
-      //  const channel = await getChannel(getState(),channelId);
-      //  console.log(channel)
-      // browserHistory.push('/'+ this.props.teamname + '/channels/' + channel.name);
-      //viewChannel(channelId)(dispatch, getState);
-    //  var data = getChannel(getState(), this.state.channelId);
-      //console.log ("data "+ JSON.stringify(data));
-    }
-
     getJoinURL = async () => {
-
-        var newtab =  await window.open('', '_blank');
-        var myurl = await this.props.actions.getJoinURL(this.state.channelId, this.state.meetingId,"");
-        var myvar = await myurl.data.joinurl.url;
-        newtab.location.href = myvar;
-      // var myurl = await this.props.actions.getJoinURL(this.state.channelId, this.state.meetingId,"");
-      // var myvar = await myurl.data.joinurl.url;
-      // console.log("generated join url: " + myvar);
-      //
-      // var win =  window.open(myvar, '_blank');
-      // win.focus();
+      var newtab =  await window.open('', '_blank');
+      var myurl = await this.props.actions.getJoinURL(this.state.channelId, this.state.meetingId,"");
+      var myvar = await myurl.data.joinurl.url;
+      newtab.location.href = myvar;
     }
     getSiteUrl = () => {
       if (window.location.origin) {
       return window.location.origin;
       }
-
       return window.location.protocol + '//' + window.location.hostname + (window.location.port ? ':' + window.location.port : '');
     }
 
-    /* Construct and return the JSX to render here. Make sure that rendering is solely based
-        on props and state. */
+
     render() {
        console.log(this.props.lastpostperchannel);
-        console.log(this.props.unreadChannelIds);
+      console.log(this.props.unreadChannelIds);
         var gotoButton;
         var renderchannelid;
         var meetingid;
@@ -134,8 +101,6 @@ export default class Root extends React.PureComponent {
           if (this.props.lastpostperchannel[channelid].type === "custom_bbb" && !this.state.ignoredPosts.includes(this.props.lastpostperchannel[channelid].id)
         && (Date.now()-this.props.lastpostperchannel[channelid].create_at < 2000) &&this.props.lastpostperchannel[channelid].user_id != this.props.cur_user.id ){
               const postid = this.props.lastpostperchannel[channelid].id;
-              // console.log("huuhh "+ this.props.lastpostperchannel[channelid].user_id);
-              // console.log("post id " +postid);
               const user = getUser(this.props.state, this.props.lastpostperchannel[channelid].user_id);
               console.log("ussrrr " + user);
               src =Client4.getProfilePictureUrl(user.id, user.last_picture_update);
@@ -153,10 +118,7 @@ export default class Root extends React.PureComponent {
 
 
       const style = getStyle(this.props.theme);
-
-
       const myteam = this.props.teamname
-
       const tooltip = (
         <Tooltip id="tooltip">
           Go to this channel
@@ -228,39 +190,14 @@ const getStyle = makeStyleFromTheme((theme) => {
         height: "10px",
         minHeight: "28px",
       },
-
-      title: {
-          margin: '5px 0 0 0',
-          fontSize: '17px',
-          textAlign: 'center',
-          lineHeight: '19px'
-      },
       body:{
         padding: '0px 0px 10px 0px',
-      },
-      bodyImg: {
-
-        justifyContent: 'center',
-    alignItems: 'center',
-
       },
       bodyText:{
         textAlign: 'center',
         margin: '20px 0 0 0',
         fontSize: '17px',
         lineHeight: '19px'
-      },
-
-      label: {
-          top: '6px'
-      },
-      error: {
-          color: '#811519',
-          marginTop: '10px',
-          fontFamily: 'Open Sans',
-          fontWeight: 'normal',
-          fontSize: '14px',
-          lineHeight: '19px'
       },
       meetingId: {
           marginTop: '55px'

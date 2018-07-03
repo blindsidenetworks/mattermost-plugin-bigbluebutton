@@ -8,7 +8,7 @@ import {getJoinURL,endMeeting,getAttendees,publishRecordings,deleteRecordings, i
 import {getCurrentUserId} from 'mattermost-redux/selectors/entities/users';
 import PostTypebbb from './post_type_bbb.jsx';
 
-
+//custom post for users to join meetings, end meetings, view recordings, etc
 
 function mapStateToProps(state, ownProps) {
     const post = ownProps.post || {};

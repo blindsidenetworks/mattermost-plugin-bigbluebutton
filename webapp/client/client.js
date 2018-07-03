@@ -1,6 +1,8 @@
 import request from 'superagent';
 //superagent helps make post request
 
+
+//client.js is used to communicate with out backend server
 export default class Client {
     constructor() {
         this.url = '/plugins/bigbluebutton';
@@ -30,13 +32,6 @@ export default class Client {
       //console.log(body)
       return body;
     }
-    getRecordingsByChannel = async (channelid) =>{
-
-
-      var body = await this.doPostXML(`${this.url}/getrecordingsbychannel`, {channel_id:channelid});
-
-      console.log(body);
-    }
 
     publishRecordings = async (recordid,publish,meetingId) => {
       return await this.doPost(`${this.url}/publishrecordings`, {record_id: recordid, publish : publish, meeting_id:meetingId});
@@ -53,18 +48,6 @@ export default class Client {
 
         try {
             const response = await request.post(url).send(body).set(headers).type('application/json').accept('application/json');
-
-            return response.body;
-        } catch (err) {
-          console.log(err);
-            throw err;
-        }
-    }
-    doPostXML = async (url, body, headers = {}) => {
-        headers['X-Requested-With'] = 'XMLHttpRequest';
-
-        try {
-            const response = await request.post(url).send(body).set(headers).type('application/json').accept('application/xml');
 
             return response.body;
         } catch (err) {

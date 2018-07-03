@@ -5,7 +5,6 @@ import {getCurrentUser} from 'mattermost-redux/selectors/entities/users';
 import {getLastPostPerChannel} from 'mattermost-redux/selectors/entities/posts';
 import {Client4} from 'mattermost-redux/client';
 
-
 import {
     getSortedPublicChannelWithUnreadsIds,
     getSortedPrivateChannelWithUnreadsIds,
@@ -23,9 +22,8 @@ import {getJoinURL } from '../../actions';
 
 import Root from './root.jsx';
 
-
-
-
+//Root component is used for creating a popup notifying user about a
+// BigBlueButton meeting started from a direct message
 
 function mapStateToProps(state, ownProps) {
   const post = ownProps.post || {};

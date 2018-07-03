@@ -20,7 +20,7 @@ type Plugin struct {
 	c               *cron.Cron
 	configuration   atomic.Value
 	Meetings        []dataStructs.MeetingRoom
-	LoopingMeetings []dataStructs.MeetingRoom
+	MeetingsWaitingforRecordings []dataStructs.MeetingRoom
 	webhooks        []*dataStructs.WebHook
 	Hookid          string
 }
@@ -112,7 +112,7 @@ func (p *Plugin) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	} else if path == "/deleterecordings" {
 		p.handleDeleteRecordings(w, r)
 	} else if strings.HasPrefix(path, "/meetingendedcallback") {
-		p.handleAnotherCallbackTry(w, r, path)
+		p.handleImmediateEndMeetingCallback(w, r, path)
 	} else if path == "/ismeetingrunning" {
 		p.handleIsMeetingRunning(w, r)
 	} else {

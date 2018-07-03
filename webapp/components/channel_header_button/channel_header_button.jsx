@@ -12,15 +12,11 @@ import {searchPosts} from 'mattermost-redux/actions/search'
 import {getChannel} from 'mattermost-redux/selectors/entities/channels';
 import * as UserUtils from 'mattermost-redux/utils/user_utils';
 
-
-// const dispatch = window.store.dispatch;
-// const getState = window.store.getState;
-
 export default class ChannelHeaderButton extends React.PureComponent {
     static propTypes = {
         channelId: PropTypes.string.isRequired,
         state: PropTypes.object.isRequired,
-          channelName: PropTypes.string.isRequired,
+        channelName: PropTypes.string.isRequired,
         theme: PropTypes.object.isRequired,
         directChannels: PropTypes.array.isRequired,
         teamId: PropTypes.string.isRequired,
@@ -36,71 +32,16 @@ export default class ChannelHeaderButton extends React.PureComponent {
 
         this.state = {
             showPopover: false,
-            rowStartHover: false,
-            rowStartWithTopicHover: false,
-            rowShareHover: false,
-            showModal: false,
-            shareModal: false,
-
         };
     }
 
-    rowStartShowHover = () => {
-        this.setState({rowStartHover: true});
-    }
-
-    rowStartHideHover = () => {
-        this.setState({rowStartHover: false});
-    }
-
-    rowStartWithTopicShowHover = () => {
-        this.setState({rowStartWithTopicHover: true});
-    }
-
-    rowStartWithTopicHideHover = () => {
-        this.setState({rowStartWithTopicHover: false});
-    }
-
-    rowShareShowHover = () => {
-        this.setState({rowShareHover: true});
-    }
-
-    rowShareHideHover = () => {
-        this.setState({rowShareHover: false});
-    }
-
-    resetHover = () => {
-        this.rowStartHideHover();
-        this.rowStartWithTopicHideHover();
-        this.rowShareHideHover();
-    }
-
-    showModal = () => {
-        this.setState({showPopover: false, showModal: true, shareModal: false});
-        this.resetHover();
-    }
-
     searchRecordings =  () => {
-
         this.props.actions.showRecordings();
     }
 
-    hideModal = () => {
-        this.setState({showModal: false});
-        this.resetHover();
-    }
-    hideRecordingsModal = () => {
-        this.setState({showRecordingsModal: false});
-        this.resetHover();
-    }
-
     startMeeting = async () => {
-      //console.log("all dm meetings" + JSON.stringify(this.props.directChannels));
-      //const channel = getState().
-      //console.log(JSON.stringify(this.props.channel));
         await this.props.actions.startMeeting(this.props.channelId, "",this.props.channel.display_name);
         this.setState({showPopover: false});
-        this.resetHover();
     }
 
 
@@ -116,7 +57,6 @@ export default class ChannelHeaderButton extends React.PureComponent {
       var channelName = channel.display_name;
 
 
-      // var fullname = UserUtils.getFullName(channel.teammate_id);
       console.log("aaaa "+ JSON.stringify(channel) );
 
 
@@ -204,7 +144,7 @@ export default class ChannelHeaderButton extends React.PureComponent {
                         </Popover>
                     </Overlay>
                 </div>
-        
+
             </div>
         );
     }

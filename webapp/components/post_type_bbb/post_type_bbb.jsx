@@ -10,18 +10,11 @@ import {formatDate} from '../../utils/date_utils';
 import PropTypes from 'prop-types';
 import {makeStyleFromTheme} from 'mattermost-redux/utils/theme_utils';
 
-import Popup from "reactjs-popup";
-
 const PostUtils = window['post-utils'];
-// const dispatch = window.store.dispatch;
-// const getState = window.store.getState;
+
 
 export default class PostTypebbb extends React.PureComponent {
     static propTypes = {
-
-        /*
-         * The post to render the message for.
-         */
         post: PropTypes.object.isRequired,
         state: PropTypes.object.isRequired,
         currentUserId: PropTypes.string.isRequired,
@@ -29,31 +22,11 @@ export default class PostTypebbb extends React.PureComponent {
         channelId: PropTypes.string.isRequired,
         username: PropTypes.string.isRequired,
         channel: PropTypes.object.isRequired,
-        /**
-         * Set to render post body compactly.
-         */
         compactDisplay: PropTypes.bool,
-
-        /**
-         * Flags if the post_message_view is for the RHS (Reply).
-         */
         isRHS: PropTypes.bool,
-
-        /**
-         * Set to display times using 24 hours.
-         */
         useMilitaryTime: PropTypes.bool,
-
-        /*
-         * Logged in user's theme.
-         */
         theme: PropTypes.object.isRequired,
-
-        /*
-         * Creator's name.
-         */
         creatorName: PropTypes.string.isRequired,
-
         actions: PropTypes.shape({
             getJoinURL: PropTypes.func.isRequired,
             endMeeting: PropTypes.func.isRequired,
@@ -81,9 +54,12 @@ export default class PostTypebbb extends React.PureComponent {
           show: false,
           showWarning: true,
           showFullAttendees: false,
-          showFullAttendees2: false,
           showThumbnails: false,
         };
+    }
+
+    componentWillUnmount(){
+      this.endMeetingForUnmount()
     }
 
     handleClose = () => {
@@ -94,31 +70,17 @@ export default class PostTypebbb extends React.PureComponent {
       this.setState({ show: true });
     };
 
-    toggle = () => {
+    toggleAttendeesInMeeting = () => {
      this.setState({ showFullAttendees: !this.state.showFullAttendees });
    }
-   toggle2 = () => {
-    this.setState({ showFullAttendees2: !this.state.showFullAttendees2 });
-  }
-
-  componentWillUnmount(){
-    this.endMeetingForUnmount()
-  }
-
-
-    closePopup = async () => {
-      await this.setState({ showWarning: false });
-    };
 
     getJoinURL = async () => {
       var newtab =  await window.open('', '_blank');
-    //  if (this.state.url === ""){
-
         var myurl = await this.props.actions.getJoinURL(this.props.channelId, this.props.post.props.meeting_id,this.props.creatorId);
         var myvar = await myurl.data.joinurl.url;
         console.log("generated join url: " + myvar);
         newtab.location.href = myvar;
-        await this.setState({ //code might not be proper http://lucybain.com/blog/2016/react-state-vs-pros/
+        await this.setState({
           url: myvar,
           users: [...this.state.users,this.props.username]
         });
@@ -126,7 +88,6 @@ export default class PostTypebbb extends React.PureComponent {
 
     isMeetingRunning = async (id) => {
       var response = await this.props.actions.isMeetingRunning(id);
-      //console.log(response);
       return response.running;
     }
 
@@ -158,7 +119,7 @@ export default class PostTypebbb extends React.PureComponent {
     unpublishRecordings = async ( ) => {
       await this.props.actions.publishRecordings(this.props.channelId, this.props.post.props.record_id, "false",this.props.post.props.meeting_id);
     }
-    togglePanel = () => {
+    toggleThumbnails = () => {
       this.setState({showThumbnails: !this.state.showThumbnails})
     };
 
@@ -170,7 +131,7 @@ export default class PostTypebbb extends React.PureComponent {
 
     render() {
 
-
+      //overrides default Mattermost style with out own
       bootstrapUtils.addStyle(Button, 'custom');
       var arrayAttendants = [];
       const style = getStyle(this.props.theme);
@@ -183,8 +144,8 @@ export default class PostTypebbb extends React.PureComponent {
 
       if (props.attendees == undefined || props.attendees === ""){
         attendees = "there are no attendees in this session";
+        //if we're on a direct message channel
         if (this.props.channel.type === "D"){
-          //attendees
           var channel = getChannel(this.props.state, this.props.channelId);
           var channelName = channel.display_name;
           if (this.props.currentUserId === this.props.creatorId){
@@ -238,9 +199,9 @@ export default class PostTypebbb extends React.PureComponent {
             preText = PostUtils.formatText("Meeting created by @" +this.props.creatorName ,{mentionHighlight:false,atMentions:true });
             let attendeestext;
             if (this.state.showFullAttendees){
-              attendeestext = (<span onDoubleClick= {this.toggle}> {attendeesFull}</span>);
+              attendeestext = (<span onDoubleClick= {this.toggleAttendeesInMeeting}> {attendeesFull}</span>);
             }else{
-              attendeestext = (<span><span>{attendees}</span> <span onClick= {this.toggle} >{otherWords}</span></span>);
+              attendeestext = (<span><span>{attendees}</span> <span onClick= {this.toggleAttendeesInMeeting} >{otherWords}</span></span>);
             }
             content = (
               <div onMouseEnter={this.getAttendees}>
@@ -261,42 +222,16 @@ export default class PostTypebbb extends React.PureComponent {
 
                     {'Join Meeting'}
                 </a>
-                { this.props.currentUserId == this.props.creatorId && this.state.userCount > 0 &&
-                    <Popup
-                        trigger={
-                         <a
-                             className='btn btn-lg btn-link'
-                             style={style.buttonEnd}
-                             onClick={this.endMeeting}
-                         >
-
-                           {'End Meeting'}
-                         </a>
-                       }
-                       position="right center"
-                       on="hover"
-                       onClose={this.closePopup}
-                     >
-                       <div>Users still in meeting: </div>
-                       <div>
-                         <ul>
-                           {userlist}
-                           </ul>
-                         </div>
-
-                     </Popup>
-              }{ this.props.currentUserId == this.props.creatorId &&  this.state.userCount == 0 &&
-                       <a
-                           className='btn btn-lg btn-link'
-                           style={style.buttonEnd}
-                           onClick={this.endMeeting}
-                       >
-                           <i
-                               style={style.buttonIcon}
-                           />
-                         {'End meeting'}
-                       </a>
-            }
+                <a
+                    className='btn btn-lg btn-link'
+                    style={style.buttonEnd}
+                    onClick={this.endMeeting}
+                >
+                    <i
+                        style={style.buttonIcon}
+                    />
+                  {'End meeting'}
+                </a>
 
 
                 </span>
@@ -315,7 +250,6 @@ export default class PostTypebbb extends React.PureComponent {
 
 
         } else if (props.meeting_status === 'ENDED') {
-          //propably shouldnt be creatorname
             preText =  PostUtils.formatText("@" +this.props.creatorName + " has ended the meeting",{mentionHighlight:false,atMentions:true });
             if (props.ended_by === "" || props.ended_by === undefined ){
               preText = `Meeting ended`;
@@ -331,14 +265,12 @@ export default class PostTypebbb extends React.PureComponent {
             if (props.attendents == undefined || props.attendents === ""){
               attendees = "there were no attendees in this session";
             }else {
-              //console.log("aaaaaaaa"+props.attendents + "aaaaaa")
               var arrayAttendants = props.attendents.split(",");
               attendees = "";
               attendeesFull = "";
               otherWords = "";
 
               if (arrayAttendants != null && arrayAttendants.length > 0){
-                //console.log("arrayAttendants: " + arrayAttendants.length);
                 for (var i = 0; i < arrayAttendants.length; i++) {
                   if (i <= 3){
                     attendees += arrayAttendants[i] ;
@@ -359,10 +291,10 @@ export default class PostTypebbb extends React.PureComponent {
               }
 
 
-              if (this.state.showFullAttendees2){
-                attendeestext = (<span onDoubleClick= {this.toggle2}> {attendeesFull}</span>);
+              if (this.state.showFullAttendees){
+                attendeestext = (<span onDoubleClick= {this.toggleAttendeesInMeeting}> {attendeesFull}</span>);
               }else{
-                attendeestext = (<span><span>{attendees}</span> <span onClick= {this.toggle2} >{otherWords}</span></span>);
+                attendeestext = (<span><span>{attendees}</span> <span onClick= {this.toggleAttendeesInMeeting} >{otherWords}</span></span>);
               }
             }
 
@@ -396,25 +328,6 @@ export default class PostTypebbb extends React.PureComponent {
             }
 
           }
-
-
-
-            //if (props.is_published === "true" ){
-              const tooltipTrash = (
-                <Tooltip id="trash">
-                  <strong>Permenantly </strong> delete this recording
-                  </Tooltip>
-                );
-                const tooltipHide = (
-                  <Tooltip id="hide">
-                    Hide recording
-                    </Tooltip>
-                  );
-                  const tooltipShow = (
-                    <Tooltip id="show">
-                      Make Recording Visble
-                      </Tooltip>
-                    );
               recordingstuff = (
                 <div>
                   <div style={style.summaryRecording}>Recording </div>
@@ -463,7 +376,7 @@ export default class PostTypebbb extends React.PureComponent {
                                 {'   |   '}
                               </span>
 
-                              <a  onClick = {this.togglePanel}>
+                              <a  onClick = {this.toggleThumbnails}>
                                 <span>
                                   Thumbnails
                                 </span>
@@ -476,7 +389,7 @@ export default class PostTypebbb extends React.PureComponent {
                         <div>
                           {props.is_published === "true" &&
                             <span>
-                              <a  onClick = {this.togglePanel}>
+                              <a  onClick = {this.toggleThumbnails}>
                                 <span>
                                   Thumbnails
                                 </span>
@@ -584,14 +497,7 @@ const getStyle = makeStyleFromTheme((theme) => {
 
             width: '100%'
         },
-        title: {
-            fontSize: '16px',
-            fontWeight: '600',
-            height: '22px',
-            lineHeight: '18px',
-            margin: '5px 0 1px 0',
-            padding: '0'
-        },
+
         button: {
             fontFamily: 'Open Sans',
             fontSize: '13px',
@@ -652,8 +558,6 @@ const getStyle = makeStyleFromTheme((theme) => {
             fontStyle: 'italic',
             color: '#8D8D94'
         },
-        faIcon: {
-            color: theme.buttonBg
-        }
+
     };
 });

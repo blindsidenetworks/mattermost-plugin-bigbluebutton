@@ -21,6 +21,9 @@ type RequestCreateMeetingJSON struct {
 	Desc       string `json:"description"`
 }
 
+
+//Create meeting doesn't call the BBB api to start a meeting
+//Only populates the meeting with details. Meeting is started when first person joins
 func (p *Plugin) handleCreateMeeting(w http.ResponseWriter, r *http.Request) {
 
 	body, _ := ioutil.ReadAll(r.Body)
@@ -28,9 +31,8 @@ func (p *Plugin) handleCreateMeeting(w http.ResponseWriter, r *http.Request) {
 	var request RequestCreateMeetingJSON
 	json.Unmarshal([]byte(body), &request)
 
-	meetingpointer := new(dataStructs.MeetingRoom) //this is actually a pointer but golang deallocate pointers for you
+	meetingpointer := new(dataStructs.MeetingRoom)
 	if request.Topic == "" {
-
 		p.PopulateMeeting(meetingpointer, nil, request.Desc)
 	} else {
 		p.PopulateMeeting(meetingpointer, []string{"create", request.Topic}, request.Desc)
@@ -38,27 +40,13 @@ func (p *Plugin) handleCreateMeeting(w http.ResponseWriter, r *http.Request) {
 
 	p.createStartMeetingPost(request.User_id, request.Channel_id, meetingpointer)
 
-	//this doesnt really do anything here
-	//sends it to the client side startmeeting
-	myresp := RequestCreateMeetingJSON{
-		User_id:    request.User_id,
-		Channel_id: request.Channel_id,
-	}
-
-	userJson, err2 := json.Marshal(myresp)
-
-	//TODO: Use key value score instead
+	// add our newly created meeting to our array of meetings
 	p.Meetings = append(p.Meetings, *meetingpointer)
 
-	if err2 != nil {
-		panic(err2)
-	}
-
-	w.Write(userJson)
-
+	w.WriteHeader(http.StatusOK)
 }
 
-//TODO: reconfigure this
+
 type ButtonRequestJSON struct {
 	User_id   string `json:"user_id"`
 	MeetingId string `json:"meeting_id"`
@@ -89,6 +77,8 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 		w.Write(userJson)
 		return
 	} else {
+		//check if meeting has actually been created and can be joined
+		//
 		if !meetingpointer.Created {
 			bbbAPI.CreateMeeting(meetingpointer)
 			meetingpointer.Created = true
@@ -96,26 +86,23 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 			bbbAPI.GetMeetingInfo(meetingID, meetingpointer.ModeratorPW_, &fullMeetingInfo)
 			meetingpointer.InternalMeetingId = fullMeetingInfo.InternalMeetingID
 			meetingpointer.CreatedAt = time.Now().Unix()
-
-			//TEMP
-			p.LoopingMeetings = append(p.LoopingMeetings, *meetingpointer)
 		}
 
 		user, _ := p.api.GetUser(request.User_id)
 		username := user.Username
-		meetingpointer.AttendeeNames = append(meetingpointer.AttendeeNames, username)
+
+		//golang doesnt have sets so have to iterate through array to check if meeting participant is already in meeeting
+		if (!IsItemInArray(username,meetingpointer.AttendeeNames)){
+			meetingpointer.AttendeeNames = append(meetingpointer.AttendeeNames, username)
+		}
+
 		var participant = dataStructs.Participants{}
 		participant.FullName_ = username
 		participant.MeetingID_ = meetingID
-		// if request.IsMod == "TRUE" {
-		// 	participant.Password_ = meetingpointer.ModeratorPW_
-		// } else {
-		// 	participant.Password_ = meetingpointer.AttendeePW_
-		// }
+
 		participant.Password_ = meetingpointer.ModeratorPW_ //make everyone in channel a mod
 		joinURL := bbbAPI.GetJoinURL(&participant)
-		// var text string
-		// text = "[Join here!](" + joinURL + ")" + "   for testing purposes: " + meetingpointer.InternalMeetingId
+
 		myresp := ButtonResponseJSON{
 			Url: joinURL,
 		}
@@ -150,15 +137,19 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 		w.Write(userJson)
 	}
 }
-func (p *Plugin) handleAnotherCallbackTry(w http.ResponseWriter, r *http.Request, path string) {
+//this method is responsible for updating meeting has ended inside mattermost when
+// we end our meeting from inside BigBlueButton
+func (p *Plugin) handleImmediateEndMeetingCallback(w http.ResponseWriter, r *http.Request, path string) {
 
-	meetingid := path[22:] //22 length of "/meetingendedcallback?"
+	startpoint :=len("/meetingendedcallback?")
+	meetingid := path[startpoint:]
 
 	meetingpointer := p.FindMeeting(meetingid)
 	if meetingpointer == nil {
 		w.WriteHeader(http.StatusOK)
 		return
 	}
+	p.MeetingsWaitingforRecordings = append(p.MeetingsWaitingforRecordings, *meetingpointer)
 	postid := meetingpointer.PostId
 	if postid == "" {
 		panic("no post id found")
@@ -171,8 +162,6 @@ func (p *Plugin) handleAnotherCallbackTry(w http.ResponseWriter, r *http.Request
 	if meetingpointer.EndedAt == 0 {
 		meetingpointer.EndedAt = time.Now().Unix()
 	}
-	// p.api.DeletePost(postid)
-	//post.Message = "Meeting has ended."
 	post.Props["meeting_status"] = "ENDED"
 	post.Props["attendents"] = strings.Join(meetingpointer.AttendeeNames, ",")
 	timediff := meetingpointer.EndedAt - meetingpointer.CreatedAt
@@ -184,13 +173,14 @@ func (p *Plugin) handleAnotherCallbackTry(w http.ResponseWriter, r *http.Request
 	w.WriteHeader(http.StatusOK)
 }
 
+//when user clicks endmeeting button inside Mattermost
 func (p *Plugin) handleEndMeeting(w http.ResponseWriter, r *http.Request) {
 	body, _ := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
 
 	var request ButtonRequestJSON
 	json.Unmarshal([]byte(body), &request)
-	meetingID := request.MeetingId //TODO: do stuff with meetingID
+	meetingID := request.MeetingId
 	meetingpointer := p.FindMeeting(meetingID)
 
 	user, _ := p.api.GetUser(request.User_id)
@@ -212,17 +202,8 @@ func (p *Plugin) handleEndMeeting(w http.ResponseWriter, r *http.Request) {
 		if meetingpointer.EndedAt == 0 {
 			meetingpointer.EndedAt = time.Now().Unix()
 		}
+		p.MeetingsWaitingforRecordings = append(p.MeetingsWaitingforRecordings, *meetingpointer)
 
-		//p.DeleteMeeting(meetingpointer.MeetingID_) //only delete it from our memory when webhook calls back
-		text := "meeting deleted"
-		myresp := model.PostActionIntegrationResponse{
-			EphemeralText: text,
-		}
-
-		userJson, err2 := json.Marshal(myresp)
-		if err2 != nil {
-			panic(err2)
-		}
 		postid := meetingpointer.PostId
 		if postid == "" {
 			panic("no post id found")
@@ -248,7 +229,7 @@ func (p *Plugin) handleEndMeeting(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), err.StatusCode)
 			return
 		}
-		w.Write(userJson)
+		w.WriteHeader(http.StatusOK)
 	}
 }
 
@@ -265,7 +246,7 @@ func (p *Plugin) handleIsMeetingRunning(w http.ResponseWriter, r *http.Request) 
 
 	var request ButtonRequestJSON
 	json.Unmarshal([]byte(body), &request)
-	meetingID := request.MeetingId //TODO: do stuff with meetingID
+	meetingID := request.MeetingId
 
 	resp := bbbAPI.IsMeetingRunning(meetingID)
 
@@ -298,6 +279,10 @@ type WebHookResponseEncoded struct {
 	Payload map[string]interface{} `form:"payload"`
 }
 
+//webhook to send additional information about meeting that had ended
+//has a 4-5 minute delay which is why handleImmediateEndMeetingCallback() is
+//used instead for updating end meeting post on Mattermost. Keeping it here in
+//case bbbserver is not up to date with the immediate meeting ended callback feature
 func (p *Plugin) handleWebhookMeetingEnded(w http.ResponseWriter, r *http.Request) {
 
 	out := ""
@@ -316,7 +301,7 @@ func (p *Plugin) handleWebhookMeetingEnded(w http.ResponseWriter, r *http.Reques
 		w.WriteHeader(http.StatusOK)
 		return
 	}
-	//
+
 	postid := meetingpointer.PostId
 	if postid == "" {
 		panic("no post id found")
@@ -329,8 +314,7 @@ func (p *Plugin) handleWebhookMeetingEnded(w http.ResponseWriter, r *http.Reques
 	if meetingpointer.EndedAt == 0 {
 		meetingpointer.EndedAt = time.Now().Unix()
 	}
-	// p.api.DeletePost(postid)
-	//post.Message = "Meeting has ended."
+
 	post.Props["meeting_status"] = "ENDED"
 	post.Props["attendents"] = strings.Join(meetingpointer.AttendeeNames, ",")
 	timediff := meetingpointer.EndedAt - meetingpointer.CreatedAt
@@ -374,7 +358,7 @@ func (p *Plugin) handleRecordingReady(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		return
 	}
-	//
+
 	postid := meetingpointer.PostId
 	if postid == "" {
 		panic("no post id found")
@@ -384,21 +368,14 @@ func (p *Plugin) handleRecordingReady(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), err.StatusCode)
 		return
 	}
-	// p.api.DeletePost(postid)
+
 	post.Message = "#BigBlueButton #" + meetingpointer.Name_ + " #" + recordid + " #recording" + " recordings"
 	post.Props["recording_status"] = "COMPLETE"
 	post.Props["is_published"] = "true"
 	post.Props["record_id"] = recordid
 	post.Props["recording_url"] = recordingsresponse.Recordings.Recording[0].Playback.Format[0].Url
-	//	post.Props["images"] = recordingsresponse.Recordings.Recording[0].Playback.Format[0].Images
-	post.Props["images"] = strings.Join(recordingsresponse.Recordings.Recording[0].Playback.Format[0].Images, ",")
-	// post.Props["image1"] = recordingsresponse.Recordings.Recording[0].Playback.Format[0].Images[0]
-	// post.Props["image2"] = recordingsresponse.Recordings.Recording[0].Playback.Format[0].Images[1]
-	// post.Props["image3"] = recordingsresponse.Recordings.Recording[0].Playback.Format[0].Images[2]
-	// ImageArr := []string{Image1, Image2, Image3}
-	//
-	// post.Props["images"] = ImageArr
 
+	post.Props["images"] = strings.Join(recordingsresponse.Recordings.Recording[0].Playback.Format[0].Images, ",")
 	if _, err := p.api.UpdatePost(post); err != nil {
 		http.Error(w, err.Error(), err.StatusCode)
 		return
@@ -423,7 +400,7 @@ func (p *Plugin) handleGetAttendeesInfo(w http.ResponseWriter, r *http.Request) 
 
 	var request AttendeesRequestJSON
 	json.Unmarshal([]byte(body), &request)
-	meetingID := request.MeetingId //TODO: do stuff with meetingID
+	meetingID := request.MeetingId
 	meetingpointer := p.FindMeeting(meetingID)
 	if meetingpointer == nil {
 		w.WriteHeader(http.StatusOK)
@@ -480,7 +457,6 @@ type PublishRecordingsRequestJSON struct {
 func (p *Plugin) handlePublishRecordings(w http.ResponseWriter, r *http.Request) {
 	body, _ := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
-	//what if we just serve through xml?
 
 	var request PublishRecordingsRequestJSON
 	json.Unmarshal([]byte(body), &request)
@@ -566,16 +542,15 @@ func (p *Plugin) handleDeleteRecordings(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	//update post props with new recording  status
 	w.WriteHeader(http.StatusOK)
 }
 
 func (p *Plugin) Loopthroughrecordings() {
 
-	for i := 0; i < len(p.LoopingMeetings); i++ {
-		Meeting := p.LoopingMeetings[i]
+	for i := 0; i < len(p.MeetingsWaitingforRecordings); i++ {
+		Meeting := p.MeetingsWaitingforRecordings[i]
 		if Meeting.LoopCount > 144 {
-			p.LoopingMeetings = append(p.LoopingMeetings[:i], p.LoopingMeetings[i+1:]...)
+			p.MeetingsWaitingforRecordings = append(p.MeetingsWaitingforRecordings[:i], p.MeetingsWaitingforRecordings[i+1:]...)
 			i--
 			continue
 		}
@@ -592,12 +567,9 @@ func (p *Plugin) Loopthroughrecordings() {
 					post.Props["record_id"] = recordingsresponse.Recordings.Recording[0].RecordID
 					post.Props["recording_url"] = recordingsresponse.Recordings.Recording[0].Playback.Format[0].Url
 					post.Props["images"] = strings.Join(recordingsresponse.Recordings.Recording[0].Playback.Format[0].Images, ",")
-					// post.Props["image1"] = recordingsresponse.Recordings.Recording[0].Playback.Format[0].Images[0]
-					// post.Props["image2"] = recordingsresponse.Recordings.Recording[0].Playback.Format[0].Images[1]
-					// post.Props["image3"] = recordingsresponse.Recordings.Recording[0].Playback.Format[0].Images[2]
 
 					if _, err := p.api.UpdatePost(post); err != nil {
-						p.LoopingMeetings = append(p.LoopingMeetings[:i], p.LoopingMeetings[i+1:]...)
+						p.MeetingsWaitingforRecordings = append(p.MeetingsWaitingforRecordings[:i], p.MeetingsWaitingforRecordings[i+1:]...)
 						i--
 					}
 

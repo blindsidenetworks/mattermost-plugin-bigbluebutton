@@ -4,71 +4,24 @@ import {makeStyleFromTheme,changeOpacity} from 'mattermost-redux/utils/theme_uti
 import { Link } from 'react-router-dom'
 import * as ChannelActions from 'mattermost-redux/actions/channels';
 
-
-// const dispatch = window.store.dispatch;
-// const getState = window.store.getState;
-//test test 3
 export default class ProfilePopover extends React.PureComponent {
     static propTypes = {
 
-        /*
-         * Source URL from the image to display in the popover
-         */
+
         src: PropTypes.string.isRequired,
-
-
-        /*
-         * User the popover is being opened for
-         */
         user: PropTypes.object.isRequired,
         state: PropTypes.object.isRequired,
         cur_user:  PropTypes.object.isRequired,
-        //directChannel: PropTypes.object.isRequired,
-
         teamname: PropTypes.string.isRequired,
-        /*
-         * Status for the user, either 'offline', 'away' or 'online'
-         */
         status: PropTypes.string,
-
-        /*
-         * Set to true if the user is in a WebRTC call
-         */
         isBusy: PropTypes.bool,
-
-        /*
-         * Function to call to hide the popover
-         */
         hide: PropTypes.func,
-
-        /*
-         * Set to true if the popover was opened from the right-hand
-         * sidebar (comment thread, search results, etc.)
-         */
         isRHS: PropTypes.bool,
-
-        /*
-         * Logged in user's theme
-         */
         theme: PropTypes.object.isRequired,
-
-        /*
-         * The CSS absolute left position
-         */
         positionLeft: PropTypes.number.isRequired,
-
-        /*
-         * The CSS absolute top position
-         */
         positionTop: PropTypes.number.isRequired,
-
-        /* Add custom props here */
-
-        /* Define action props here or remove if no actions */
         actions: PropTypes.shape({
-
           startMeeting: PropTypes.func.isRequired
-
         }).isRequired
 
     }
@@ -77,22 +30,12 @@ export default class ProfilePopover extends React.PureComponent {
         isBusy: false,
         hide: () => {},
         isRHS: false
-        /* If necessary, add defaults for custom props here */
     }
 
     constructor(props) {
         super(props);
-      //  this.handleShowDirectChannel = this.handleShowDirectChannel.bind(this);
-        //this.handleDirectMessage = this.handleDirectMessage.bind(this);
-        this.state = {
-        //  currentUserId: UserStore.getCurrentId(),
-          loadingDMChannel: -1,
-        };
     }
 
-    exampleFunction = () => {
-        // Do some things
-    }
 
 
     handleDirectMessage = async () => {
@@ -104,15 +47,13 @@ export default class ProfilePopover extends React.PureComponent {
 
     }
 
-    /* Construct and return the JSX to render here. Make sure that rendering is solely based
-        on props and state. */
+
     render() {
         const style = getStyle(this.props.theme);
         const user = this.props.user;
 
         const myteam = this.props.teamname
         const url = '/' + myteam + '/messages/@' + user.username
-        //const team = this.props.teamName
 
         return (
           <div
