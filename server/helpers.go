@@ -83,7 +83,6 @@ func (p *Plugin) createEndMeetingWebook(callback_url string, meeting_id string) 
 	}
 	BBBwh.CreateHook(webhook)
 	p.webhooks = append(p.webhooks, webhook)
-	//TODO: use key value store instead
 
 	return webhook.HookID
 }
@@ -123,8 +122,6 @@ func (p *Plugin) UpdatePostButtons(postid string, message string) {
 	}
 	post.Message = message
 	post.Props = nil
-
-	//post.Props = nil
 
 	p.api.UpdatePost(post)
 	return
