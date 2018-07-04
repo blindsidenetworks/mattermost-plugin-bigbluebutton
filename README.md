@@ -63,7 +63,7 @@ Alternatively contact **Blindside Networks**, the company behind BigBlueButton, 
 
 ## Contributing
 
-Plugin is written in Golang for server side and Javascript for client side. Use `make build` to build the plugin (generate the tar file).
+Plugin is written in Golang for server side and Javascript for client side. Use `make build` to build the plugin.
 The dependencies are managed with Glide for Go and NPM for javascript.
 
 Mattermost plugin development guides available here: https://developers.mattermost.com/extend/plugins/
