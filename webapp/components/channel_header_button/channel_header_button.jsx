@@ -56,10 +56,6 @@ export default class ChannelHeaderButton extends React.PureComponent {
       var channel = getChannel(this.props.state, this.props.channelId);
       var channelName = channel.display_name;
 
-
-      console.log("aaaa "+ JSON.stringify(channel) );
-
-
         const style = getStyle(this.props.theme);
 
         let popoverButton = (

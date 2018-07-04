@@ -14,22 +14,18 @@ export default class Client {
 
     getJoinURL = async (userid, meetingid, ismod) => {
       var body = await this.doPost(`${this.url}/joinmeeting`, {user_id: userid, meeting_id : meetingid, is_mod: ismod});
-      //console.log("from client " + JSON.stringify(body));
       return body;
     }
     endMeeting = async (userid, meetingid) => {
       var body = await this.doPost(`${this.url}/endmeeting`, {user_id: userid, meeting_id : meetingid});
-      //console.log("from client " + JSON.stringify(body));
       return body;
     }
     isMeetingRunning = async (meetingid) =>{
       var body = await this.doPost(`${this.url}/ismeetingrunning`, {meeting_id : meetingid});
-      //console.log("from client " + JSON.stringify(body));
       return body;
     }
     getAttendees = async (meetingid) =>{
       var body = await this.doPost(`${this.url}/getattendees`, {meeting_id: meetingid});
-      //console.log(body)
       return body;
     }
 

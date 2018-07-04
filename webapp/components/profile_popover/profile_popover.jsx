@@ -41,7 +41,6 @@ export default class ProfilePopover extends React.PureComponent {
     handleDirectMessage = async () => {
       const dispatch = window.store.dispatch;
       const result = await ChannelActions.createDirectChannel(this.props.user.id,this.props.cur_user.id)(dispatch, this.props.state);
-      console.log("some result:" + result.data.id)
 
       await this.props.actions.startMeeting(result.data.id, "",this.props.cur_user.username + " "+ this.props.user.username );
 

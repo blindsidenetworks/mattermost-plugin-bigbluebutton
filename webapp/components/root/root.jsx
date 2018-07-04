@@ -87,8 +87,6 @@ export default class Root extends React.PureComponent {
 
 
     render() {
-       console.log(this.props.lastpostperchannel);
-      console.log(this.props.unreadChannelIds);
         var gotoButton;
         var renderchannelid;
         var meetingid;
@@ -102,14 +100,11 @@ export default class Root extends React.PureComponent {
         && (Date.now()-this.props.lastpostperchannel[channelid].create_at < 2000) &&this.props.lastpostperchannel[channelid].user_id != this.props.cur_user.id ){
               const postid = this.props.lastpostperchannel[channelid].id;
               const user = getUser(this.props.state, this.props.lastpostperchannel[channelid].user_id);
-              console.log("ussrrr " + user);
               src =Client4.getProfilePictureUrl(user.id, user.last_picture_update);
-              console.log("srrrccc " + src);
               renderchannelid = channelid;
               var message = this.props.lastpostperchannel[channelid].message;
               var index = message.indexOf('#ID');
                meetingid = message.substr(index+3)
-              console.log("MEETING ID " + meetingid);
             this.openmodal(postid,channelid,meetingid,src);
 
           }

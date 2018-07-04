@@ -78,7 +78,6 @@ export default class PostTypebbb extends React.PureComponent {
       var newtab =  await window.open('', '_blank');
         var myurl = await this.props.actions.getJoinURL(this.props.channelId, this.props.post.props.meeting_id,this.props.creatorId);
         var myvar = await myurl.data.joinurl.url;
-        console.log("generated join url: " + myvar);
         newtab.location.href = myvar;
         await this.setState({
           url: myvar,
@@ -105,7 +104,6 @@ export default class PostTypebbb extends React.PureComponent {
 
     getAttendees = async () => {
       var resp = await this.props.actions.getAttendees(this.props.channelId, this.props.post.props.meeting_id);
-      console.log(resp)
       await this.setState({ //code might not be proper http://lucybain.com/blog/2016/react-state-vs-pros/
         users: resp.attendees,
         userCount: resp.num
@@ -315,7 +313,6 @@ export default class PostTypebbb extends React.PureComponent {
 
 
          if (props.recording_status === 'COMPLETE' && (props.is_deleted == undefined ||props.is_deleted !="true" )) {
-          console.log("Here are the images" + props.images);
 
           var images = [];
           if (props.images != undefined && props.images != "" && typeof props.images === 'string' ){

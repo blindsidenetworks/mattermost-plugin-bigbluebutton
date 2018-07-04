@@ -59,7 +59,6 @@ export function getJoinURL(channelId, meetingid,creatorid) {
       if (curUserId == creatorid){
         ismod = "TRUE"
       }
-      console.log(curUserId + "\n" + creatorid + "\n" + ismod);
         try {
             url = await Client.getJoinURL(curUserId, meetingid,ismod);
             return {data:{joinurl : url}};
@@ -123,7 +122,6 @@ export function getAttendees(channelId, meetingid) {
 
         try {
             var resp = await Client.getAttendees(meetingid);
-            //console.log (resp.num + " \n" + resp.attendees);
             return resp;
         } catch (error) {
             const post = {
@@ -164,7 +162,6 @@ export function publishRecordings(channelId, recordid,publish,meetingId) {
 
         try {
             var resp = await Client.publishRecordings(recordid,publish,meetingId);
-            //console.log (resp.num + " \n" + resp.attendees);
             return resp;
         } catch (error) {
             const post = {
@@ -204,7 +201,6 @@ export function deleteRecordings(channelId, recordid,meetingId) {
 
         try {
             var resp = await Client.deleteRecordings(recordid,meetingId);
-            //console.log (resp.num + " \n" + resp.attendees);
             return resp;
         } catch (error) {
             const post = {

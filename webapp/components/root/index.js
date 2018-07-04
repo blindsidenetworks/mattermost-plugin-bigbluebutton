@@ -32,8 +32,6 @@ function mapStateToProps(state, ownProps) {
     let teamname = team.name;
     let cur_user = getCurrentUser(state) || {};
       const keepChannelIdAsUnread = state.views.channel.keepChannelIdAsUnread;
-    //console.log("getting all posts:" +state.entities.posts.posts)
-  //  console.log("what does get unread print? " + JSON.stringify(getUnreads(state)));
     return {
       cur_user,
       teamname,
