@@ -1,18 +1,18 @@
 package api
 
 import (
-	"log"
-	"net/url"
 	"github.com/mattermost/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/dataStructs"
 	"github.com/mattermost/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/helpers"
+	"log"
+	"net/url"
 	"strconv"
 )
 
-var BASE_URL 	string
-var SALT 			string
+var BASE_URL string
+var SALT string
 
-func SetAPI(url string, salt string){
-	BASE_URL =  url
+func SetAPI(url string, salt string) {
+	BASE_URL = url
 	SALT = salt
 }
 
@@ -44,14 +44,14 @@ func CreateMeeting(meetingRoom *dataStructs.MeetingRoom) string {
 	meta_bn_recording_ready_url := "&meta_bn-recording-ready-url=" +
 		url.QueryEscape(meetingRoom.Meta_bn_recording_ready_url)
 	meta_channelid := "&meta_channelid=" +
-			url.QueryEscape(meetingRoom.Meta_channelid)
-	meta_endcallback := 	"&meta_endcallbackurl=" +
+		url.QueryEscape(meetingRoom.Meta_channelid)
+	meta_endcallback := "&meta_endcallbackurl=" +
 		url.QueryEscape(meetingRoom.Meta_endcallbackurl)
 	voiceBridge := "&voiceBridge=" + url.QueryEscape(meetingRoom.VoiceBridge)
 
 	createParam := name + meetingID + attendeePW + moderatorPW + welcome + dialNumber +
-		voiceBridge + logoutURL + record + duration + moderatorOnlyMessage + meta_bn_recording_ready_url +meta_channelid+
-		meta_endcallback +allowStartStopRecording
+		voiceBridge + logoutURL + record + duration + moderatorOnlyMessage + meta_bn_recording_ready_url + meta_channelid +
+		meta_endcallback + allowStartStopRecording
 
 	checksum := helpers.GetChecksum("create" + createParam + SALT)
 
@@ -121,7 +121,7 @@ func GetJoinURL(participants *(dataStructs.Participants)) string {
 	joinviahtml := "&joinViaHtml5=true"
 
 	joinParam := fullName + meetingID + password + createTime + userID +
-		configToken + avatarURL + redirect + clientURL +joinviahtml
+		configToken + avatarURL + redirect + clientURL + joinviahtml
 
 	checksum := helpers.GetChecksum("join" + joinParam + SALT)
 	joinUrl := BASE_URL + "join?" + joinParam + "&checksum=" + checksum
@@ -133,7 +133,7 @@ func GetJoinURL(participants *(dataStructs.Participants)) string {
 //only returns true when someone has joined the meeting
 func IsMeetingRunning(meetingID string) bool {
 	checksum := helpers.GetChecksum("isMeetingRunning" + "meetingID=" + meetingID + SALT)
-	getURL := BASE_URL + "isMeetingRunning?" + "meetingID=" + meetingID+ "&checksum=" + checksum
+	getURL := BASE_URL + "isMeetingRunning?" + "meetingID=" + meetingID + "&checksum=" + checksum
 	response := helpers.HttpGet(getURL)
 	if "ERROR" == response {
 		log.Println("ERROR: HTTP ERROR.")
@@ -177,6 +177,7 @@ func EndMeeting(meeting_ID string, mod_PW string) string {
 	}
 
 }
+
 //pass in meeting id, moderator password and address of a response structure,
 // able to see new response info without having to get passed back the structure
 func GetMeetingInfo(meeting_ID string, mod_PW string, responseXML *dataStructs.GetMeetingInfoResponse) string {
@@ -209,9 +210,9 @@ func GetMeetingInfo(meeting_ID string, mod_PW string, responseXML *dataStructs.G
 }
 
 //Gets all meetings and the details by returning a struct
-func GetMeetings() dataStructs.GetMeetingsResponse{
+func GetMeetings() dataStructs.GetMeetingsResponse {
 	checksum := helpers.GetChecksum("getMeetings" + SALT)
-	getURL := BASE_URL + "getMeetings?"  + "&checksum=" + checksum
+	getURL := BASE_URL + "getMeetings?" + "&checksum=" + checksum
 	response := helpers.HttpGet(getURL)
 
 	if "ERROR" == response {
@@ -219,7 +220,7 @@ func GetMeetings() dataStructs.GetMeetingsResponse{
 	}
 	var XMLResp dataStructs.GetMeetingsResponse
 
-  helpers.ReadXML(response, &XMLResp)
+	helpers.ReadXML(response, &XMLResp)
 
 	if "SUCCESS" == XMLResp.ReturnCode {
 		println("Successfully got meetings info")
@@ -231,22 +232,22 @@ func GetMeetings() dataStructs.GetMeetingsResponse{
 
 }
 
-func GetRecordings(meeting_id string, record_id string, metachannelid string) (dataStructs.GetRecordingsResponse, string){
+func GetRecordings(meeting_id string, record_id string, metachannelid string) (dataStructs.GetRecordingsResponse, string) {
 
 	meetingID := "meetingID=" + url.QueryEscape(meeting_id)
 	recordid := "&recordID=" + url.QueryEscape(record_id)
 	var param string
-	if (metachannelid != ""){
+	if metachannelid != "" {
 		meta_channelid := "meta_channelid=" +
-				url.QueryEscape(metachannelid)
-		param =  meta_channelid
-	}else if (meeting_id != "" && record_id != ""){
+			url.QueryEscape(metachannelid)
+		param = meta_channelid
+	} else if meeting_id != "" && record_id != "" {
 		param = meetingID + recordid
-	}else if (meeting_id != ""){
+	} else if meeting_id != "" {
 		param = meetingID
 	}
-	checksum := helpers.GetChecksum("getRecordings"  + param + SALT)
-	getURL := BASE_URL + "getRecordings?"  +param + "&checksum=" + checksum
+	checksum := helpers.GetChecksum("getRecordings" + param + SALT)
+	getURL := BASE_URL + "getRecordings?" + param + "&checksum=" + checksum
 	response := helpers.HttpGet(getURL)
 
 	if "ERROR" == response {
@@ -264,10 +265,10 @@ func GetRecordings(meeting_id string, record_id string, metachannelid string) (d
 	} else {
 		println("Could not get recordings info ")
 	}
-	return XMLResp,response
+	return XMLResp, response
 }
 
-func PublishRecordings(recordid string, publish string) (dataStructs.PublishRecordingsResponse){
+func PublishRecordings(recordid string, publish string) dataStructs.PublishRecordingsResponse {
 	recordID := "recordID=" + url.QueryEscape(recordid)
 	Publish := "&publish=" + url.QueryEscape(publish)
 
@@ -284,7 +285,7 @@ func PublishRecordings(recordid string, publish string) (dataStructs.PublishReco
 	return XMLResp
 }
 
-func DeleteRecordings(recordid string) (dataStructs.DeleteRecordingsResponse){
+func DeleteRecordings(recordid string) dataStructs.DeleteRecordingsResponse {
 	recordID := "recordID=" + url.QueryEscape(recordid)
 	param := recordID
 	checksum := helpers.GetChecksum("deleteRecordings" + param + SALT)

@@ -6,13 +6,16 @@ import ProfilePopover from './components/profile_popover';
 import PostTypebbb from './components/post_type_bbb';
 import Root from './components/root';
 
-
 class PluginClass {
-    initialize(registerComponents, store) {
-        window.store = store;
+  initialize(registerComponents, store) {
+    window.store = store;
 
-        registerComponents({ChannelHeaderButton,ProfilePopover,Root}, {custom_bbb: PostTypebbb});
-    }
+    registerComponents({
+      ChannelHeaderButton,
+      ProfilePopover,
+      Root
+    }, {custom_bbb: PostTypebbb});
+  }
 }
 
 global.window.plugins['bigbluebutton'] = new PluginClass();

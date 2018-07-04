@@ -3,13 +3,12 @@ package dataStructs
 //the following structs are the types we create to interact with the API
 // ie participants, meetingRooms, recordings
 
-
 type Recording struct {
-  MeetingID     string
-  RecordID      string
-  State         string
-  Meta          string
-  Publish       string
+	MeetingID string
+	RecordID  string
+	State     string
+	Meta      string
+	Publish   string
 }
 
 type Participants struct {
@@ -30,7 +29,7 @@ type Participants struct {
 type MeetingRoom struct {
 	Name_                   string
 	MeetingID_              string
-  InternalMeetingId       string
+	InternalMeetingId       string
 	AttendeePW_             string
 	ModeratorPW_            string
 	Welcome                 string
@@ -44,26 +43,25 @@ type MeetingRoom struct {
 	ModeratorOnlyMessage    string
 	AutoStartRecording      bool
 	AllowStartStopRecording bool
-  Created                 bool
-  PostId                  string
-  CreatedAt               int64
-  EndedAt                 int64
-  AttendeeNames           []string
-  LoopCount               int
+	Created                 bool
+	PostId                  string
+	CreatedAt               int64
+	EndedAt                 int64
+	AttendeeNames           []string
+	LoopCount               int
 
-  Meta_bn_recording_ready_url string //this needs to be properly url encoded
-  Meta_channelid          string
-  Meta_endcallbackurl     string
+	Meta_bn_recording_ready_url string //this needs to be properly url encoded
+	Meta_channelid              string
+	Meta_endcallbackurl         string
 
-  CreateMeetingResponse CreateMeetingResponse
+	CreateMeetingResponse CreateMeetingResponse
 	MeetingInfo           GetMeetingInfoResponse
-
 }
 
 type WebHook struct {
-  HookID      string
-  CallBackURL string
-  MeetingId   string
+	HookID      string
+	CallBackURL string
+	MeetingId   string
 
-  WebhookResponse CreateWebhookResponse
+	WebhookResponse CreateWebhookResponse
 }

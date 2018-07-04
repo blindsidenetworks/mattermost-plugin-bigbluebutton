@@ -5,9 +5,9 @@ import (
 )
 
 type Configuration struct {
-	BASE_URL       string
-	SALT 			     string
-  CallBack_URL   string
+	BASE_URL     string
+	SALT         string
+	CallBack_URL string
 }
 
 func (c *Configuration) IsValid() error {

@@ -21,7 +21,6 @@ type RequestCreateMeetingJSON struct {
 	Desc       string `json:"description"`
 }
 
-
 //Create meeting doesn't call the BBB api to start a meeting
 //Only populates the meeting with details. Meeting is started when first person joins
 func (p *Plugin) handleCreateMeeting(w http.ResponseWriter, r *http.Request) {
@@ -45,7 +44,6 @@ func (p *Plugin) handleCreateMeeting(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 }
-
 
 type ButtonRequestJSON struct {
 	User_id   string `json:"user_id"`
@@ -92,7 +90,7 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 		username := user.Username
 
 		//golang doesnt have sets so have to iterate through array to check if meeting participant is already in meeeting
-		if (!IsItemInArray(username,meetingpointer.AttendeeNames)){
+		if !IsItemInArray(username, meetingpointer.AttendeeNames) {
 			meetingpointer.AttendeeNames = append(meetingpointer.AttendeeNames, username)
 		}
 
@@ -137,11 +135,12 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 		w.Write(userJson)
 	}
 }
+
 //this method is responsible for updating meeting has ended inside mattermost when
 // we end our meeting from inside BigBlueButton
 func (p *Plugin) handleImmediateEndMeetingCallback(w http.ResponseWriter, r *http.Request, path string) {
 
-	startpoint :=len("/meetingendedcallback?")
+	startpoint := len("/meetingendedcallback?")
 	meetingid := path[startpoint:]
 
 	meetingpointer := p.FindMeeting(meetingid)

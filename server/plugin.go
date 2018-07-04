@@ -16,13 +16,13 @@ import (
 )
 
 type Plugin struct {
-	api             plugin.API
-	c               *cron.Cron
-	configuration   atomic.Value
-	Meetings        []dataStructs.MeetingRoom
+	api                          plugin.API
+	c                            *cron.Cron
+	configuration                atomic.Value
+	Meetings                     []dataStructs.MeetingRoom
 	MeetingsWaitingforRecordings []dataStructs.MeetingRoom
-	webhooks        []*dataStructs.WebHook
-	Hookid          string
+	webhooks                     []*dataStructs.WebHook
+	Hookid                       string
 }
 
 //OnActivate runs as soon as plugin activates

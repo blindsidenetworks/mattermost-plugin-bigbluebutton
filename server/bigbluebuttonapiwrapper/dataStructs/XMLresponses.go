@@ -25,11 +25,11 @@ type EndResponse struct {
 	Message    string `xml:"message"`
 }
 type GetMeetingsResponse struct {
-  ReturnCode string `xml:"returncode"`
-  Meetings allMeetings `xml:"meetings"`
+	ReturnCode string      `xml:"returncode"`
+	Meetings   allMeetings `xml:"meetings"`
 }
-type allMeetings struct{
-  MeetingInfo []GetMeetingInfoResponse `xml:"meeting"`
+type allMeetings struct {
+	MeetingInfo []GetMeetingInfoResponse `xml:"meeting"`
 }
 
 type GetMeetingInfoResponse struct {
@@ -60,11 +60,11 @@ type GetMeetingInfoResponse struct {
 	Metadata              string    `xml:"metadata"`
 	MessageKey            string    `xml:"messageKey"`
 	Message               string    `xml:"message"`
-  //untested
-  BreakoutRooms         breakoutRooms   `xml:"breakoutRooms"`
+	//untested
+	BreakoutRooms breakoutRooms `xml:"breakoutRooms"`
 }
-type breakoutRooms struct{
-  BreakoutRooms []string  `xml:"breakout"`
+type breakoutRooms struct {
+	BreakoutRooms []string `xml:"breakout"`
 }
 
 type attendees struct {
@@ -83,60 +83,60 @@ type attendee struct {
 }
 
 type GetRecordingsResponse struct {
-  ReturnCode            string    `xml:"returncode"`
-  Recordings            recordings `xml:"recordings"`
+	ReturnCode string     `xml:"returncode"`
+	Recordings recordings `xml:"recordings"`
 }
 type recordings struct {
 	Recording []recording `xml:"recording"`
 }
 type recording struct {
-  RecordID          string `xml:"recordID"`
-  MeetingID         string `xml:"meetingID"`
-  Name              string `xml:"name"`
-  Published         string `xml:"published"`
-  State             string `xml:"state"`
-	StartTime         string `xml:"startTime"`
-  EndTime           string `xml:"endTime"`
-	Participants			string `xml:"participants"`
-	MetaData					metadata `xml:"metadata"`
-	Playback					struct{
-		Format []struct{
-			Type          string `xml:"type"`
-		  Url         string `xml:"url"`
-		  Length              string `xml:"length"`
-			Images []string    `xml:"preview>images>image"`
-		}`xml:"format"`
-	}`xml:"playback"`
+	RecordID     string   `xml:"recordID"`
+	MeetingID    string   `xml:"meetingID"`
+	Name         string   `xml:"name"`
+	Published    string   `xml:"published"`
+	State        string   `xml:"state"`
+	StartTime    string   `xml:"startTime"`
+	EndTime      string   `xml:"endTime"`
+	Participants string   `xml:"participants"`
+	MetaData     metadata `xml:"metadata"`
+	Playback     struct {
+		Format []struct {
+			Type   string   `xml:"type"`
+			Url    string   `xml:"url"`
+			Length string   `xml:"length"`
+			Images []string `xml:"preview>images>image"`
+		} `xml:"format"`
+	} `xml:"playback"`
 }
 
-type metadata struct{
-	Title          string `xml:"title"`
-	Subject         string `xml:"subject"`
-	Description              string `xml:"description"`
-	Creator         string `xml:"creator"`
-	Contributor             string `xml:"contributor"`
-	Language         string `xml:"language"`
+type metadata struct {
+	Title       string `xml:"title"`
+	Subject     string `xml:"subject"`
+	Description string `xml:"description"`
+	Creator     string `xml:"creator"`
+	Contributor string `xml:"contributor"`
+	Language    string `xml:"language"`
 }
 
 type CreateWebhookResponse struct {
-	Returncode           string `xml:"returncode"`
-	MessageKey           string `xml:"messageKey"`
-	Message              string `xml:"message"`
-	HookID							 string `xml:"hookID"`
+	Returncode string `xml:"returncode"`
+	MessageKey string `xml:"messageKey"`
+	Message    string `xml:"message"`
+	HookID     string `xml:"hookID"`
 }
 type DestroyedWebhookResponse struct {
-	Returncode           string `xml:"returncode"`
-	MessageKey           string `xml:"messageKey"`
-	Message              string `xml:"message"`
-	Removed							 string `xml:"removed"`
+	Returncode string `xml:"returncode"`
+	MessageKey string `xml:"messageKey"`
+	Message    string `xml:"message"`
+	Removed    string `xml:"removed"`
 }
 
 type PublishRecordingsResponse struct {
-	ReturnCode					string `xml:"returncode"`
-	Published						string `xml:"published"`
+	ReturnCode string `xml:"returncode"`
+	Published  string `xml:"published"`
 }
 
 type DeleteRecordingsResponse struct {
-	ReturnCode					string `xml:"returncode"`
-	Deleted							string `xml:"deleted"`
+	ReturnCode string `xml:"returncode"`
+	Deleted    string `xml:"deleted"`
 }

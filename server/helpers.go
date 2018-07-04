@@ -197,10 +197,10 @@ func GenerateRandomID() string {
 }
 
 func IsItemInArray(name string, array []string) bool {
-    for _, word := range array {
-        if word == name {
-            return true
-        }
-    }
-    return false
+	for _, word := range array {
+		if word == name {
+			return true
+		}
+	}
+	return false
 }

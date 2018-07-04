@@ -38,7 +38,7 @@ func GetChecksum(toConvert string) string {
 }
 
 func ReadXML(response string, data interface{}) error {
-	err := xml.Unmarshal([]byte(response),data)
+	err := xml.Unmarshal([]byte(response), data)
 	if nil != err {
 		log.Println("XML PARSE ERROR: " + err.Error())
 	}

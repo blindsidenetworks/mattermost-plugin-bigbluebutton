@@ -1,6 +1,14 @@
 const React = window.react;
-const {Button, Modal,Thumbnail, Grid, Col, Row, Panel}  = window['react-bootstrap'];
-import { bootstrapUtils } from 'react-bootstrap/lib/utils';
+const {
+  Button,
+  Modal,
+  Thumbnail,
+  Grid,
+  Col,
+  Row,
+  Panel
+} = window['react-bootstrap'];
+import {bootstrapUtils} from 'react-bootstrap/lib/utils';
 import {getChannel} from 'mattermost-redux/selectors/entities/channels';
 import {formatDate} from '../../utils/date_utils';
 
@@ -9,550 +17,546 @@ import {makeStyleFromTheme} from 'mattermost-redux/utils/theme_utils';
 
 const PostUtils = window['post-utils'];
 
-
 export default class PostTypebbb extends React.PureComponent {
-    static propTypes = {
-        post: PropTypes.object.isRequired,
-        state: PropTypes.object.isRequired,
-        currentUserId: PropTypes.string.isRequired,
-        creatorId: PropTypes.string.isRequired,
-        channelId: PropTypes.string.isRequired,
-        username: PropTypes.string.isRequired,
-        channel: PropTypes.object.isRequired,
-        compactDisplay: PropTypes.bool,
-        isRHS: PropTypes.bool,
-        useMilitaryTime: PropTypes.bool,
-        theme: PropTypes.object.isRequired,
-        creatorName: PropTypes.string.isRequired,
-        actions: PropTypes.shape({
-            getJoinURL: PropTypes.func.isRequired,
-            endMeeting: PropTypes.func.isRequired,
-            getAttendees: PropTypes.func.isRequired,
-            publishRecordings: PropTypes.func.isRequired,
-            deleteRecordings: PropTypes.func.isRequired,
-            isMeetingRunning: PropTypes.func.isRequired,
-        }).isRequired
+  static propTypes = {
+    post: PropTypes.object.isRequired,
+    state: PropTypes.object.isRequired,
+    currentUserId: PropTypes.string.isRequired,
+    creatorId: PropTypes.string.isRequired,
+    channelId: PropTypes.string.isRequired,
+    username: PropTypes.string.isRequired,
+    channel: PropTypes.object.isRequired,
+    compactDisplay: PropTypes.bool,
+    isRHS: PropTypes.bool,
+    useMilitaryTime: PropTypes.bool,
+    theme: PropTypes.object.isRequired,
+    creatorName: PropTypes.string.isRequired,
+    actions: PropTypes.shape({
+      getJoinURL: PropTypes.func.isRequired,
+      endMeeting: PropTypes.func.isRequired,
+      getAttendees: PropTypes.func.isRequired,
+      publishRecordings: PropTypes.func.isRequired,
+      deleteRecordings: PropTypes.func.isRequired,
+      isMeetingRunning: PropTypes.func.isRequired
+    }).isRequired
 
+  };
+
+  static defaultProps = {
+    mentionKeys: [],
+    compactDisplay: false,
+    isRHS: false
+  };
+
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      url: "",
+      users: {},
+      userCount: 0,
+      show: false,
+      showWarning: true,
+      showFullAttendees: false,
+      showThumbnails: false
     };
+  }
 
-    static defaultProps = {
-        mentionKeys: [],
-        compactDisplay: false,
-        isRHS: false
-    };
+  componentWillUnmount() {
+    this.endMeetingForUnmount()
+  }
 
-    constructor(props) {
-        super(props);
+  handleClose = () => {
+    this.setState({show: false});
+  };
 
-        this.state = {
-          url : "",
-          users : {},
-          userCount : 0,
-          show: false,
-          showWarning: true,
-          showFullAttendees: false,
-          showThumbnails: false,
-        };
+  handleShow = () => {
+    this.setState({show: true});
+  };
+
+  toggleAttendeesInMeeting = () => {
+    this.setState({
+      showFullAttendees: !this.state.showFullAttendees
+    });
+  }
+
+  getJoinURL = async () => {
+    var newtab = await window.open('', '_blank');
+    var myurl = await this.props.actions.getJoinURL(this.props.channelId, this.props.post.props.meeting_id, this.props.creatorId);
+    var myvar = await myurl.data.joinurl.url;
+    newtab.location.href = myvar;
+    await this.setState({
+      url: myvar,
+      users: [
+        ...this.state.users,
+        this.props.username
+      ]
+    });
+  }
+
+  isMeetingRunning = async (id) => {
+    var response = await this.props.actions.isMeetingRunning(id);
+    return response.running;
+  }
+
+  endMeeting = async () => {
+    await this.props.actions.endMeeting(this.props.channelId, this.props.post.props.meeting_id);
+  }
+
+  endMeetingForUnmount = async () => {
+    var isRunning = await this.isMeetingRunning(this.props.post.props.meeting_id);
+    if (isRunning) {
+      await this.props.actions.endMeeting(this.props.channelId, this.props.post.props.meeting_id);
     }
 
-    componentWillUnmount(){
-      this.endMeetingForUnmount()
-    }
+  }
 
-    handleClose = () => {
-      this.setState({ show: false });
-    };
+  getAttendees = async () => {
+    var resp = await this.props.actions.getAttendees(this.props.channelId, this.props.post.props.meeting_id);
+    await this.setState({users: resp.attendees, userCount: resp.num});
+    return resp.num;
+  }
 
-    handleShow = () => {
-      this.setState({ show: true });
-    };
+  publishRecordings = async () => {
+    await this.props.actions.publishRecordings(this.props.channelId, this.props.post.props.record_id, "true", this.props.post.props.meeting_id);
+  }
+  unpublishRecordings = async () => {
+    await this.props.actions.publishRecordings(this.props.channelId, this.props.post.props.record_id, "false", this.props.post.props.meeting_id);
+  }
+  toggleThumbnails = () => {
+    this.setState({
+      showThumbnails: !this.state.showThumbnails
+    })
+  };
 
-    toggleAttendeesInMeeting = () => {
-     this.setState({ showFullAttendees: !this.state.showFullAttendees });
-   }
+  deleteRecordings = async () => {
+    await this.props.actions.deleteRecordings(this.props.channelId, this.props.post.props.record_id, this.props.post.props.meeting_id);
+    this.setState({show: false});
+  }
 
-    getJoinURL = async () => {
-      var newtab =  await window.open('', '_blank');
-        var myurl = await this.props.actions.getJoinURL(this.props.channelId, this.props.post.props.meeting_id,this.props.creatorId);
-        var myvar = await myurl.data.joinurl.url;
-        newtab.location.href = myvar;
-        await this.setState({
-          url: myvar,
-          users: [...this.state.users,this.props.username]
-        });
-    }
+  render() {
 
-    isMeetingRunning = async (id) => {
-      var response = await this.props.actions.isMeetingRunning(id);
-      return response.running;
-    }
+    //overrides default Mattermost style with out own
+    bootstrapUtils.addStyle(Button, 'custom');
+    var arrayAttendants = [];
+    const style = getStyle(this.props.theme);
+    const post = this.props.post;
+    const props = post.props || {};
 
-    endMeeting = async () => {
-        await this.props.actions.endMeeting(this.props.channelId, this.props.post.props.meeting_id);
-    }
+    var attendees = "";
+    var attendeesFull = "";
+    var otherWords = "";
 
-    endMeetingForUnmount = async () => {
-      var isRunning = await this.isMeetingRunning(this.props.post.props.meeting_id);
-      if (isRunning){
-        await this.props.actions.endMeeting(this.props.channelId, this.props.post.props.meeting_id);
+    if (props.attendees == undefined || props.attendees === "") {
+      attendees = "there are no attendees in this session";
+      //if we're on a direct message channel
+      if (this.props.channel.type === "D") {
+        var channel = getChannel(this.props.state, this.props.channelId);
+        var channelName = channel.display_name;
+        if (this.props.currentUserId === this.props.creatorId) {
+          attendees = "Invited " + channelName + " to this meeting";
+        }
       }
+    } else {
+      arrayAttendants = props.attendees.split(",");
+      if (arrayAttendants != null && props.user_count > 0) {
+        for (var i = 0; i < arrayAttendants.length; i++) {
+          if (i <= 3) {
 
-    }
-
-    getAttendees = async () => {
-      var resp = await this.props.actions.getAttendees(this.props.channelId, this.props.post.props.meeting_id);
-      await this.setState({
-        users: resp.attendees,
-        userCount: resp.num
-      });
-      return resp.num;
-    }
-
-    publishRecordings = async ( ) => {
-      await this.props.actions.publishRecordings(this.props.channelId, this.props.post.props.record_id, "true",this.props.post.props.meeting_id);
-    }
-    unpublishRecordings = async ( ) => {
-      await this.props.actions.publishRecordings(this.props.channelId, this.props.post.props.record_id, "false",this.props.post.props.meeting_id);
-    }
-    toggleThumbnails = () => {
-      this.setState({showThumbnails: !this.state.showThumbnails})
-    };
-
-
-    deleteRecordings = async () => {
-      await this.props.actions.deleteRecordings(this.props.channelId, this.props.post.props.record_id,this.props.post.props.meeting_id);
-      this.setState({ show: false });
-    }
-
-    render() {
-
-      //overrides default Mattermost style with out own
-      bootstrapUtils.addStyle(Button, 'custom');
-      var arrayAttendants = [];
-      const style = getStyle(this.props.theme);
-      const post = this.props.post;
-      const props = post.props || {};
-
-      var attendees = "";
-      var attendeesFull = "";
-      var otherWords = "";
-
-      if (props.attendees == undefined || props.attendees === ""){
-        attendees = "there are no attendees in this session";
-        //if we're on a direct message channel
-        if (this.props.channel.type === "D"){
-          var channel = getChannel(this.props.state, this.props.channelId);
-          var channelName = channel.display_name;
-          if (this.props.currentUserId === this.props.creatorId){
-            attendees = "Invited " + channelName + " to this meeting";
+            attendees += arrayAttendants[i];
+            if (i != arrayAttendants.length - 1) {
+              attendees += ", ";
+            }
+          }
+          attendeesFull += arrayAttendants[i];
+          if (i != arrayAttendants.length - 1) {
+            attendeesFull += ", ";
           }
         }
-      }else {
-        arrayAttendants = props.attendees.split(",");
-        if (arrayAttendants != null && props.user_count > 0){
-          for (var i = 0; i < arrayAttendants.length; i++) {
-            if (i <= 3){
+        if (arrayAttendants.length > 4) {
+          otherWords = "and " + (
+          arrayAttendants.length - 4) + " others";
+        }
 
+      } else {
+        attendees = "there are no attendees in this session";
+      }
+    }
+
+    let preText;
+    let content;
+    let subtitle;
+    let activeUsers;
+    let recordingstuff;
+    var userlist = [];
+    if (arrayAttendants != null || arrayAttendants != []) {
+      for (var i = 0; i < arrayAttendants.length; i++) {
+        userlist.push(<li>{arrayAttendants[i]}</li>);
+      }
+    }
+
+    this.setState({userCount: props.user_count})
+
+    if (props.meeting_status === 'STARTED') {
+
+      preText = PostUtils.formatText("Meeting created by @" + this.props.creatorName, {
+        mentionHighlight: false,
+        atMentions: true
+      });
+      let attendeestext;
+      if (this.state.showFullAttendees) {
+        attendeestext = (<span onDoubleClick={this.toggleAttendeesInMeeting}>
+          {attendeesFull}</span>);
+      } else {
+        attendeestext = (<span>
+          <span>{attendees}</span>
+          <span onClick={this.toggleAttendeesInMeeting}>{otherWords}</span>
+        </span>);
+      }
+      content = (<div onMouseEnter={this.getAttendees}>
+        <div>
+          <span style={style.summary}>
+            Attendees:
+          </span>
+          {
+            (arrayAttendants != null && props.user_count > 0)
+              ? <span style={style.summaryItem}>&ensp; {attendeestext}</span>
+              : <span style={style.summaryItemGreyItalics}>
+                  &ensp; {attendees}</span>
+          }
+
+        </div>
+        <span >
+          <a className='btn btn-lg btn-primary' style={style.button} onClick={this.getJoinURL}>
+
+            {'Join Meeting'}
+          </a>
+          {
+            this.props.currentUserId == this.props.creatorId && <a className='btn btn-lg btn-link' style={style.buttonEnd} onClick={this.endMeeting}>
+                <i style={style.buttonIcon}/> {'End meeting'}
+              </a>
+          }
+
+        </span>
+      </div>);
+      if (props.meeting_desc != "") {
+        subtitle = (<span>
+          {'Description : '}
+
+          {props.meeting_desc}
+
+        </span>);
+      }
+
+    } else if (props.meeting_status === 'ENDED') {
+      preText = PostUtils.formatText("@" + this.props.creatorName + " has ended the meeting", {
+        mentionHighlight: false,
+        atMentions: true
+      });
+      if (props.ended_by === "" || props.ended_by === undefined) {
+        preText = `Meeting ended`;
+      }
+      if (props.meeting_desc != "") {
+        subtitle = 'Description : ' + props.meeting_desc;
+      }
+
+      const startDate = new Date(post.create_at);
+      const start = formatDate(startDate);
+      const length = Math.ceil((new Date(post.update_at) - startDate) / 1000 / 60);
+      var attendeestext;
+      if (props.attendents == undefined || props.attendents === "") {
+        attendees = "there were no attendees in this session";
+      } else {
+        var arrayAttendants = props.attendents.split(",");
+        attendees = "";
+        attendeesFull = "";
+        otherWords = "";
+
+        if (arrayAttendants != null && arrayAttendants.length > 0) {
+          for (var i = 0; i < arrayAttendants.length; i++) {
+            if (i <= 3) {
               attendees += arrayAttendants[i];
-              if (i != arrayAttendants.length-1 ){
-                attendees+= ", ";
+              if (i != arrayAttendants.length - 1) {
+                attendees += ", ";
               }
-            }attendeesFull += arrayAttendants[i];
-            if (i != arrayAttendants.length-1 ){
+            }
+            attendeesFull += arrayAttendants[i];
+            if (i != arrayAttendants.length - 1) {
               attendeesFull += ", ";
             }
           }
-          if (arrayAttendants.length > 4){
-            otherWords = "and " + (arrayAttendants.length - 4) + " others";
+          if (arrayAttendants.length > 4) {
+            otherWords = "and " + (
+            arrayAttendants.length - 4) + " others";
           }
+        } else {
+          attendees = "there were no attendees in this session";
+        }
 
-        }else {
-          attendees = "there are no attendees in this session";
+        if (this.state.showFullAttendees) {
+          attendeestext = (<span onDoubleClick={this.toggleAttendeesInMeeting}>
+            {attendeesFull}</span>);
+        } else {
+          attendeestext = (<span>
+            <span>{attendees}</span>
+            <span onClick={this.toggleAttendeesInMeeting}>{otherWords}</span>
+          </span>);
         }
       }
 
-
-        let preText;
-        let content;
-        let subtitle;
-        let activeUsers;
-        let recordingstuff;
-        var userlist = [];
-        if (arrayAttendants != null || arrayAttendants != []){
-          for (var i = 0; i < arrayAttendants.length; i++) {
-            userlist.push( <li>{arrayAttendants[i]}</li>);
-          }
+      content = (<div>
+        <span>
+          <span style={style.summary}>{'Date: '}</span>
+          <span style={style.summaryItem}>{'Started at ' + start}</span>
+        </span>
+        &emsp;&emsp;
+        <span>
+          <span style={style.summary}>{'Meeting Length: '}</span>
+          <span style={style.summaryItem}>{props.duration}</span>
+        </span>
+        &emsp;&emsp;
+        <span style={style.summary}>
+          Attendees:
+        </span>
+        {
+          (props.attendents != undefined && arrayAttendants != null && arrayAttendants.length > 0)
+            ? <span style={style.summaryItem}>&ensp; {attendeestext}</span>
+            : <span style={style.summaryItemGreyItalics}>
+                &ensp; {attendees}</span>
         }
 
+      </div>);
 
-        this.setState({
-          userCount :props.user_count
-        })
+      if (props.recording_status === 'COMPLETE' && (props.is_deleted == undefined || props.is_deleted != "true")) {
 
-        if (props.meeting_status === 'STARTED') {
+        var images = [];
+        if (props.images != undefined && props.images != "" && typeof props.images === 'string') {
+          var imagesArray = props.images.split(",");
 
-            preText = PostUtils.formatText("Meeting created by @" +this.props.creatorName ,{mentionHighlight:false,atMentions:true });
-            let attendeestext;
-            if (this.state.showFullAttendees){
-              attendeestext = (<span onDoubleClick= {this.toggleAttendeesInMeeting}> {attendeesFull}</span>);
-            }else{
-              attendeestext = (<span><span>{attendees}</span> <span onClick= {this.toggleAttendeesInMeeting} >{otherWords}</span></span>);
-            }
-            content = (
-              <div onMouseEnter={this.getAttendees}>
-                <div>
-              <span style = {style.summary}> Attendees: </span>
-              {(arrayAttendants != null && props.user_count > 0) ? <span style = {style.summaryItem}>&ensp; {attendeestext}</span> :
-                                                                  <span style = {style.summaryItemGreyItalics}> &ensp; {attendees}</span> }
-
-              </div>
-              <span >
-                <a
-                    className='btn btn-lg btn-primary'
-                    style={style.button}
-                    onClick= {this.getJoinURL}
-
-
-                >
-
-                    {'Join Meeting'}
-                </a>
-                { this.props.currentUserId == this.props.creatorId &&
-                <a
-                    className='btn btn-lg btn-link'
-                    style={style.buttonEnd}
-                    onClick={this.endMeeting}
-                >
-                    <i
-                        style={style.buttonIcon}
-                    />
-                  {'End meeting'}
-                </a>
-              }
-
-                </span>
-              </div>
-            );
-            if (props.meeting_desc != "" ){
-              subtitle = (
-                  <span>
-                      {'Description : '}
-
-                          {props.meeting_desc}
-
-                  </span>
-              );
-            }
-
-
-        } else if (props.meeting_status === 'ENDED') {
-            preText =  PostUtils.formatText("@" +this.props.creatorName + " has ended the meeting",{mentionHighlight:false,atMentions:true });
-            if (props.ended_by === "" || props.ended_by === undefined ){
-              preText = `Meeting ended`;
-            }
-            if (props.meeting_desc != "" ){
-                subtitle = 'Description : '+ props.meeting_desc;
-              }
-
-            const startDate = new Date(post.create_at);
-            const start = formatDate(startDate);
-            const length = Math.ceil((new Date(post.update_at) - startDate) / 1000 / 60);
-            var attendeestext;
-            if (props.attendents == undefined || props.attendents === ""){
-              attendees = "there were no attendees in this session";
-            }else {
-              var arrayAttendants = props.attendents.split(",");
-              attendees = "";
-              attendeesFull = "";
-              otherWords = "";
-
-              if (arrayAttendants != null && arrayAttendants.length > 0){
-                for (var i = 0; i < arrayAttendants.length; i++) {
-                  if (i <= 3){
-                    attendees += arrayAttendants[i] ;
-                    if (i != arrayAttendants.length-1 ){
-                      attendees+= ", ";
-                    }
-                  }
-                  attendeesFull += arrayAttendants[i];
-                  if (i != arrayAttendants.length-1 ){
-                    attendeesFull+= ", ";
-                  }
-                }
-                if (arrayAttendants.length > 4){
-                  otherWords = "and " + (arrayAttendants.length - 4) + " others";
-                }
-              }else {
-                attendees = "there were no attendees in this session";
-              }
-
-
-              if (this.state.showFullAttendees){
-                attendeestext = (<span onDoubleClick= {this.toggleAttendeesInMeeting}> {attendeesFull}</span>);
-              }else{
-                attendeestext = (<span><span>{attendees}</span> <span onClick= {this.toggleAttendeesInMeeting} >{otherWords}</span></span>);
-              }
-            }
-
-            content = (
-                <div>
-                    <span><span style={style.summary}>{'Date: '}</span> <span style={style.summaryItem}>{'Started at '+ start}</span></span>
-                       &emsp;&emsp;
-                       <span><span style={style.summary}>{'Meeting Length: '}</span> <span style={style.summaryItem}>{props.duration}</span></span>
-                        &emsp;&emsp;
-                         <span style = {style.summary}> Attendees: </span>
-                           {(props.attendents != undefined &&arrayAttendants != null && arrayAttendants.length > 0) ? <span style = {style.summaryItem}>&ensp; {attendeestext}</span> :
-                                                                               <span style = {style.summaryItemGreyItalics}> &ensp; {attendees}</span> }
-
-                </div>
-            );
-
-
-
-
-         if (props.recording_status === 'COMPLETE' && (props.is_deleted == undefined ||props.is_deleted !="true" )) {
-
-          var images = [];
-          if (props.images != undefined && props.images != "" && typeof props.images === 'string' ){
-            var imagesArray = props.images.split(",");
-
-            for (var i = 0; i < imagesArray.length; i++) {
-              images.push(<Col xs={3}sm={3} md={2} lg= {2}>
-                     <Thumbnail href={imagesArray[i]} responsive src={props.recording_url} />
-                   </Col>);
-            }
-
+          for (var i = 0; i < imagesArray.length; i++) {
+            images.push(<Col sm={3} xs={3} md={2} lg={2}>
+              <Thumbnail href={imagesArray[i]} responsive="responsive" src={props.recording_url}/>
+            </Col>);
           }
-              recordingstuff = (
-                <div>
-                  <div style={style.summaryRecording}>Recording </div>
-                  <div style={style.recordingBody}>
-                    <div>
-                      {props.is_published === "true" ?
-                        <a href={props.recording_url} target="_blank" >
-                          {'Click to view recording'}
-                        </a>
-                        :
-                        <span style={style.summaryItemGreyItalics}>
-                          Recording currently not viewable
-                        </span>
-                      }
 
+        }
+        recordingstuff = (<div>
+          <div style={style.summaryRecording}>Recording
+          </div>
+          <div style={style.recordingBody}>
+            <div>
+              {
+                props.is_published === "true"
+                  ? <a href={props.recording_url} target="_blank">
+                      {'Click to view recording'}
+                    </a>
+                  : <span style={style.summaryItemGreyItalics}>
+                      Recording currently not viewable
+                    </span>
+              }
 
-                    </div>
-                    <div style={style.extraPadding} >
-                      { (this.props.currentUserId == this.props.creatorId) ?
-                        <div>
-                          {props.is_published === "true" ?
-                            <a onClick= {this.unpublishRecordings}>
+            </div>
+            <div style={style.extraPadding}>
+              {
+                (this.props.currentUserId == this.props.creatorId)
+                  ? <div>
+                      {
+                        props.is_published === "true"
+                          ? <a onClick={this.unpublishRecordings}>
                               <span>
                                 Make recording invisble
                               </span>
                             </a>
-                            :
-
-                            <a  onClick= {this.publishRecordings}>
+                          : <a onClick={this.publishRecordings}>
                               <span>
                                 Show recording
                               </span>
                             </a>
-                          }
-                          <span style= {style.bluebar}>
-                            {'   |   '}
-                          </span>
-                          <a  onClick = {this.handleShow}>
-                            <span>
-                              Delete recording
+                      }
+                      <span style={style.bluebar}>
+                        {'   |   '}
+                      </span>
+                      <a onClick={this.handleShow}>
+                        <span>
+                          Delete recording
+                        </span>
+                      </a>
+                      {
+                        props.is_published === "true" && <span>
+                            <span style={style.bluebar}>
+                              {'   |   '}
                             </span>
-                          </a>
-                          {props.is_published === "true" &&
-                            <span>
-                              <span style= {style.bluebar}>
-                                {'   |   '}
+
+                            <a onClick={this.toggleThumbnails}>
+                              <span>
+                                Thumbnails
                               </span>
-
-                              <a  onClick = {this.toggleThumbnails}>
-                                <span>
-                                  Thumbnails
-                                </span>
-                              </a>
-                            </span>
-                          }
-                        </div>
-
-                        :
-                        <div>
-                          {props.is_published === "true" &&
-                            <span>
-                              <a  onClick = {this.toggleThumbnails}>
-                                <span>
-                                  Thumbnails
-                                </span>
-                              </a>
-                            </span>
-                          }
-                        </div>
+                            </a>
+                          </span>
                       }
                     </div>
-                  </div>
-                    {props.is_published === "true" &&
-                  <div>
-                    <Panel  expanded={this.state.showThumbnails}>
-                      <Panel.Collapse>
-                        <Panel.Body>
-                          <span>
-                            <Grid>
-                              <Row>
-                                {images}
-                              </Row>
-                            </Grid>
+
+                  : <div>
+                      {
+                        props.is_published === "true" && <span>
+                            <a onClick={this.toggleThumbnails}>
+                              <span>
+                                Thumbnails
+                              </span>
+                            </a>
                           </span>
-                        </Panel.Body>
-                      </Panel.Collapse>
-                    </Panel>
-                  </div>}
-
-
-                </div>
-
-              );
-
-        }
-}
-
-
-
-        return (
-            <div style={style.attachment}>
-                {PostUtils.messageHtmlToComponent(preText)}
-                    <div style={style.content}>
-                        <div style={style.container}  >
-                                <div style={style.body}>
-                                    {content}
-                                    {recordingstuff}
-                                </div>
-                        </div>
+                      }
                     </div>
-
-                <Modal show={this.state.show} onHide={this.handleClose}
-                  bsSize="small">
-                  <Modal.Header closeButton>
-                    <Modal.Title>Are You Sure?</Modal.Title>
-                  </Modal.Header>
-                  <Modal.Body>
-                    <p>
-                      Once deleted, the recording will be gone forever.
-                    </p>
-                  </Modal.Body>
-                  <Modal.Footer>
-                    <span>
-                    <Button onClick={this.handleClose}>Close</Button>
-                    </span>
-                    <span>
-                    <Button  bsStyle="danger" onClick={this.deleteRecordings}>Delete Recording</Button>
-                    </span>
-                  </Modal.Footer>
-                </Modal>
+              }
             </div>
-        );
+          </div>
+          {
+            props.is_published === "true" && <div>
+                <Panel expanded={this.state.showThumbnails}>
+                  <Panel.Collapse>
+                    <Panel.Body>
+                      <span>
+                        <Grid>
+                          <Row>
+                            {images}
+                          </Row>
+                        </Grid>
+                      </span>
+                    </Panel.Body>
+                  </Panel.Collapse>
+                </Panel>
+              </div>
+          }
+
+        </div>);
+
+      }
     }
+
+    return (<div style={style.attachment}>
+      {PostUtils.messageHtmlToComponent(preText)}
+      <div style={style.content}>
+        <div style={style.container}>
+          <div style={style.body}>
+            {content}
+            {recordingstuff}
+          </div>
+        </div>
+      </div>
+
+      <Modal show={this.state.show} onHide={this.handleClose} bsSize="small">
+        <Modal.Header closeButton="closeButton">
+          <Modal.Title>Are You Sure?</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>
+            Once deleted, the recording will be gone forever.
+          </p>
+        </Modal.Body>
+        <Modal.Footer>
+          <span>
+            <Button onClick={this.handleClose}>Close</Button>
+          </span>
+          <span>
+            <Button bsStyle="danger" onClick={this.deleteRecordings}>Delete Recording</Button>
+          </span>
+        </Modal.Footer>
+      </Modal>
+    </div>);
+  }
 }
 
 const getStyle = makeStyleFromTheme((theme) => {
-    return {
+  return {
 
-        attachment: {
-            marginLeft: '-5px',
-            position: 'relative',
+    attachment: {
+      marginLeft: '-5px',
+      position: 'relative'
+    },
+    content: {
+      marginTop: '8px',
+      borderRadius: '4px',
+      borderStyle: 'solid',
+      borderWidth: '0px',
+      borderColor: '#BDBDBF',
 
-        },
-        content: {
-            marginTop: '8px',
-            borderRadius: '4px',
-            borderStyle: 'solid',
-            borderWidth: '0px',
-            borderColor: '#BDBDBF',
+      //margin: '5px 0 5px 20px',
+      //  padding: '2px 5px'
+    },
+    container: {
+      borderLeftStyle: 'solid',
+      borderLeftWidth: '2px',
+      paddingLeft: '10px',
+      paddingBottom: '5px',
+      paddingTop: '5px',
+      //padding: '10px',
+      borderLeftColor: theme.buttonBg
+    },
+    body: {
+      overflowX: 'auto',
+      overflowY: 'hidden',
+      paddingRight: '5px',
 
-            //margin: '5px 0 5px 20px',
-          //  padding: '2px 5px'
-        },
-        container: {
-            borderLeftStyle: 'solid',
-            borderLeftWidth: '2px',
-            paddingLeft: '10px',
-            paddingBottom: '5px',
-            paddingTop: '5px',
-            //padding: '10px',
-            borderLeftColor: theme.buttonBg
-        },
-        body: {
-            overflowX: 'auto',
-            overflowY: 'hidden',
-            paddingRight: '5px',
+      width: '100%'
+    },
 
-            width: '100%'
-        },
+    button: {
+      fontFamily: 'Open Sans',
+      fontSize: '13px',
+      //fontWeight: 'bold',
+      //letterSpacing: '1px',
+      //  height: '13px',
+      lineHeight: '13px',
+      marginTop: '10px',
+      marginRight: '2px',
+      borderRadius: '4px',
+      color: theme.buttonColor
+    },
 
-        button: {
-            fontFamily: 'Open Sans',
-            fontSize: '13px',
-            //fontWeight: 'bold',
-            //letterSpacing: '1px',
-            //  height: '13px',
-            lineHeight: '13px',
-            marginTop: '10px',
-            marginRight: '2px',
-            borderRadius: '4px',
-            color: theme.buttonColor
-        },
+    buttonEnd: {
+      fontFamily: 'Open Sans',
+      fontSize: '13px',
+      //fontWeight: 'bold',
+      //letterSpacing: '1px',
+      lineHeight: '13px',
+      marginTop: '10px',
+      marginRight: '2px',
+      borderRadius: '4px',
+      color: theme.buttonBg
+    },
+    extraPadding: {
+      marginTop: '10px'
+    },
 
-        buttonEnd: {
-            fontFamily: 'Open Sans',
-            fontSize: '13px',
-            //fontWeight: 'bold',
-            //letterSpacing: '1px',
-            lineHeight: '13px',
-            marginTop: '10px',
-            marginRight: '2px',
-            borderRadius: '4px',
-            color: theme.buttonBg
-        },
-        extraPadding:{
-          marginTop: '10px'
-        },
+    summary: {
+      fontFamily: 'Open Sans',
+      fontSize: '14px',
+      fontWeight: '600'
+    },
+    summaryRecording: {
+      fontFamily: 'Open Sans',
+      fontSize: '14px',
+      fontWeight: '600',
+      lineHeight: '26px'
+    },
+    summaryItem: {
+      fontFamily: 'Open Sans',
+      fontSize: '14px',
+      //  lineHeight: '26px'
+    },
+    recordingBody: {
+      lineHeight: '26px'
+    },
 
-        summary: {
-            fontFamily: 'Open Sans',
-            fontSize: '14px',
-            fontWeight: '600',
-
-        },
-        summaryRecording: {
-            fontFamily: 'Open Sans',
-            fontSize: '14px',
-            fontWeight: '600',
-            lineHeight: '26px',
-
-        },
-        summaryItem: {
-            fontFamily: 'Open Sans',
-            fontSize: '14px',
-          //  lineHeight: '26px'
-        },
-        recordingBody: {
-            lineHeight: '26px',
-        },
-
-        bluebar:{
-          color: '#008BD2',
-          fontWeight: '400',
-        },
-        summaryItemGreyItalics: {
-            fontFamily: 'Open Sans',
-            fontSize: '14px',
-            fontStyle: 'italic',
-            color: '#8D8D94'
-        },
-
-    };
+    bluebar: {
+      color: '#008BD2',
+      fontWeight: '400'
+    },
+    summaryItemGreyItalics: {
+      fontFamily: 'Open Sans',
+      fontSize: '14px',
+      fontStyle: 'italic',
+      color: '#8D8D94'
+    }
+  };
 });
