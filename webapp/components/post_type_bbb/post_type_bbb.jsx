@@ -217,6 +217,7 @@ export default class PostTypebbb extends React.PureComponent {
 
                     {'Join Meeting'}
                 </a>
+                { this.props.currentUserId == this.props.creatorId &&
                 <a
                     className='btn btn-lg btn-link'
                     style={style.buttonEnd}
@@ -227,7 +228,7 @@ export default class PostTypebbb extends React.PureComponent {
                     />
                   {'End meeting'}
                 </a>
-
+              }
 
                 </span>
               </div>
