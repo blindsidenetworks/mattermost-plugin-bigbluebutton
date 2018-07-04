@@ -3,21 +3,8 @@ const {bindActionCreators} = window.redux;
 import {getCurrentTeam} from 'mattermost-redux/selectors/entities/teams';
 import {getCurrentUser} from 'mattermost-redux/selectors/entities/users';
 import {getLastPostPerChannel} from 'mattermost-redux/selectors/entities/posts';
-import {Client4} from 'mattermost-redux/client';
 
-import {
-    getSortedPublicChannelWithUnreadsIds,
-    getSortedPrivateChannelWithUnreadsIds,
-    getSortedFavoriteChannelWithUnreadsIds,
-    getSortedDirectChannelWithUnreadsIds,
-    getCurrentChannel,
-    getUnreads,
-    getSortedUnreadChannelIds,
-    getSortedDirectChannelIds,
-    getSortedFavoriteChannelIds,
-    getSortedPublicChannelIds,
-    getSortedPrivateChannelIds,
-} from 'mattermost-redux/selectors/entities/channels';
+import {getSortedDirectChannelWithUnreadsIds} from 'mattermost-redux/selectors/entities/channels';
 import {getJoinURL } from '../../actions';
 
 import Root from './root.jsx';

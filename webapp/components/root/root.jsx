@@ -4,12 +4,9 @@ import {makeStyleFromTheme,changeOpacity} from 'mattermost-redux/utils/theme_uti
 import { Link } from 'react-router-dom'
 import {viewChannel, getChannelStats} from 'mattermost-redux/actions/channels';
 import {isDirectChannel} from 'mattermost-redux/utils/channel_utils';
-import {Well,Glyphicon,Button, ButtonGroup,ButtonToolbar, Tooltip, OverlayTrigger,Modal,Thumbnail,
-Grid, Col, Row, Image}  from 'react-bootstrap';
-import {browserHistory} from '../../utils/browser_history.jsx';
+import { Tooltip, OverlayTrigger,Modal}  from 'react-bootstrap';
 import {Client4} from 'mattermost-redux/client';
 import {getUser} from 'mattermost-redux/selectors/entities/users';
-import {Svgs} from '../../constants';
 import {getChannel} from 'mattermost-redux/selectors/entities/channels';
 
 

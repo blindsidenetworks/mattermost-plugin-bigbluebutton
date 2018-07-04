@@ -1,10 +1,7 @@
 const React = window.react;
-const {Well,Glyphicon,Button, ButtonGroup,ButtonToolbar, Tooltip, OverlayTrigger,Modal,Thumbnail,
-Grid, Col, Row, Panel}  = window['react-bootstrap'];
+const {Button, Modal,Thumbnail, Grid, Col, Row, Panel}  = window['react-bootstrap'];
 import { bootstrapUtils } from 'react-bootstrap/lib/utils';
-import {FormattedHTMLMessage, FormattedMessage} from 'react-intl';
 import {getChannel} from 'mattermost-redux/selectors/entities/channels';
-import {Svgs} from '../../constants';
 import {formatDate} from '../../utils/date_utils';
 
 import PropTypes from 'prop-types';
@@ -104,7 +101,7 @@ export default class PostTypebbb extends React.PureComponent {
 
     getAttendees = async () => {
       var resp = await this.props.actions.getAttendees(this.props.channelId, this.props.post.props.meeting_id);
-      await this.setState({ //code might not be proper http://lucybain.com/blog/2016/react-state-vs-pros/
+      await this.setState({
         users: resp.attendees,
         userCount: resp.num
       });
@@ -320,7 +317,7 @@ export default class PostTypebbb extends React.PureComponent {
 
             for (var i = 0; i < imagesArray.length; i++) {
               images.push(<Col xs={3}sm={3} md={2} lg= {2}>
-                     <Thumbnail href={imagesArray[i]} responsive src={imagesArray[i]} />
+                     <Thumbnail href={imagesArray[i]} responsive src={props.recording_url} />
                    </Col>);
             }
 

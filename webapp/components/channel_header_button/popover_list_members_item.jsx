@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 
 import {Svgs} from '../../constants';
 import {makeStyleFromTheme, changeOpacity} from 'mattermost-redux/utils/theme_utils';
-import {FormattedHTMLMessage, FormattedMessage} from 'react-intl';
+
 
 export default class PopoverListMembersItem extends React.PureComponent {
   static propTypes = {

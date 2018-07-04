@@ -1,10 +1,10 @@
 import {PostTypes} from 'mattermost-redux/action_types';
+import {batchActions} from 'redux-batched-actions';
+import {getCurrentChannel} from 'mattermost-redux/selectors/entities/channels';
 import {getCurrentTeamId} from 'mattermost-redux/selectors/entities/teams';
 import {searchPosts} from 'mattermost-redux/actions/search';
-import {batchActions} from 'redux-batched-actions';
-import {ActionTypes, RHSStates} from '../utils/constants.jsx';
-import {getCurrentChannel} from 'mattermost-redux/selectors/entities/channels';
 
+import {ActionTypes, RHSStates} from '../utils/constants.jsx';
 import Client from '../client';
 
 
@@ -111,7 +111,7 @@ export function endMeeting(channelId, meetingid) {
       let url;
         try {
             url = await Client.endMeeting(getState().entities.users.currentUserId, meetingid);
-            return {data:{joinurl : url}}; // don't know if its right to put return inside try
+            return {data:{joinurl : url}};
         } catch (error) {
             return {error};
         }
@@ -240,9 +240,7 @@ export function showRecordings() {
 
         const channel = getCurrentChannel(getState());
 
-        const terms = "in:"+channel.name + " #recording" // change this to recordings
-
-      //  trackEvent('api', 'api_posts_search_mention');
+        const terms = "in:"+channel.name + " #recording"
 
         dispatch(performSearch(terms, false));
         dispatch(batchActions([
