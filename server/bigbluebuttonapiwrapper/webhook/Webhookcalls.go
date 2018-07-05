@@ -46,8 +46,6 @@ func CreateHook(wh *dataStructs.WebHook) string {
 	} else {
 		return wh.WebhookResponse.Message
 	}
-
-	return "aaaaaaahhh"
 }
 
 func DestroyHook(hookID string) string {
