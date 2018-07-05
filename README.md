@@ -3,9 +3,9 @@ BigBlueButton is an open source web conferencing system for online learning. Tea
 
 Jump to:
 
-- [Installation and Setup](https://github.com/ypgao1/mattermost-plugin-bigbluebutton/blob/master/README.md#installation-and-setup)  
-- [Usage](https://github.com/ypgao1/mattermost-plugin-bigbluebutton/blob/master/README.md#usage)
-- [Contributing](https://github.com/ypgao1/mattermost-plugin-bigbluebutton/blob/master/README.md#contributing)
+- [Installation and Setup](https://github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/blob/master/README.md#installation-and-setup)  
+- [Usage](https://github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/blob/master/README.md#usage)
+- [Contributing](https://github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/blob/master/README.md#contributing)
 
 ## Installation and Setup
 
