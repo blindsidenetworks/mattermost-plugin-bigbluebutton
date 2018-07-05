@@ -66,6 +66,10 @@ Alternatively contact **Blindside Networks**, the company behind BigBlueButton, 
 Plugin is written in Golang for server side and Javascript for client side. Use `make build` to build the plugin.
 The dependencies are managed with Glide for Go and NPM for javascript.
 
+The plugin should be placed in a directory such as `~/go/src/github.com/blindsidenetworks/mattermost-plugin-bigbluebutton`
+
+To download a local version: `mkdir -p ~/go/src/github.com/blindsidenetworks` and `git clone https://github.com/blindsidenetworks/mattermost-plugin-bigbluebutton.git`
+
 Mattermost plugin development guides available here: https://developers.mattermost.com/extend/plugins/
 
 BigBlueButton API available here: http://docs.bigbluebutton.org/dev/api.html
