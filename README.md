@@ -3,14 +3,14 @@ BigBlueButton is an open source web conferencing system for online learning. Tea
 
 Jump to:
 
-- [Installation and Setup](https://github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/blob/master/README.md#installation-and-setup)  
-- [Usage](https://github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/blob/master/README.md#usage)
-- [Contributing](https://github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/blob/master/README.md#contributing)
+- [Installation and Setup](https://github.com/ypgao1/mattermost-plugin-bigbluebutton/blob/master/README.md#installation-and-setup)  
+- [Usage](https://github.com/ypgao1/mattermost-plugin-bigbluebutton/blob/master/README.md#usage)
+- [Contributing](https://github.com/ypgao1/mattermost-plugin-bigbluebutton/blob/master/README.md#contributing)
 
 ## Installation and Setup
 
- 1. Go to: https://github.com/ypgao1/mattermost-plugin-bigbluebutton/releases
- 2. Download `bigbluebutton.tar.gz` you do not need to extract the tar file once you download it.![enter image description here](https://raw.githubusercontent.com/blindsidenetworks/mattermost-plugin-bigbluebutton/master/docs_images/download_binary.png?token=AQcJwAEZnlU-0YcwkuRX5CIiis4L7ENbks5bRiAmwA==)
+ 1. Go to: https://github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/releases
+ 2. Download `bigbluebutton.tar.gz` you do not need to extract the tar file once you download it.![enter image description here](https://raw.githubusercontent.com/ypgao1/mattermost-plugin-bigbluebutton/master/docs_images/download_binary.png?token=AQcJwAEZnlU-0YcwkuRX5CIiis4L7ENbks5bRiAmwA==)
  3. Inside Mattermost, go to **System Console > Integrations > Custom Integrations**. Make sure the following are turned to true:
 	- `Enable Incoming Webhooks`
 	- `Enable Outgoing Webhooks`
