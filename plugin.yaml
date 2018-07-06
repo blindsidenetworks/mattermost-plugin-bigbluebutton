@@ -1,5 +1,6 @@
 id: bigbluebutton
 name: BigBlueButton
+version: 1.0.0
 backend:
     executable: server/plugin.exe
 webapp:
@@ -10,14 +11,19 @@ settings_schema:
     display_name: BigBlueButton Server URL
     type: text
     default: http://test-install.blindsidenetworks.com/bigbluebutton/api
-    help_text: Enter the address of your BigBlueButton server
+    help_text: >
+      Enter the address of your BigBlueButton server that you want to connect to.
+      Default server is: http://test-install.blindsidenetworks.com/bigbluebutton/api. Make sure to end with the url with '/bigbluebutton/api'
   - key: SALT
     display_name: Secret
     type: text
     default: 8cd8ef52e8e101574e400365b55e11a6
-    help_text: The secret you generated to securely connect to your BigBlueButton
+    help_text: >
+      The shared secret you generated to securely connect to your BigBlueButton. Default secret is: 8cd8ef52e8e101574e400365b55e11a6
   - key: CallBack_URL
     display_name: Site URL
     type: text
-    help_text: Your mattermost URL, ie:mycompany.mattermost.com
-  footer: Deactivate and reactivate your plugin when changing to a new configuration. Don't worry, no data will be lost
+    help_text: >
+      Your mattermost URL, ie: https://mycompany.mattermost.com
+  footer: >
+    Note: Deactivate and reactivate your plugin when changing to a new configuration. Don't worry, no data will be lost

@@ -335,7 +335,7 @@ export default class PostTypebbb extends React.PureComponent {
 
           for (var i = 0; i < imagesArray.length; i++) {
             images.push(<Col sm={3} xs={3} md={2} lg={2}>
-              <Thumbnail href={imagesArray[i]} responsive="responsive" src={props.recording_url}/>
+              <Thumbnail href={props.recording_url} responsive="responsive" src={imagesArray[i]}/>
             </Col>);
           }
 

@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
-	bbbAPI "github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/api"
-	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/dataStructs"
 	"github.com/mattermost/mattermost-server/model"
+	bbbAPI "github.com/ypgao1/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/api"
+	"github.com/ypgao1/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/dataStructs"
 )
 
 type RequestCreateMeetingJSON struct {
@@ -84,6 +84,7 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 			bbbAPI.GetMeetingInfo(meetingID, meetingpointer.ModeratorPW_, &fullMeetingInfo)
 			meetingpointer.InternalMeetingId = fullMeetingInfo.InternalMeetingID
 			meetingpointer.CreatedAt = time.Now().Unix()
+			p.ActiveMeetings = append(p.ActiveMeetings, *meetingpointer)
 		}
 
 		user, _ := p.api.GetUser(request.User_id)
@@ -140,6 +141,7 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 // we end our meeting from inside BigBlueButton
 func (p *Plugin) handleImmediateEndMeetingCallback(w http.ResponseWriter, r *http.Request, path string) {
 
+
 	startpoint := len("/meetingendedcallback?")
 	meetingid := path[startpoint:]
 
@@ -148,6 +150,8 @@ func (p *Plugin) handleImmediateEndMeetingCallback(w http.ResponseWriter, r *htt
 		w.WriteHeader(http.StatusOK)
 		return
 	}
+	p.DeleteActiveMeeting(meetingid)
+
 	p.MeetingsWaitingforRecordings = append(p.MeetingsWaitingforRecordings, *meetingpointer)
 	postid := meetingpointer.PostId
 	if postid == "" {
@@ -180,6 +184,7 @@ func (p *Plugin) handleEndMeeting(w http.ResponseWriter, r *http.Request) {
 	var request ButtonRequestJSON
 	json.Unmarshal([]byte(body), &request)
 	meetingID := request.MeetingId
+
 	meetingpointer := p.FindMeeting(meetingID)
 
 	user, _ := p.api.GetUser(request.User_id)
@@ -196,6 +201,7 @@ func (p *Plugin) handleEndMeeting(w http.ResponseWriter, r *http.Request) {
 		w.Write(userJson)
 		return
 	} else {
+		p.DeleteActiveMeeting(meetingID)
 		bbbAPI.EndMeeting(meetingpointer.MeetingID_, meetingpointer.ModeratorPW_)
 
 		if meetingpointer.EndedAt == 0 {
@@ -300,7 +306,7 @@ func (p *Plugin) handleWebhookMeetingEnded(w http.ResponseWriter, r *http.Reques
 		w.WriteHeader(http.StatusOK)
 		return
 	}
-
+	p.DeleteActiveMeeting(meetingpointer.MeetingID_)
 	postid := meetingpointer.PostId
 	if postid == "" {
 		panic("no post id found")
@@ -553,7 +559,6 @@ func (p *Plugin) Loopthroughrecordings() {
 			i--
 			continue
 		}
-
 		recordingsresponse, _ := bbbAPI.GetRecordings(Meeting.MeetingID_, "", "")
 		if recordingsresponse.ReturnCode == "SUCCESS" {
 			if len(recordingsresponse.Recordings.Recording) > 0 {
@@ -574,6 +579,39 @@ func (p *Plugin) Loopthroughrecordings() {
 
 				}
 			}
+		}
+	}
+}
+
+func (p *Plugin) LoopThroughActiveMeetings() {
+	for i :=0; i < len(p.ActiveMeetings); i++{
+		Meeting := p.ActiveMeetings[i]
+		if !(bbbAPI.IsMeetingRunning(Meeting.MeetingID_)){
+			meetingpointer := p.FindMeeting(Meeting.MeetingID_) //finds the meeting from all meetings, not the active meeting
+			p.MeetingsWaitingforRecordings = append(p.MeetingsWaitingforRecordings, *meetingpointer)
+			postid := meetingpointer.PostId
+			if postid == "" {
+				panic("no post id found")
+			}
+			post, err := p.api.GetPost(postid)
+			if err != nil {
+				return
+			}
+			if meetingpointer.EndedAt == 0 {
+				meetingpointer.EndedAt = time.Now().Unix()
+			}
+			post.Props["meeting_status"] = "ENDED"
+			post.Props["attendents"] = strings.Join(meetingpointer.AttendeeNames, ",")
+			timediff := meetingpointer.EndedAt - meetingpointer.CreatedAt
+			durationstring := FormatSeconds(timediff)
+			post.Props["duration"] = durationstring
+
+			p.api.UpdatePost(post)
+
+
+
+			p.DeleteActiveMeeting(Meeting.MeetingID_)
+			i--
 		}
 	}
 }

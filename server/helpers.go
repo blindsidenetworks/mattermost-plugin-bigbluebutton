@@ -4,12 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"strings"
 
-	bbbAPI "github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/api"
-	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/dataStructs"
-	BBBwh "github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/webhook"
 	"github.com/mattermost/mattermost-server/model"
 	"github.com/segmentio/ksuid"
+	bbbAPI "github.com/ypgao1/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/api"
+	"github.com/ypgao1/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/dataStructs"
+	BBBwh "github.com/ypgao1/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/webhook"
 )
 
 const key = "key"
@@ -35,13 +36,19 @@ func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, d
 
 	var recordingcallbackurl string
 	var Url *url.URL
-	Url, _ = url.Parse(config.CallBack_URL)
+
+	BaseUrl := config.CallBack_URL
+	if !strings.HasPrefix(BaseUrl, "http") {
+		BaseUrl = "http://" + BaseUrl
+	}
+
+	Url, _ = url.Parse(BaseUrl)
 	Url.Path += "/plugins/bigbluebutton/recordingready"
 	recordingcallbackurl = Url.String()
 	m.Meta_bn_recording_ready_url = recordingcallbackurl
 
 	var UrlEnd *url.URL
-	UrlEnd, _ = url.Parse(config.CallBack_URL)
+	UrlEnd, _ = url.Parse(BaseUrl)
 	UrlEnd.Path += "/plugins/bigbluebutton/meetingendedcallback?" + m.MeetingID_
 	Endmeetingcallback := UrlEnd.String()
 	m.Meta_endcallbackurl = Endmeetingcallback
@@ -49,13 +56,25 @@ func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, d
 }
 
 func (p *Plugin) LoadMeetingsFromStore() {
-	byted, _ := p.api.KeyValueStore().Get(key)
+	byted, _ := p.api.KeyValueStore().Get("all_meetings")
 	json.Unmarshal(byted, &p.Meetings)
+
+	bytedRecordings, _ := p.api.KeyValueStore().Get("recording_meetings")
+	json.Unmarshal(bytedRecordings, &p.MeetingsWaitingforRecordings)
+
+	bytedLive, _ := p.api.KeyValueStore().Get("live_meetings")
+	json.Unmarshal(bytedLive, &p.ActiveMeetings)
 
 }
 func (p *Plugin) SaveMeetingToStore() {
 	byted, _ := json.Marshal(p.Meetings)
-	p.api.KeyValueStore().Set(key, byted)
+	p.api.KeyValueStore().Set("all_meetings", byted)
+
+	bytedRecordings, _ := json.Marshal(p.MeetingsWaitingforRecordings)
+	p.api.KeyValueStore().Set("recording_meetings", bytedRecordings)
+
+	bytedLive, _ := json.Marshal(p.ActiveMeetings)
+	p.api.KeyValueStore().Set("live_meetings", bytedLive)
 }
 
 func (p *Plugin) FindMeeting(meeting_id string) *dataStructs.MeetingRoom {
@@ -138,6 +157,17 @@ func (p *Plugin) DeleteMeeting(meeting_id string) {
 	}
 	p.Meetings = append(p.Meetings[:index], p.Meetings[index+1:]...)
 }
+func (p *Plugin) DeleteActiveMeeting(meeting_id string) {
+	var index int
+	for i := range p.ActiveMeetings {
+		if p.ActiveMeetings[i].MeetingID_ == meeting_id {
+			index = i
+			break
+		}
+	}
+	p.ActiveMeetings = append(p.ActiveMeetings[:index], p.ActiveMeetings[index+1:]...)
+}
+
 
 // check if an attendee is a MODERATOR, useful feature decided not to include
 // func (p *Plugin) IsModerator(meeting_id string, modpw string, fullname string) bool {

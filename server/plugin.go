@@ -6,13 +6,13 @@ import (
 
 	"sync/atomic"
 
-	bbbAPI "github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/api"
-	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/dataStructs"
-	BBBwh "github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/webhook"
 	"github.com/mattermost/mattermost-server/model"
 	"github.com/mattermost/mattermost-server/plugin"
 	"github.com/mattermost/mattermost-server/plugin/rpcplugin"
 	"github.com/robfig/cron"
+	bbbAPI "github.com/ypgao1/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/api"
+	"github.com/ypgao1/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/dataStructs"
+	BBBwh "github.com/ypgao1/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/webhook"
 )
 
 type Plugin struct {
@@ -21,6 +21,7 @@ type Plugin struct {
 	configuration                atomic.Value
 	Meetings                     []dataStructs.MeetingRoom
 	MeetingsWaitingforRecordings []dataStructs.MeetingRoom
+	ActiveMeetings 							 []dataStructs.MeetingRoom
 	webhooks                     []*dataStructs.WebHook
 	Hookid                       string
 }
@@ -49,6 +50,7 @@ func (p *Plugin) OnActivate(api plugin.API) error {
 	//every 2 minutes, look through active meetings and check if recordings are done
 	p.c = cron.New()
 	p.c.AddFunc("@every 2m", p.Loopthroughrecordings)
+	p.c.AddFunc("@every 1m", p.LoopThroughActiveMeetings)
 	p.c.Start()
 
 	// register slash command '/bbb' to create a meeting
