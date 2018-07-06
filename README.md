@@ -6,6 +6,7 @@ Jump to:
 
 - [Installation and Setup](https://github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/blob/master/README.md#installation-and-setup)  
 - [Usage](https://github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/blob/master/README.md#usage)
+- [Known Issues](https://github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/blob/master/README.md#known-issues)
 - [Contributing](https://github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/blob/master/README.md#contributing)
 
 ## Installation and Setup
