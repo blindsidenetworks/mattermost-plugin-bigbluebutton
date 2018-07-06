@@ -33,6 +33,7 @@ func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, d
 	m.Meta = description
 	m.LogoutURL = "javascript:window.close();"
 	m.LoopCount = 0
+	m.Token = GenerateRandomID()
 
 	var recordingcallbackurl string
 	var Url *url.URL
@@ -49,7 +50,7 @@ func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, d
 
 	var UrlEnd *url.URL
 	UrlEnd, _ = url.Parse(BaseUrl)
-	UrlEnd.Path += "/plugins/bigbluebutton/meetingendedcallback?" + m.MeetingID_
+	UrlEnd.Path += "/plugins/bigbluebutton/meetingendedcallback?" + m.MeetingID_ + "&"+m.Token
 	Endmeetingcallback := UrlEnd.String()
 	m.Meta_endcallbackurl = Endmeetingcallback
 

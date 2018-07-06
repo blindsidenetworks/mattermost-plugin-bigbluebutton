@@ -143,10 +143,18 @@ func (p *Plugin) handleImmediateEndMeetingCallback(w http.ResponseWriter, r *htt
 
 
 	startpoint := len("/meetingendedcallback?")
-	meetingid := path[startpoint:]
+	endpoint := strings.Index(path, "&")
+	meetingid := path[startpoint:endpoint]
 
 	meetingpointer := p.FindMeeting(meetingid)
+
+	token := path[endpoint+1:]
+
 	if meetingpointer == nil {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+	if token != meetingpointer.Token {
 		w.WriteHeader(http.StatusOK)
 		return
 	}
