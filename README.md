@@ -1,3 +1,4 @@
+
 # BigBlueButton Plugin for Mattermost
 BigBlueButton is an open source web conferencing system for online learning. Teams can create, join and manage their BigBlueButton meetings from inside Mattermost.
 
@@ -5,6 +6,7 @@ Jump to:
 
 - [Installation and Setup](https://github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/blob/master/README.md#installation-and-setup)  
 - [Usage](https://github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/blob/master/README.md#usage)
+- [Known Issues](https://github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/blob/master/README.md#known-issues)
 - [Contributing](https://github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/blob/master/README.md#contributing)
 
 ## Installation and Setup
@@ -24,13 +26,12 @@ Jump to:
 	 - Restart your Mattermost with `sudo systemctl restart mattermost` assuming you used *systemd* for Mattermost 	services
  5. Go to **System Console > Plugins > Management** and upload your `bigbluebutton.tar.gz`. The BigBlueButton Plugin should appear under **Installed Plugins**.    ![
 ](https://raw.githubusercontent.com/blindsidenetworks/mattermost-plugin-bigbluebutton/master/docs_images/PluginManagement.png?token=AQcJwJTKKoWnMVDJ4dpx_ekktQPf2aaYks5bRlbxwA==)
- 6. Before activating the plugin, we must go configure the plugin settings. By default, you are given a BigBlueButton test server to try it out. See [BigBlueButton documentation](http://docs.bigbluebutton.org/install/install.html#Install_) to install your own BigBlueButton server. The secret key is to securely connect to BigBlueButton. To check your secret, in the command line, enter `bbb-conf --secret`.
+ 6. Before activating the plugin, we must go configure the plugin settings in **System Console > Plugins > BigBlueButton**. By default, you are given a BigBlueButton test server to try it out. See [BigBlueButton documentation](http://docs.bigbluebutton.org/install/install.html#Install_) to install your own BigBlueButton server. The secret key is to securely connect to BigBlueButton. To check your secret, in the command line, enter `bbb-conf --secret`.
 Alternatively contact **Blindside Networks**, the company behind BigBlueButton, for  [Setup & Support, Custom Development, and Premium Hosting.](https://blindsidenetworks.com/services/)
 
-	The **Site URL** is the site of your Mattermost without any paths. For example, if the location of your Mattermost Town Square is : `https://mysite.mattermost.com/core/channels/town-square`, enter: `https://mysite.mattermost.com`![
-](https://raw.githubusercontent.com/blindsidenetworks/mattermost-plugin-bigbluebutton/master/docs_images/BBBsettingspage.png?token=AQcJwOiFKKpG3rAC6zpMgyjFt1xxsAHUks5bRlbWwA==)
+	The **Site URL** is the site of your Mattermost without any paths. For example, if the location of your Mattermost Town Square is : `https://mysite.mattermost.com/core/channels/town-square`, enter: `https://mysite.mattermost.com`![](https://raw.githubusercontent.com/blindsidenetworks/mattermost-plugin-bigbluebutton/master/docs_images/BBBsettingspage.png?token=AQcJwOiFKKpG3rAC6zpMgyjFt1xxsAHUks5bRlbWwA==)
 
- 7. Afterwards, go back to **System Console > Plugins > Management** and `Activate` the plugin.
+ 7. Afterwards, go back to **System Console > Plugins > Management** and `Activate` the plugin.![enter image description here](https://raw.githubusercontent.com/ypgao1/mattermost-plugin-bigbluebutton/master/docs_images/activate.png)
 
 
 ## Usage
@@ -60,6 +61,11 @@ Alternatively contact **Blindside Networks**, the company behind BigBlueButton, 
 #### For any direct or group message, popup alert will open anywhere inside Mattermost to notify that someone has requested a meeting with you.
 ![
 ](https://raw.githubusercontent.com/blindsidenetworks/mattermost-plugin-bigbluebutton/master/docs_images/popup_modal.png?token=AQcJwJVBz6NRUNNtQpwpZivcF6gW-Lr8ks5bRlgZwA==)
+
+## Known Issues
+
+ 1. When changing configurations in **System Console > Plugins > BigBlueButton**, you must `deactivate` and `activate` the plugin for the new configuration to work.
+ 2. For developers that wish to contribute, depending on the Mattermost version, you may experience Mattermost not removing your previous webapp plugin. To fix this, go into `cd /opt/mattermost/client/plugins/` (note you might have to `sudo su`) and `rm bigbluebutton_bundle.js` to remove the previous version of the webapp plugin.  Restart Mattermost with `sudo systemctl restart mattermost`.
 
 ## Contributing
 
