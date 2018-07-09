@@ -84,7 +84,6 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 			bbbAPI.GetMeetingInfo(meetingID, meetingpointer.ModeratorPW_, &fullMeetingInfo)
 			meetingpointer.InternalMeetingId = fullMeetingInfo.InternalMeetingID
 			meetingpointer.CreatedAt = time.Now().Unix()
-			p.ActiveMeetings = append(p.ActiveMeetings, *meetingpointer)
 		}
 
 		user, _ := p.api.GetUser(request.User_id)
@@ -94,6 +93,8 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 		if !IsItemInArray(username, meetingpointer.AttendeeNames) {
 			meetingpointer.AttendeeNames = append(meetingpointer.AttendeeNames, username)
 		}
+
+		p.ActiveMeetings = append(p.ActiveMeetings, *meetingpointer)
 
 		var participant = dataStructs.Participants{}
 		participant.FullName_ = username
@@ -596,14 +597,16 @@ func (p *Plugin) LoopThroughActiveMeetings() {
 		Meeting := p.ActiveMeetings[i]
 		if !(bbbAPI.IsMeetingRunning(Meeting.MeetingID_)){
 			meetingpointer := p.FindMeeting(Meeting.MeetingID_) //finds the meeting from all meetings, not the active meeting
+			p.DeleteActiveMeeting(Meeting.MeetingID_)
+			i--
 			p.MeetingsWaitingforRecordings = append(p.MeetingsWaitingforRecordings, *meetingpointer)
 			postid := meetingpointer.PostId
 			if postid == "" {
-				panic("no post id found")
+				continue
 			}
 			post, err := p.api.GetPost(postid)
 			if err != nil {
-				return
+				continue
 			}
 			if meetingpointer.EndedAt == 0 {
 				meetingpointer.EndedAt = time.Now().Unix()
@@ -615,11 +618,6 @@ func (p *Plugin) LoopThroughActiveMeetings() {
 			post.Props["duration"] = durationstring
 
 			p.api.UpdatePost(post)
-
-
-
-			p.DeleteActiveMeeting(Meeting.MeetingID_)
-			i--
 		}
 	}
 }

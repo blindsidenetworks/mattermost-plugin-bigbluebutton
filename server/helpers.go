@@ -153,20 +153,22 @@ func (p *Plugin) DeleteMeeting(meeting_id string) {
 	for i := range p.Meetings {
 		if p.Meetings[i].MeetingID_ == meeting_id {
 			index = i
-			break
+			p.Meetings = append(p.Meetings[:index], p.Meetings[index+1:]...)
+			return
 		}
 	}
-	p.Meetings = append(p.Meetings[:index], p.Meetings[index+1:]...)
+
 }
 func (p *Plugin) DeleteActiveMeeting(meeting_id string) {
 	var index int
 	for i := range p.ActiveMeetings {
 		if p.ActiveMeetings[i].MeetingID_ == meeting_id {
 			index = i
-			break
+			p.ActiveMeetings = append(p.ActiveMeetings[:index], p.ActiveMeetings[index+1:]...)
+			return
 		}
 	}
-	p.ActiveMeetings = append(p.ActiveMeetings[:index], p.ActiveMeetings[index+1:]...)
+
 }
 
 

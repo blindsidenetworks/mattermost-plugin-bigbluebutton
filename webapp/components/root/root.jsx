@@ -67,6 +67,7 @@ export default class Root extends React.PureComponent {
     var myurl = await this.props.actions.getJoinURL(this.state.channelId, this.state.meetingId, "");
     var myvar = await myurl.data.joinurl.url;
     newtab.location.href = myvar;
+    this.handleClose();
   }
   getSiteUrl = () => {
     if (window.location.origin) {
