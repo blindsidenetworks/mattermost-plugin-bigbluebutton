@@ -1,3 +1,19 @@
+/*
+Copyright 2018 Blindside Networks
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 export default {
     SHARE:'<svg width="28px" height="28px" viewBox="2.5 1.5 28 28"version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"> <!-- Generator: Sketch 50.2 (55047) - http://www.bohemiancoding.com/sketch -->  <desc>Created with Sketch.</desc> <defs></defs> <g id="Page-1" stroke="none" stroke-width="1" fill="inherit" fill-rule="evenodd"> <g id="mattermost-start-dropdown" transform="translate(-880.000000, -156.000000)"> <g id="camera" transform="translate(881.000000, 157.000000)"> <path d="M23.105,11.447 L20,13 L20,11 C20,10.447 19.553,10 19,10 L9,10 C8.447,10 8,10.447 8,11 L8,21 C8,21.553 8.447,22 9,22 L19,22 C19.553,22 20,21.553 20,21 L20,19 L23.105,20.553 C23.6,20.8 24,20.553 24,20 L24,12 C24,11.447 23.6,11.2 23.105,11.447 Z M20.895,17.211 C20.612,17.07 20.306,17 20,17 L18.5,17 C18.224,17 18,17.224 18,17.5 L18,20 L10,20 L10,12 L18,12 L18,14.5 C18,14.776 18.224,15 18.5,15 L20,15 C20.306,15 20.612,14.93 20.895,14.789 L22,14.236 L22,17.763 L20.895,17.211 Z" id="Shape"  fill-rule="nonzero"></path> </g> </g> </g> </svg>'
 ,
