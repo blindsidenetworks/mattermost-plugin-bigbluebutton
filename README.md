@@ -7,6 +7,8 @@ Jump to:
 - [Usage](https://github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/blob/master/README.md#usage)
 - [Contributing](https://github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/blob/master/README.md#contributing)
 
+See this [YouTube video](https://youtu.be/gg7J9B4wGa4) for an overview of the Mattermost integration for BigBlueButton.
+
 ## Installation and Setup
 
  1. Go to: https://github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/releases
