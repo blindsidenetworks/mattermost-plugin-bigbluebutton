@@ -32,7 +32,7 @@ Alternatively contact **Blindside Networks**, the company behind BigBlueButton, 
 	The **Site URL** is the site of your Mattermost without any paths. For example, if the location of your Mattermost Town Square is : `https://mysite.mattermost.com/core/channels/town-square`, enter: `https://mysite.mattermost.com`![
 ](https://raw.githubusercontent.com/ypgao1/mattermost-plugin-bigbluebutton/master/docs_images/BBBsettingspage.png?token=AQcJwOiFKKpG3rAC6zpMgyjFt1xxsAHUks5bRlbWwA==)
 
- 7. Afterwards, go back to **System Console > Plugins > Management** and `Activate` the plugin.
+ 7. Afterwards, go back to **System Console > Plugins > Management** and `Activate` the plugin. [](https://raw.githubusercontent.com/ypgao1/mattermost-plugin-bigbluebutton/master/docs_images/activate_plugin.png)
 
 
 ## Usage
