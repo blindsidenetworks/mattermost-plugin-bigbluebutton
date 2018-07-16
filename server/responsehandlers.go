@@ -25,8 +25,8 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
-	bbbAPI "github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/api"
-	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/dataStructs"
+	bbbAPI "github.com/ypgao1/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/api"
+	"github.com/ypgao1/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/dataStructs"
 	"github.com/mattermost/mattermost-server/model"
 )
 
@@ -157,14 +157,14 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 func (p *Plugin) handleImmediateEndMeetingCallback(w http.ResponseWriter, r *http.Request, path string) {
 
 	startpoint := len("/meetingendedcallback?")
-	meetingid := path[startpoint:]
-
+	endpoint := strings.Index(path, "&")
+	meetingid := path[startpoint:endpoint]
+	validation := path[endpoint+1 :]
 	meetingpointer := p.FindMeeting(meetingid)
-	if meetingpointer == nil {
+	if meetingpointer == nil || meetingpointer.ValidToken != validation{
 		w.WriteHeader(http.StatusOK)
 		return
 	}
-	p.MeetingsWaitingforRecordings = append(p.MeetingsWaitingforRecordings, *meetingpointer)
 	postid := meetingpointer.PostId
 	if postid == "" {
 		panic("no post id found")
@@ -177,6 +177,7 @@ func (p *Plugin) handleImmediateEndMeetingCallback(w http.ResponseWriter, r *htt
 	if meetingpointer.EndedAt == 0 {
 		meetingpointer.EndedAt = time.Now().Unix()
 	}
+	p.MeetingsWaitingforRecordings = append(p.MeetingsWaitingforRecordings, *meetingpointer)
 	post.Props["meeting_status"] = "ENDED"
 	post.Props["attendents"] = strings.Join(meetingpointer.AttendeeNames, ",")
 	timediff := meetingpointer.EndedAt - meetingpointer.CreatedAt
@@ -329,7 +330,7 @@ func (p *Plugin) handleWebhookMeetingEnded(w http.ResponseWriter, r *http.Reques
 	if meetingpointer.EndedAt == 0 {
 		meetingpointer.EndedAt = time.Now().Unix()
 	}
-
+	p.MeetingsWaitingforRecordings = append(p.MeetingsWaitingforRecordings, *meetingpointer)
 	post.Props["meeting_status"] = "ENDED"
 	post.Props["attendents"] = strings.Join(meetingpointer.AttendeeNames, ",")
 	timediff := meetingpointer.EndedAt - meetingpointer.CreatedAt

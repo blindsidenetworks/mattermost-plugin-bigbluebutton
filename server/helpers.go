@@ -20,10 +20,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
-
-	bbbAPI "github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/api"
-	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/dataStructs"
-	BBBwh "github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/webhook"
+	"strings"
+	bbbAPI "github.com/ypgao1/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/api"
+	"github.com/ypgao1/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/dataStructs"
+	BBBwh "github.com/ypgao1/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/webhook"
 	"github.com/mattermost/mattermost-server/model"
 	"github.com/segmentio/ksuid"
 )
@@ -39,6 +39,12 @@ func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, d
 	} else {
 		m.Name_ = "Big Blue Button Meeting"
 	}
+
+	callbackURL := config.CallBack_URL
+	if !strings.HasPrefix(callbackURL, "http"){
+		callbackURL = "http://" + callbackURL
+	}
+
 	m.MeetingID_ = GenerateRandomID()
 	m.AttendeePW_ = "ap"
 	m.ModeratorPW_ = "mp"
@@ -46,19 +52,26 @@ func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, d
 	m.AllowStartStopRecording = true
 	m.AutoStartRecording = false
 	m.Meta = description
-	m.LogoutURL = "javascript:window.close();"
+	var RedirectUrl *url.URL
+	RedirectUrl, _ = url.Parse(callbackURL)
+	RedirectUrl.Path += "/plugins/bigbluebutton/redirect"
+  StringRedirectUrl := RedirectUrl.String()
+	m.LogoutURL = StringRedirectUrl
 	m.LoopCount = 0
+	m.ValidToken = GenerateRandomID()
+
+
 
 	var recordingcallbackurl string
 	var Url *url.URL
-	Url, _ = url.Parse(config.CallBack_URL)
+	Url, _ = url.Parse(callbackURL)
 	Url.Path += "/plugins/bigbluebutton/recordingready"
 	recordingcallbackurl = Url.String()
 	m.Meta_bn_recording_ready_url = recordingcallbackurl
 
 	var UrlEnd *url.URL
-	UrlEnd, _ = url.Parse(config.CallBack_URL)
-	UrlEnd.Path += "/plugins/bigbluebutton/meetingendedcallback?" + m.MeetingID_
+	UrlEnd, _ = url.Parse(callbackURL)
+	UrlEnd.Path += "/plugins/bigbluebutton/meetingendedcallback?" + m.MeetingID_ + "&" + m.ValidToken
 	Endmeetingcallback := UrlEnd.String()
 	m.Meta_endcallbackurl = Endmeetingcallback
 
