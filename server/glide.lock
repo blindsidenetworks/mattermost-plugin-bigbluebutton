@@ -1,16 +1,14 @@
-hash: 8c032be4642af3dca0af7181e8bc5767149a0d2454e6d9ec812d291c0251c0d0
-updated: 2018-07-03T11:47:14.020833107-04:00
+hash: df247b65609a16b1d6358c6fc0bb7f125307c5854c4e68d20254a7b04fa9f162
+updated: 2018-07-31T10:54:52.139022816-04:00
 imports:
 - name: github.com/dgrijalva/jwt-go
   version: 06ea1031745cb8b3dab3f6a236daf2b0aa468b7e
-- name: github.com/gorilla/context
-  version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/mux
   version: e3702bed27f0d39777b0b37b664b6280e8ef8fbf
 - name: github.com/gorilla/websocket
   version: ea4d1f681babbce9545c9c5f3d5194a789c89f5b
 - name: github.com/mattermost/mattermost-server
-  version: 85a75526c7c03fca1d14a39cfb3f2638d98d3fe1
+  version: 6b04b984f74a0526030e71b64e961003d75bd421
   subpackages:
   - mlog
   - model
