@@ -97,10 +97,22 @@ export default class PostTypebbb extends React.PureComponent {
   }
 
   getJoinURL = async () => {
-    var newtab = await window.open('', '_blank');
-    var myurl = await this.props.actions.getJoinURL(this.props.channelId, this.props.post.props.meeting_id, this.props.creatorId);
-    var myvar = await myurl.data.joinurl.url;
-    newtab.location.href = myvar;
+
+    var userAgent = navigator.userAgent.toLowerCase();
+    var myurl;
+    var myvar;
+    if (userAgent.indexOf(' electron/') > -1) {
+      myurl = await this.props.actions.getJoinURL(this.props.channelId, this.props.post.props.meeting_id, this.props.creatorId);
+      myvar = await myurl.data.joinurl.url;
+      window.open(myvar);
+    }else{
+      var newtab = await window.open('https://blindsidenetworks.com/', '_blank');
+      myurl = await this.props.actions.getJoinURL(this.props.channelId, this.props.post.props.meeting_id, this.props.creatorId);
+      myvar = await myurl.data.joinurl.url;
+      newtab.location.href = myvar;
+      // newtab.location.assign(myvar)
+    }
+
     await this.setState({
       url: myvar,
       users: [

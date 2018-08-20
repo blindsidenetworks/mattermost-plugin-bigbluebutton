@@ -79,7 +79,7 @@ export default class Root extends React.PureComponent {
   };
 
   getJoinURL = async () => {
-    var newtab = await window.open('', '_blank');
+    var newtab = await window.open('https://blindsidenetworks.com/', '_blank');
     var myurl = await this.props.actions.getJoinURL(this.state.channelId, this.state.meetingId, "");
     var myvar = await myurl.data.joinurl.url;
     newtab.location.href = myvar;
