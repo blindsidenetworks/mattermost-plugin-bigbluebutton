@@ -14,7 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-const React = window.react;
+// const React = window.react;
+import React from 'react';
+
 import PropTypes from 'prop-types';
 
 import {Svgs} from '../../constants';

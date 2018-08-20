@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 const {connect} = window['react-redux'];
-const {bindActionCreators} = window.redux;
+const {bindActionCreators} = window.Redux;
 
 import {startMeeting, showRecordings} from '../../actions';
 import {getChannelsInCurrentTeam, getDirectChannels, getSortedUnreadChannelIds, makeGetChannel} from 'mattermost-redux/selectors/entities/channels';

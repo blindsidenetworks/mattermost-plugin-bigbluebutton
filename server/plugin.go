@@ -22,9 +22,9 @@ import (
 	"fmt"
 	"sync/atomic"
 
-	bbbAPI "github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/api"
-	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/dataStructs"
-	BBBwh "github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/webhook"
+	bbbAPI "github.com/ypgao1/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/api"
+	"github.com/ypgao1/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/dataStructs"
+	BBBwh "github.com/ypgao1/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/webhook"
 	"github.com/mattermost/mattermost-server/model"
 	"github.com/mattermost/mattermost-server/plugin"
 	"github.com/robfig/cron"
@@ -32,7 +32,10 @@ import (
 //test
 
 type Plugin struct {
-	api                          plugin.API
+
+	plugin.MattermostPlugin
+
+	// api                          plugin.API
 	c                            *cron.Cron
 	configuration                atomic.Value
 	Meetings                     []dataStructs.MeetingRoom
@@ -42,8 +45,7 @@ type Plugin struct {
 }
 
 //OnActivate runs as soon as plugin activates
-func (p *Plugin) OnActivate(api plugin.API) error {
-	p.api = api
+func (p *Plugin) OnActivate() error {
 	// we save all the meetings infos that are stored on in our database upon deactivation
 	// loads the details back so everything works
 	p.LoadMeetingsFromStore()
@@ -68,7 +70,7 @@ func (p *Plugin) OnActivate(api plugin.API) error {
 	p.c.Start()
 
 	// register slash command '/bbb' to create a meeting
-	return api.RegisterCommand(&model.Command{
+	return p.API.RegisterCommand(&model.Command{
 		Trigger:          "bbb",
 		AutoComplete:     true,
 		AutoCompleteDesc: "Create a BigBlueButton meeting",
@@ -78,7 +80,7 @@ func (p *Plugin) OnActivate(api plugin.API) error {
 func (p *Plugin) OnConfigurationChange() error {
 	var configuration Configuration
 	// loads configuration from our config ui page
-	err := p.api.LoadPluginConfiguration(&configuration)
+	err := p.API.LoadPluginConfiguration(&configuration)
 	//stores the config in an Atomic.Value place
 	p.configuration.Store(&configuration)
 	return err

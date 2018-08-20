@@ -21,9 +21,9 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
-	bbbAPI "github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/api"
-	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/dataStructs"
-	BBBwh "github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/webhook"
+	bbbAPI "github.com/ypgao1/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/api"
+	"github.com/ypgao1/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/dataStructs"
+	BBBwh "github.com/ypgao1/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/webhook"
 	"github.com/mattermost/mattermost-server/model"
 	"github.com/segmentio/ksuid"
 )
@@ -79,13 +79,13 @@ func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, d
 
 func (p *Plugin) LoadMeetingsFromStore() {
 	// byted, _ := p.api.KeyValueStore().Get(key)
-	byted, _ := p.api.KVGet(key)
+	byted, _ := p.API.KVGet(key)
 	json.Unmarshal(byted, &p.Meetings)
 
 }
 func (p *Plugin) SaveMeetingToStore() {
 	byted, _ := json.Marshal(p.Meetings)
-	p.api.KVSet(key, byted)
+	p.API.KVSet(key, byted)
 	// p.api.KeyValueStore().Set(key, byted)
 }
 
@@ -142,19 +142,19 @@ func (p *Plugin) createStartMeetingPost(user_id string, channel_id string, m *da
 		"user_count":        0,
 	}
 
-	postpointer, _ := p.api.CreatePost(textPost)
+	postpointer, _ := p.API.CreatePost(textPost)
 	m.PostId = postpointer.Id
 }
 
 func (p *Plugin) UpdatePostButtons(postid string, message string) {
-	post, err := p.api.GetPost(postid)
+	post, err := p.API.GetPost(postid)
 	if err != nil {
 		return
 	}
 	post.Message = message
 	post.Props = nil
 
-	p.api.UpdatePost(post)
+	p.API.UpdatePost(post)
 	return
 
 }

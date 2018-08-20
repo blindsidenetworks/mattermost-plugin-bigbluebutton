@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 const {connect} = window['react-redux'];
-const {bindActionCreators} = window.redux;
+const {bindActionCreators} = window.Redux;
 import {getCurrentTeam} from 'mattermost-redux/selectors/entities/teams';
 import {getCurrentUser} from 'mattermost-redux/selectors/entities/users';
 import {getLastPostPerChannel} from 'mattermost-redux/selectors/entities/posts';

@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 const {connect} = window['react-redux'];
-const {bindActionCreators} = window.redux;
+const {bindActionCreators} = window.Redux;
 
 import {getBool} from 'mattermost-redux/selectors/entities/preferences';
 import {displayUsernameForUser} from '../../utils/user_utils';
