@@ -22,12 +22,11 @@ import (
 	"fmt"
 	"sync/atomic"
 
-	bbbAPI "github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/api"
-	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/dataStructs"
-	BBBwh "github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/webhook"
+	bbbAPI "github.com/ypgao1/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/api"
+	"github.com/ypgao1/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/dataStructs"
+	BBBwh "github.com/ypgao1/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/webhook"
 	"github.com/mattermost/mattermost-server/model"
 	"github.com/mattermost/mattermost-server/plugin"
-	"github.com/mattermost/mattermost-server/plugin/rpcplugin"
 	"github.com/robfig/cron"
 )
 //test
@@ -90,7 +89,7 @@ func (p *Plugin) config() *Configuration {
 }
 
 //following method is to create a meeting from '/bbb' slash command
-func (p *Plugin) ExecuteCommand(args *model.CommandArgs) (*model.CommandResponse, *model.AppError) {
+func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*model.CommandResponse, *model.AppError) {
 
 	meetingpointer := new(dataStructs.MeetingRoom)
 	p.PopulateMeeting(meetingpointer, nil, "")
@@ -103,7 +102,7 @@ func (p *Plugin) ExecuteCommand(args *model.CommandArgs) (*model.CommandResponse
 
 //this is the router to handle our server calls
 //methods are all in responsehandlers.go
-func (p *Plugin) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (p *Plugin) ServeHTTP(c *plugin.Context,w http.ResponseWriter, r *http.Request) {
 
 	config := p.config()
 	if err := config.IsValid(); err != nil {
@@ -154,5 +153,5 @@ func (p *Plugin) OnDeactivate() error {
 }
 
 func main() {
-	rpcplugin.Main(&Plugin{})
+	plugin.ClientMain(&Plugin{})
 }
