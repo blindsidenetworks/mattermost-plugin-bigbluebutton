@@ -14,10 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import ChannelHeaderButton from './components/channel_header_button';
-import ProfilePopover from './components/profile_popover';
+// import ChannelHeaderButton from './components/channel_header_button';
+// import ProfilePopover from './components/profile_popover';
 import PostTypebbb from './components/post_type_bbb';
-import Root from './components/root';
+// import Root from './components/root';
 
 // class PluginClass {
 //   initialize(registerComponents, store) {
@@ -34,14 +34,10 @@ import Root from './components/root';
 class PluginClass {
   initialize(registry, store) {
     window.store = store;
+    registry.registerPostTypeComponent('custom_bbb', PostTypebbb)
 
-    registerComponents({
-      ChannelHeaderButton,
-      ProfilePopover,
-      Root
-    }, {custom_bbb: PostTypebbb});
   }
 }
 
 // global.window.plugins['bigbluebutton'] = new PluginClass();
-window.registerPlugin('bigbluebutton', new MyPlugin());
+global.window.registerPlugin('bigbluebutton', new PluginClass());

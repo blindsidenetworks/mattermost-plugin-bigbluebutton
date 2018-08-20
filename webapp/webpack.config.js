@@ -4,7 +4,10 @@ module.exports = {
         filename: 'dist/bigbluebutton_bundle.js'
     },
     externals: {
-      react: 'react',
+      react: 'React',
+      redux: 'Redux',
+      'react-redux': 'ReactRedux'
+
     },
     module: {
         loaders: [

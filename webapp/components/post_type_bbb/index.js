@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-const {connect} = window['react-redux'];
+const {connect} = window.ReactRedux;
 const {bindActionCreators} = window.Redux;
 
 import {getBool} from 'mattermost-redux/selectors/entities/preferences';
