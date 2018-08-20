@@ -30,6 +30,7 @@ import (
 	"github.com/mattermost/mattermost-server/plugin/rpcplugin"
 	"github.com/robfig/cron"
 )
+//test
 
 type Plugin struct {
 	api                          plugin.API
