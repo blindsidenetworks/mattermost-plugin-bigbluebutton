@@ -19,7 +19,7 @@ const {bindActionCreators} = window.Redux;
 
 import {startMeeting, showRecordings} from '../../actions';
 import {getChannelsInCurrentTeam, getDirectChannels, getSortedUnreadChannelIds, makeGetChannel} from 'mattermost-redux/selectors/entities/channels';
-
+import {getTheme} from 'mattermost-redux/selectors/entities/preferences';
 import ChannelHeaderButton from './channel_header_button.jsx';
 
 function mapStateToProps(state, ownProps) {
@@ -37,6 +37,7 @@ function mapStateToProps(state, ownProps) {
     channel: channel,
     channelName: channel.name,
     directChannels: getDirectChannels(state),
+    theme: getTheme(state),
     teamId,
     ...ownProps
   };

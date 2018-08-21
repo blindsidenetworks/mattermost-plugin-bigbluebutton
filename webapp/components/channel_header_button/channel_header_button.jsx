@@ -28,6 +28,8 @@ import {searchPosts} from 'mattermost-redux/actions/search'
 import {getChannel} from 'mattermost-redux/selectors/entities/channels';
 import * as UserUtils from 'mattermost-redux/utils/user_utils';
 
+
+
 export default class ChannelHeaderButton extends React.PureComponent {
   static propTypes = {
     channelId: PropTypes.string.isRequired,
@@ -78,13 +80,12 @@ export default class ChannelHeaderButton extends React.PureComponent {
     </div>);
 
     return (<div>
-      <div id='bbbChannelHeaderPopover' className={this.state.showPopover
-          ? 'channel-header__icon active'
-          : 'channel-header__icon'}>
-        <OverlayTrigger trigger={['hover', 'focus']} delayShow={400} placement='bottom' overlay={(<Tooltip id='bbbChannelHeaderTooltip'>
+      <div >
+        <OverlayTrigger trigger={['hover', 'focus']} delayShow={400} ref = "overlay" placement='bottom' overlay={(<Tooltip id='bbbChannelHeaderTooltip'>
             {'BigBlueButton'}
           </Tooltip>)}>
           <div id='bbbChannelHeaderButton' onClick={(e) => {
+              this.refs.overlay.hide();
               this.setState({
                 popoverTarget: e.target,
                 showPopover: !this.state.showPopover

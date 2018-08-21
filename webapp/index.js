@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// import ChannelHeaderButton from './components/channel_header_button';
+import ChannelHeaderButton from './components/channel_header_button';
 // import ProfilePopover from './components/profile_popover';
 import PostTypebbb from './components/post_type_bbb';
 // import Root from './components/root';
@@ -34,7 +34,12 @@ import PostTypebbb from './components/post_type_bbb';
 class PluginClass {
   initialize(registry, store) {
     window.store = store;
-    registry.registerPostTypeComponent('custom_bbb', PostTypebbb)
+    registry.registerPostTypeComponent('custom_bbb', PostTypebbb);
+    registry.registerChannelHeaderButtonAction(
+            ChannelHeaderButton,
+            () => {},
+            'Demo Plugin',
+        );
 
   }
 }
