@@ -17,7 +17,7 @@ limitations under the License.
 import ChannelHeaderButton from './components/channel_header_button';
 // import ProfilePopover from './components/profile_popover';
 import PostTypebbb from './components/post_type_bbb';
-// import Root from './components/root';
+import Root from './components/root';
 
 // class PluginClass {
 //   initialize(registerComponents, store) {
@@ -36,10 +36,9 @@ class PluginClass {
     window.store = store;
     registry.registerPostTypeComponent('custom_bbb', PostTypebbb);
     registry.registerChannelHeaderButtonAction(
-            ChannelHeaderButton,
-            () => {},
-            'Demo Plugin',
-        );
+      ChannelHeaderButton, () => {}, 'Demo Plugin',
+    );
+    registry.registerRootComponent(Root);
 
   }
 }

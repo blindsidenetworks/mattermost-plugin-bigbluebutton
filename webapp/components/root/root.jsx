@@ -78,6 +78,8 @@ export default class Root extends React.PureComponent {
       channelName: channel.display_name,
       channelURL: channelurl
     });
+
+    console.log("open modal is called")
   };
 
   getJoinURL = async () => {
@@ -104,6 +106,9 @@ export default class Root extends React.PureComponent {
     var src = "";
 
     for (var i = 0; i < this.props.unreadChannelIds.length; i++) {
+
+      console.log("root stuff is running")
+
       var channelid = this.props.unreadChannelIds[i];
       if (channelid in this.props.lastpostperchannel) {
         if (this.props.lastpostperchannel[channelid].type === "custom_bbb" && !this.state.ignoredPosts.includes(this.props.lastpostperchannel[channelid].id) && (Date.now() - this.props.lastpostperchannel[channelid].create_at < 2000) && this.props.lastpostperchannel[channelid].user_id != this.props.cur_user.id) {
@@ -114,6 +119,7 @@ export default class Root extends React.PureComponent {
           var message = this.props.lastpostperchannel[channelid].message;
           var index = message.indexOf('#ID');
           meetingid = message.substr(index + 3)
+          console.log("screened for meeting")
           this.openmodal(postid, channelid, meetingid, src);
 
         }
@@ -125,42 +131,68 @@ export default class Root extends React.PureComponent {
     const tooltip = (<Tooltip id="tooltip">
       Go to this channel
     </Tooltip>);
+    if (!this.state.show){
+      return (null);
+    }
+    return (
+        <div
+            style={style.backdrop}
+            onClick={()=>{this.state.show = false}}
+        >
+            <div style={style.modal}>
+                <div>
+                        <div >
+                          <img src={this.getSiteUrl() + this.state.profilePicUrl} class="img-responsive img-circle center-block "/>
+                        </div>
+                        
+                        <div>
+                          { 'You have triggered the root component of the demo plugin.' }
+                          <br/>
+                          <br/>
+                          { 'Click anywhere to close.' }
+                        </div>
+                </div>
 
-    return (<Modal show={this.state.show} onHide={this.handleClose}>
-      <Modal.Header closeButton={true} style={style.header}></Modal.Header>
-
-      <Modal.Body style={style.body}>
-        <div >
-          <div >
-            <img src={this.getSiteUrl() + this.state.profilePicUrl} class="img-responsive img-circle center-block "/>
-          </div>
-          <div style={style.bodyText}>
-            <span >
-              BigBlueButton meeting request from
-              <strong>
-                <OverlayTrigger placement="top" overlay={tooltip}>
-                  <Link to={"/" + this.props.teamname + this.state.channelURL}>
-                    {this.state.channelName}
-                  </Link>
-                </OverlayTrigger>
-
-              </strong>
-            </span>
-          </div>
+            </div>
         </div>
-      </Modal.Body>
-      <Modal.Footer>
-        <button type='button' className='btn btn-default' onClick={this.handleClose}>
-          Close
+    );
 
-        </button>
-
-        <button type='button' className='btn btn-primary pull-left' onClick={this.getJoinURL}>
-          Join Meeting
-        </button>
-
-      </Modal.Footer>
-    </Modal>);
+    // return (<Modal show={this.state.show} onHide={this.handleClose}>
+    //
+    //   <Modal.Header closeButton={true} style={style.header}></Modal.Header>
+    //
+    //   <Modal.Body style={style.body}>
+    //     <div >
+    //       <div >
+    //         <img src={this.getSiteUrl() + this.state.profilePicUrl} class="img-responsive img-circle center-block "/>
+    //       </div>
+    //       <div style={style.bodyText}>
+    //         <span >
+    //           BigBlueButton meeting request from
+    //           <strong>
+    //             <OverlayTrigger placement="top" overlay={tooltip}>
+    //               <Link to={"/" + this.props.teamname + this.state.channelURL}>
+    //                 {this.state.channelName}
+    //               </Link>
+    //             </OverlayTrigger>
+    //
+    //           </strong>
+    //         </span>
+    //       </div>
+    //     </div>
+    //   </Modal.Body>
+    //   <Modal.Footer>
+    //     <button type='button' className='btn btn-default' onClick={this.handleClose}>
+    //       Close
+    //
+    //     </button>
+    //
+    //     <button type='button' className='btn btn-primary pull-left' onClick={this.getJoinURL}>
+    //       Join Meeting
+    //     </button>
+    //
+    //   </Modal.Footer>
+    // </Modal>);
   }
 }
 
@@ -186,6 +218,25 @@ const getStyle = makeStyleFromTheme((theme) => {
     },
     meetingId: {
       marginTop: '55px'
-    }
+    },
+    backdrop: {
+      position: 'absolute',
+      display: 'flex',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.50)',
+      zIndex: 2000,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    modal: {
+      height: '250px',
+      width: '400px',
+      padding: '1em',
+      color: theme.centerChannelColor,
+      backgroundColor: theme.centerChannelBg,
+    },
   };
 });

@@ -19,6 +19,7 @@ const {bindActionCreators} = window.Redux;
 import {getCurrentTeam} from 'mattermost-redux/selectors/entities/teams';
 import {getCurrentUser} from 'mattermost-redux/selectors/entities/users';
 import {getLastPostPerChannel} from 'mattermost-redux/selectors/entities/posts';
+import {getTheme} from 'mattermost-redux/selectors/entities/preferences';
 
 import {getSortedDirectChannelWithUnreadsIds} from 'mattermost-redux/selectors/entities/channels';
 import {getJoinURL} from '../../actions';
@@ -39,6 +40,7 @@ function mapStateToProps(state, ownProps) {
     cur_user,
     teamname,
     state,
+    theme: getTheme(state),
     lastpostperchannel: getLastPostPerChannel(state),
     unreadChannelIds: getSortedDirectChannelWithUnreadsIds(state, keepChannelIdAsUnread),
     ...ownProps
