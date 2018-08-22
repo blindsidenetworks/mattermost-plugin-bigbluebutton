@@ -131,35 +131,7 @@ export default class Root extends React.PureComponent {
     const tooltip = (<Tooltip id="tooltip">
       Go to this channel
     </Tooltip>);
-    // if (!this.state.show){
-    //   return (null);
-    // }
-    // return (
-    //     <div
-    //         style={style.backdrop}
-    //         onClick={()=>{this.state.show = false}}
-    //     >
-    //         <div style={style.modal}>
-    //             <div>
-    //                     <div >
-    //                       <img src={this.getSiteUrl() + this.state.profilePicUrl} class="img-responsive img-circle center-block "/>
-    //                     </div>
-    //
-    //                     <div>
-    //                       <span>
-    //                         {'BigBlueButton meeting request from'}
-    //                                     <OverlayTrigger trigger={['hover', 'focus']} placement="top" overlay={tooltip}>
-    //                                       <Link to={"/" + this.props.teamname + this.state.channelURL}>
-    //                                         {this.state.channelName}
-    //                                       </Link>
-    //                                     </OverlayTrigger>
-    //                       </span>
-    //                     </div>
-    //             </div>
-    //
-    //         </div>
-    //     </div>
-    // );
+
 
     return (<Modal show={this.state.show} onHide={this.handleClose}>
 
@@ -241,5 +213,41 @@ const getStyle = makeStyleFromTheme((theme) => {
       color: theme.centerChannelColor,
       backgroundColor: theme.centerChannelBg,
     },
+    iconStyle: {
+      position: 'relative',
+      top: '-1px'
+    },
+    popover: {
+      marginLeft: '-100px',
+      maxWidth: '300px',
+      height: '105px',
+      width: '300px',
+      background: theme.centerChannelBg
+    },
+    popoverBody: {
+      maxHeight: '305px',
+      overflow: 'auto',
+      position: 'relative',
+      width: '298px',
+      left: '-14px',
+      top: '-9px',
+      borderBottom: '1px solid #D8D8D9'
+    },
+    popoverDM: {
+      marginLeft: '-50px',
+      maxWidth: '220px',
+      height: '105px',
+      width: '220px',
+      background: theme.centerChannelBg
+    },
+    popoverBodyDM: {
+      maxHeight: '305px',
+      overflow: 'auto',
+      position: 'relative',
+      width: '218px',
+      left: '-14px',
+      top: '-9px',
+      borderBottom: '1px solid #D8D8D9'
+    }
   };
 });
