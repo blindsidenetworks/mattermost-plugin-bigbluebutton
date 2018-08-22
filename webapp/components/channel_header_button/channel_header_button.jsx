@@ -61,6 +61,8 @@ export default class ChannelHeaderButton extends React.PureComponent {
 
   render() {
 
+    console.log("channel header buttom top of render")
+
     if (this.props.channelId === '') {
       return <div/>;
     }
@@ -78,13 +80,14 @@ export default class ChannelHeaderButton extends React.PureComponent {
       </a>
 
     </div>);
-
+    console.log("channel header buttom right before return")
     return (<div>
       <div >
-        <OverlayTrigger trigger={['hover', 'focus']} delayShow={400} ref = "overlay" placement='bottom' overlay={(<Tooltip id='bbbChannelHeaderTooltip'>
+        <OverlayTrigger trigger={['hover']} delayShow={400} ref = "overlay" placement='bottom' overlay={(<Tooltip id='bbbChannelHeaderTooltip'>
             {'BigBlueButton'}
           </Tooltip>)}>
           <div id='bbbChannelHeaderButton' onClick={(e) => {
+              // console.log(e.target);
               this.refs.overlay.hide();
               this.setState({
                 popoverTarget: e.target,
@@ -96,35 +99,36 @@ export default class ChannelHeaderButton extends React.PureComponent {
               }}/>
           </div>
         </OverlayTrigger>
-        <Overlay rootClose={true} show={this.state.showPopover} target={() => this.state.popoverTarget} onHide={() => this.setState({showPopover: false})} placement='bottom'>
-          <Popover id='bbbPopover' style={this.props.channel.type === "D"
-              ? style.popoverDM
-              : style.popover}>
-            <div style={this.props.channel.type === "D"
-                ? style.popoverBodyDM
-                : style.popoverBody}>
-              {
-                this.props.channel.type === "D"
-                  ? <PopoverListMembersItem onItemClick={this.startMeeting} cam={1} text={<span> {
-                        'Call '
-                      }
-                      <strong>{channelName}</strong>
-                    </span>} theme={this.props.theme}/>
-                  : <PopoverListMembersItem onItemClick={this.startMeeting} cam={1} text={<span> {
-                        'Create a BigBlueButton Meeting'
-                      }
-                      </span>} theme={this.props.theme}/>
-              }
-
-            </div>
-            {popoverButton}
-          </Popover>
-        </Overlay>
       </div>
-
     </div>);
   }
 }
+
+// <Overlay rootClose={true} show={this.state.showPopover} target={() => this.state.popoverTarget} onHide={() => this.setState({showPopover: false})} placement='bottom'>
+//   <Popover id='bbbPopover' style={this.props.channel.type === "D"
+//       ? style.popoverDM
+//       : style.popover}>
+//     <div style={this.props.channel.type === "D"
+//         ? style.popoverBodyDM
+//         : style.popoverBody}>
+//       {
+//         this.props.channel.type === "D"
+//           ? <PopoverListMembersItem onItemClick={this.startMeeting} cam={1} text={<span> {
+//                 'Call '
+//               }
+//               <strong>{channelName}</strong>
+//             </span>} theme={this.props.theme}/>
+//           : <PopoverListMembersItem onItemClick={this.startMeeting} cam={1} text={<span> {
+//                 'Create a BigBlueButton Meeting'
+//               }
+//               </span>} theme={this.props.theme}/>
+//       }
+//
+//     </div>
+//     {popoverButton}
+//   </Popover>
+// </Overlay>
+
 
 const getStyle = makeStyleFromTheme((theme) => {
   return {

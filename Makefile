@@ -3,8 +3,8 @@ build:
 
 	rm -rf dist
 
-	cd server && go get github.com/Masterminds/glide
-	cd server && $(shell go env GOPATH)/bin/glide install
+	# cd server && go get github.com/Masterminds/glide
+	# cd server && $(shell go env GOPATH)/bin/glide install
 
 	cd server && go build -o plugin.exe plugin.go responsehandlers.go helpers.go config.go
 
