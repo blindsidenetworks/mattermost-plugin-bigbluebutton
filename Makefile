@@ -3,8 +3,9 @@ build:
 
 	rm -rf dist
 
-	cd server && go get github.com/Masterminds/glide
-	cd server && $(shell go env GOPATH)/bin/glide install
+# Comment the next 2 lines to speed up build
+	# cd server && go get github.com/Masterminds/glide
+	# cd server && $(shell go env GOPATH)/bin/glide install
 
 	cd server && go build -o plugin.exe plugin.go responsehandlers.go helpers.go config.go
 

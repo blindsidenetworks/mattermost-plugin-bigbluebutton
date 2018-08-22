@@ -39,7 +39,8 @@ export default class ChannelHeaderButton extends React.PureComponent {
     directChannels: PropTypes.array.isRequired,
     teamId: PropTypes.string.isRequired,
     channel: PropTypes.object.isRequired,
-    actions: PropTypes.shape({startMeeting: PropTypes.func.isRequired, showRecordings: PropTypes.func.isRequired}).isRequired
+    visible: PropTypes.bool.isRequired,
+    actions: PropTypes.shape({startMeeting: PropTypes.func.isRequired, showRecordings: PropTypes.func.isRequired, closePopover: PropTypes.func.isRequired}).isRequired,
   }
 
   constructor(props) {
@@ -56,6 +57,10 @@ export default class ChannelHeaderButton extends React.PureComponent {
 
   startMeeting = async () => {
     await this.props.actions.startMeeting(this.props.channelId, "", this.props.channel.display_name);
+    this.close_the_popover()
+  }
+  close_the_popover = () =>{
+    this.props.actions.closePopover();
     this.setState({showPopover: false});
   }
 
@@ -88,7 +93,7 @@ export default class ChannelHeaderButton extends React.PureComponent {
               this.refs.overlay.hide();
               this.setState({
                 popoverTarget: e.target,
-                showPopover: !this.state.showPopover
+                showPopover: !this.props.visible
               });
             }}>
             <span style={style.iconStyle} aria-hidden='true' dangerouslySetInnerHTML={{
@@ -96,7 +101,8 @@ export default class ChannelHeaderButton extends React.PureComponent {
               }}/>
           </div>
         </OverlayTrigger>
-        <Overlay rootClose={true} show={this.state.showPopover} target={() => this.state.popoverTarget} onHide={() => this.setState({showPopover: false})} placement='bottom'>
+
+        <Overlay rootClose={true} show={this.props.visible} target={() => this.state.popoverTarget} onHide={this.close_the_popover} placement='bottom'>
           <Popover id='bbbPopover' style={this.props.channel.type === "D"
               ? style.popoverDM
               : style.popover}>
