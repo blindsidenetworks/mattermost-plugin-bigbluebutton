@@ -22,7 +22,7 @@ import {makeStyleFromTheme, changeOpacity} from 'mattermost-redux/utils/theme_ut
 import {Link} from 'react-router-dom'
 import {viewChannel, getChannelStats} from 'mattermost-redux/actions/channels';
 import {isDirectChannel} from 'mattermost-redux/utils/channel_utils';
-import {Tooltip, OverlayTrigger, Modal} from 'react-bootstrap';
+const {Tooltip, OverlayTrigger, Modal} = window.ReactBootstrap
 import {Client4} from 'mattermost-redux/client';
 import {getUser} from 'mattermost-redux/selectors/entities/users';
 import {getChannel} from 'mattermost-redux/selectors/entities/channels';
@@ -131,68 +131,71 @@ export default class Root extends React.PureComponent {
     const tooltip = (<Tooltip id="tooltip">
       Go to this channel
     </Tooltip>);
-    if (!this.state.show){
-      return (null);
-    }
-    return (
-        <div
-            style={style.backdrop}
-            onClick={()=>{this.state.show = false}}
-        >
-            <div style={style.modal}>
-                <div>
-                        <div >
-                          <img src={this.getSiteUrl() + this.state.profilePicUrl} class="img-responsive img-circle center-block "/>
-                        </div>
-                        
-                        <div>
-                          { 'You have triggered the root component of the demo plugin.' }
-                          <br/>
-                          <br/>
-                          { 'Click anywhere to close.' }
-                        </div>
-                </div>
-
-            </div>
-        </div>
-    );
-
-    // return (<Modal show={this.state.show} onHide={this.handleClose}>
+    // if (!this.state.show){
+    //   return (null);
+    // }
+    // return (
+    //     <div
+    //         style={style.backdrop}
+    //         onClick={()=>{this.state.show = false}}
+    //     >
+    //         <div style={style.modal}>
+    //             <div>
+    //                     <div >
+    //                       <img src={this.getSiteUrl() + this.state.profilePicUrl} class="img-responsive img-circle center-block "/>
+    //                     </div>
     //
-    //   <Modal.Header closeButton={true} style={style.header}></Modal.Header>
+    //                     <div>
+    //                       <span>
+    //                         {'BigBlueButton meeting request from'}
+    //                                     <OverlayTrigger trigger={['hover', 'focus']} placement="top" overlay={tooltip}>
+    //                                       <Link to={"/" + this.props.teamname + this.state.channelURL}>
+    //                                         {this.state.channelName}
+    //                                       </Link>
+    //                                     </OverlayTrigger>
+    //                       </span>
+    //                     </div>
+    //             </div>
     //
-    //   <Modal.Body style={style.body}>
-    //     <div >
-    //       <div >
-    //         <img src={this.getSiteUrl() + this.state.profilePicUrl} class="img-responsive img-circle center-block "/>
-    //       </div>
-    //       <div style={style.bodyText}>
-    //         <span >
-    //           BigBlueButton meeting request from
-    //           <strong>
-    //             <OverlayTrigger placement="top" overlay={tooltip}>
-    //               <Link to={"/" + this.props.teamname + this.state.channelURL}>
-    //                 {this.state.channelName}
-    //               </Link>
-    //             </OverlayTrigger>
-    //
-    //           </strong>
-    //         </span>
-    //       </div>
+    //         </div>
     //     </div>
-    //   </Modal.Body>
-    //   <Modal.Footer>
-    //     <button type='button' className='btn btn-default' onClick={this.handleClose}>
-    //       Close
-    //
-    //     </button>
-    //
-    //     <button type='button' className='btn btn-primary pull-left' onClick={this.getJoinURL}>
-    //       Join Meeting
-    //     </button>
-    //
-    //   </Modal.Footer>
-    // </Modal>);
+    // );
+
+    return (<Modal show={this.state.show} onHide={this.handleClose}>
+
+      <Modal.Header closeButton={true} style={style.header}></Modal.Header>
+
+      <Modal.Body style={style.body}>
+        <div >
+          <div >
+            <img src={this.getSiteUrl() + this.state.profilePicUrl} class="img-responsive img-circle center-block "/>
+          </div>
+          <div style={style.bodyText}>
+            <span >
+              BigBlueButton meeting request from
+              <strong>
+                <OverlayTrigger placement="top" overlay={tooltip}>
+                  <Link to={"/" + this.props.teamname + this.state.channelURL}>
+                    {this.state.channelName}
+                  </Link>
+                </OverlayTrigger>
+              </strong>
+            </span>
+          </div>
+        </div>
+      </Modal.Body>
+      <Modal.Footer>
+        <button type='button' className='btn btn-default' onClick={this.handleClose}>
+          Close
+
+        </button>
+
+        <button type='button' className='btn btn-primary pull-left' onClick={this.getJoinURL}>
+          Join Meeting
+        </button>
+
+      </Modal.Footer>
+    </Modal>);
   }
 }
 
