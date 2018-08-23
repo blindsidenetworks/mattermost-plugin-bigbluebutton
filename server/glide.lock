@@ -8,7 +8,7 @@ imports:
 - name: github.com/gorilla/websocket
   version: ea4d1f681babbce9545c9c5f3d5194a789c89f5b
 - name: github.com/mattermost/mattermost-server
-  version: 6b04b984f74a0526030e71b64e961003d75bd421
+  version: d1534154d18ce1f101738034bee93c77bedda5f4
   subpackages:
   - mlog
   - model
