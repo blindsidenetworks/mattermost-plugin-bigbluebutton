@@ -13,7 +13,6 @@ imports:
   - mlog
   - model
   - plugin
-  - plugin/rpcplugin
   - utils/jsonutils
   - utils/markdown
 - name: github.com/nicksnyder/go-i18n
