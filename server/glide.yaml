@@ -9,7 +9,6 @@ import:
   subpackages:
   - model
   - plugin
-  - plugin/rpcplugin
 - package: github.com/robfig/cron
   version: ^1.1.0
 - package: github.com/segmentio/ksuid
