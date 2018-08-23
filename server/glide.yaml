@@ -6,9 +6,6 @@ import:
   version: ^1.6.2
 - package: github.com/mattermost/mattermost-server
   version: 6b04b984f74a0526030e71b64e961003d75bd421
-  subpackages:
-  - model
-  - plugin
 - package: github.com/robfig/cron
   version: ^1.1.0
 - package: github.com/segmentio/ksuid
