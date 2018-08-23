@@ -18,17 +18,24 @@ import ChannelHeaderButton from './components/channel_header_button';
 import ProfilePopover from './components/profile_popover';
 import PostTypebbb from './components/post_type_bbb';
 import Root from './components/root';
+import PluginId from './plugin_id';
+
+import {channelHeaderButtonAction} from './actions';
+import reducer from './reducer';
 
 class PluginClass {
-  initialize(registerComponents, store) {
+  initialize(registry, store) {
     window.store = store;
+    registry.registerPostTypeComponent('custom_bbb', PostTypebbb);
+    registry.registerChannelHeaderButtonAction(
+      <ChannelHeaderButton/>,() => store.dispatch(channelHeaderButtonAction()), 'BigBlueButton');
+    registry.registerPopoverUserActionsComponent(ProfilePopover);
+    registry.registerRootComponent(Root);
 
-    registerComponents({
-      ChannelHeaderButton,
-      ProfilePopover,
-      Root
-    }, {custom_bbb: PostTypebbb});
+    registry.registerReducer(reducer);
+
   }
 }
 
-global.window.plugins['bigbluebutton'] = new PluginClass();
+// global.window.plugins['bigbluebutton'] = new PluginClass();
+global.window.registerPlugin(PluginId, new PluginClass());

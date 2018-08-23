@@ -14,16 +14,20 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-const React = window.react;
+// const React = window.React;
+import React from 'react';
+import PopoverListMembersItem from './popover_list_members_item.jsx';
 import PropTypes from 'prop-types';
 import {makeStyleFromTheme, changeOpacity} from 'mattermost-redux/utils/theme_utils';
 import {Link} from 'react-router-dom'
 import {viewChannel, getChannelStats} from 'mattermost-redux/actions/channels';
 import {isDirectChannel} from 'mattermost-redux/utils/channel_utils';
-import {Tooltip, OverlayTrigger, Modal} from 'react-bootstrap';
+const {Tooltip,Popover, OverlayTrigger, Modal,Overlay} = window.ReactBootstrap
 import {Client4} from 'mattermost-redux/client';
 import {getUser} from 'mattermost-redux/selectors/entities/users';
 import {getChannel} from 'mattermost-redux/selectors/entities/channels';
+import {searchPosts} from 'mattermost-redux/actions/search'
+import * as UserUtils from 'mattermost-redux/utils/user_utils';
 
 export default class Root extends React.PureComponent {
   static propTypes = {
@@ -34,7 +38,16 @@ export default class Root extends React.PureComponent {
     lastpostperchannel: PropTypes.object.isRequired,
     unreadChannelIds: PropTypes.array.isRequired,
     theme: PropTypes.object.isRequired,
-    actions: PropTypes.shape({getJoinURL: PropTypes.func.isRequired}).isRequired
+    actions: PropTypes.shape({getJoinURL: PropTypes.func.isRequired,
+      channelId: PropTypes.string.isRequired,
+      channelName: PropTypes.string.isRequired,
+      directChannels: PropTypes.array.isRequired,
+      teamId: PropTypes.string.isRequired,
+      channel: PropTypes.object.isRequired,
+      visible: PropTypes.bool.isRequired,
+      actions: PropTypes.shape({startMeeting: PropTypes.func.isRequired, showRecordings: PropTypes.func.isRequired, closePopover: PropTypes.func.isRequired}).isRequired,
+
+    startMeeting: PropTypes.func.isRequired, showRecordings: PropTypes.func.isRequired, closePopover: PropTypes.func.isRequired}).isRequired
 
   }
 
@@ -56,6 +69,19 @@ export default class Root extends React.PureComponent {
     this.setState({show: false});
   };
 
+  searchRecordings = () => {
+    this.props.actions.showRecordings();
+  }
+
+  startMeeting = async () => {
+    await this.props.actions.startMeeting(this.props.channelId, "", this.props.channel.display_name);
+    this.close_the_popover()
+  }
+  close_the_popover = () =>{
+    this.props.actions.closePopover();
+    this.setState({showPopover: false});
+  }
+
   openmodal = async (postid, channelid, meetingId, src) => {
     var channel = getChannel(this.props.state, channelid);
     var channelurl;
@@ -76,6 +102,8 @@ export default class Root extends React.PureComponent {
       channelName: channel.display_name,
       channelURL: channelurl
     });
+
+    console.log("open modal is called")
   };
 
   getJoinURL = async () => {
@@ -112,6 +140,9 @@ export default class Root extends React.PureComponent {
     var src = "";
 
     for (var i = 0; i < this.props.unreadChannelIds.length; i++) {
+
+      console.log("root stuff is running")
+
       var channelid = this.props.unreadChannelIds[i];
       if (channelid in this.props.lastpostperchannel) {
         if (this.props.lastpostperchannel[channelid].type === "custom_bbb" && !this.state.ignoredPosts.includes(this.props.lastpostperchannel[channelid].id) && (Date.now() - this.props.lastpostperchannel[channelid].create_at < 2000) && this.props.lastpostperchannel[channelid].user_id != this.props.cur_user.id) {
@@ -122,19 +153,58 @@ export default class Root extends React.PureComponent {
           var message = this.props.lastpostperchannel[channelid].message;
           var index = message.indexOf('#ID');
           meetingid = message.substr(index + 3)
+          console.log("screened for meeting")
           this.openmodal(postid, channelid, meetingid, src);
 
         }
       }
     }
+    let popoverButton = (<div className='more-modal__button'>
 
+      <a className='btn  btn-link' onClick={this.searchRecordings}>
+
+        {'View Recordings'}
+      </a>
+
+    </div>);
     const style = getStyle(this.props.theme);
     const myteam = this.props.teamname
     const tooltip = (<Tooltip id="tooltip">
       Go to this channel
     </Tooltip>);
 
-    return (<Modal show={this.state.show} onHide={this.handleClose}>
+    var channel = getChannel(this.props.state, this.props.channelId);
+    var channelName = channel.display_name;
+    //target={() => ReactDOM.findDOMNode('bbbChannelHeaderButton')}
+    // target = {() =>{ReactDOM.findDOMNode(bbbicon)}}
+    //target = {() =>{ReactDOM.findDOMNode('ChannelHeaderButton')}}
+    return (
+      <div>
+      <Overlay rootClose={true} show={this.props.visible}  onHide={this.close_the_popover} placement='bottom'>
+        <Popover id='bbbPopover' style={this.props.channel.type === "D"
+            ? style.popoverDM
+            : style.popover}>
+          <div style={this.props.channel.type === "D"
+              ? style.popoverBodyDM
+              : style.popoverBody}>
+            {
+              this.props.channel.type === "D"
+                ? <PopoverListMembersItem onItemClick={this.startMeeting} cam={1} text={<span> {
+                      'Call '
+                    }
+                    <strong>{channelName}</strong>
+                  </span>} theme={this.props.theme}/>
+                : <PopoverListMembersItem onItemClick={this.startMeeting} cam={1} text={<span> {
+                      'Create a BigBlueButton Meeting'
+                    }
+                    </span>} theme={this.props.theme}/>
+            }
+          </div>
+          {popoverButton}
+        </Popover>
+      </Overlay>
+
+      <Modal show={this.state.show} onHide={this.handleClose}>
       <Modal.Header closeButton={true} style={style.header}></Modal.Header>
 
       <Modal.Body style={style.body}>
@@ -144,14 +214,13 @@ export default class Root extends React.PureComponent {
           </div>
           <div style={style.bodyText}>
             <span >
-              BigBlueButton meeting request from
+              {"BigBlueButton meeting request from "}
               <strong>
                 <OverlayTrigger placement="top" overlay={tooltip}>
                   <Link to={"/" + this.props.teamname + this.state.channelURL}>
                     {this.state.channelName}
                   </Link>
                 </OverlayTrigger>
-
               </strong>
             </span>
           </div>
@@ -168,14 +237,34 @@ export default class Root extends React.PureComponent {
         </button>
 
       </Modal.Footer>
-    </Modal>);
+    </Modal>
+  </div>);
   }
 }
 
 /* Define CSS styles here */
 const getStyle = makeStyleFromTheme((theme) => {
+  var x_pos = (window.innerWidth - 400 + "px");
+  console.log(x_pos)
   return {
-
+    popover: {
+      marginLeft: x_pos,
+      marginTop: "50px",
+      //left: x_pos,
+      maxWidth: '300px',
+      height: '105px',
+      width: '300px',
+      background: theme.centerChannelBg
+    },
+    popoverDM: {
+      marginLeft: x_pos,
+      marginTop: "50px",
+      // marginLeft: '-50px',
+      maxWidth: '220px',
+      height: '105px',
+      width: '220px',
+      background: theme.centerChannelBg
+    },
     header: {
       background: '#FFFFFF',
       color: '#0059A5',
@@ -194,6 +283,49 @@ const getStyle = makeStyleFromTheme((theme) => {
     },
     meetingId: {
       marginTop: '55px'
+    },
+    backdrop: {
+      position: 'absolute',
+      display: 'flex',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.50)',
+      zIndex: 2000,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    modal: {
+      height: '250px',
+      width: '400px',
+      padding: '1em',
+      color: theme.centerChannelColor,
+      backgroundColor: theme.centerChannelBg,
+    },
+    iconStyle: {
+      position: 'relative',
+      top: '-1px'
+    },
+
+    popoverBody: {
+      maxHeight: '305px',
+      overflow: 'auto',
+      position: 'relative',
+      width: '298px',
+      left: '-14px',
+      top: '-9px',
+      borderBottom: '1px solid #D8D8D9'
+    },
+
+    popoverBodyDM: {
+      maxHeight: '305px',
+      overflow: 'auto',
+      position: 'relative',
+      width: '218px',
+      left: '-14px',
+      top: '-9px',
+      borderBottom: '1px solid #D8D8D9'
     }
   };
 });

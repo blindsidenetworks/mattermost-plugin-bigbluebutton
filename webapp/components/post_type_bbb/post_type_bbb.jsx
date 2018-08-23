@@ -14,7 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-const React = window.react;
+// const React = window.React;
+import React from 'react';
+
 const {
   Button,
   Modal,
@@ -23,7 +25,7 @@ const {
   Col,
   Row,
   Panel
-} = window['react-bootstrap'];
+} = window.ReactBootstrap;
 import {bootstrapUtils} from 'react-bootstrap/lib/utils';
 import {getChannel} from 'mattermost-redux/selectors/entities/channels';
 import {formatDate} from '../../utils/date_utils';
@@ -31,7 +33,7 @@ import {formatDate} from '../../utils/date_utils';
 import PropTypes from 'prop-types';
 import {makeStyleFromTheme} from 'mattermost-redux/utils/theme_utils';
 
-const PostUtils = window['post-utils'];
+const PostUtils = window.PostUtils;
 
 export default class PostTypebbb extends React.PureComponent {
   static propTypes = {

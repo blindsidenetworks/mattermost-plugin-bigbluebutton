@@ -102,7 +102,7 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 			meetingpointer.CreatedAt = time.Now().Unix()
 		}
 
-		user, _ := p.api.GetUser(request.User_id)
+		user, _ := p.API.GetUser(request.User_id)
 		username := user.Username
 
 		//golang doesnt have sets so have to iterate through array to check if meeting participant is already in meeeting
@@ -132,7 +132,7 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 		}
 		//TODO: update kvp
 
-		post, err := p.api.GetPost(postid)
+		post, err := p.API.GetPost(postid)
 		if err != nil {
 			http.Error(w, err.Error(), err.StatusCode)
 			return
@@ -142,7 +142,7 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 		post.Props["user_count"] = Length + 1
 		post.Props["attendees"] = strings.Join(attendantsarray, ",")
 
-		if _, err := p.api.UpdatePost(post); err != nil {
+		if _, err := p.API.UpdatePost(post); err != nil {
 			http.Error(w, err.Error(), err.StatusCode)
 			return
 		}
@@ -169,7 +169,7 @@ func (p *Plugin) handleImmediateEndMeetingCallback(w http.ResponseWriter, r *htt
 	if postid == "" {
 		panic("no post id found")
 	}
-	post, err := p.api.GetPost(postid)
+	post, err := p.API.GetPost(postid)
 	if err != nil {
 		http.Error(w, err.Error(), err.StatusCode)
 		return
@@ -184,7 +184,7 @@ func (p *Plugin) handleImmediateEndMeetingCallback(w http.ResponseWriter, r *htt
 	durationstring := FormatSeconds(timediff)
 	post.Props["duration"] = durationstring
 
-	p.api.UpdatePost(post)
+	p.API.UpdatePost(post)
 
 	w.WriteHeader(http.StatusOK)
 }
@@ -199,7 +199,7 @@ func (p *Plugin) handleEndMeeting(w http.ResponseWriter, r *http.Request) {
 	meetingID := request.MeetingId
 	meetingpointer := p.FindMeeting(meetingID)
 
-	user, _ := p.api.GetUser(request.User_id)
+	user, _ := p.API.GetUser(request.User_id)
 	username := user.Username
 
 	if meetingpointer == nil {
@@ -224,7 +224,7 @@ func (p *Plugin) handleEndMeeting(w http.ResponseWriter, r *http.Request) {
 		if postid == "" {
 			panic("no post id found")
 		}
-		post, err := p.api.GetPost(postid)
+		post, err := p.API.GetPost(postid)
 		if err != nil {
 			http.Error(w, err.Error(), err.StatusCode)
 			return
@@ -241,7 +241,7 @@ func (p *Plugin) handleEndMeeting(w http.ResponseWriter, r *http.Request) {
 		durationstring := FormatSeconds(timediff)
 		post.Props["duration"] = durationstring
 
-		if _, err := p.api.UpdatePost(post); err != nil {
+		if _, err := p.API.UpdatePost(post); err != nil {
 			http.Error(w, err.Error(), err.StatusCode)
 			return
 		}
@@ -322,7 +322,7 @@ func (p *Plugin) handleWebhookMeetingEnded(w http.ResponseWriter, r *http.Reques
 	if postid == "" {
 		panic("no post id found")
 	}
-	post, err := p.api.GetPost(postid)
+	post, err := p.API.GetPost(postid)
 	if err != nil {
 		http.Error(w, err.Error(), err.StatusCode)
 		return
@@ -337,7 +337,7 @@ func (p *Plugin) handleWebhookMeetingEnded(w http.ResponseWriter, r *http.Reques
 	durationstring := FormatSeconds(timediff)
 	post.Props["duration"] = durationstring
 
-	if _, err := p.api.UpdatePost(post); err != nil {
+	if _, err := p.API.UpdatePost(post); err != nil {
 		http.Error(w, err.Error(), err.StatusCode)
 		return
 	}
@@ -379,7 +379,7 @@ func (p *Plugin) handleRecordingReady(w http.ResponseWriter, r *http.Request) {
 	if postid == "" {
 		panic("no post id found")
 	}
-	post, err := p.api.GetPost(postid)
+	post, err := p.API.GetPost(postid)
 	if err != nil {
 		http.Error(w, err.Error(), err.StatusCode)
 		return
@@ -392,7 +392,7 @@ func (p *Plugin) handleRecordingReady(w http.ResponseWriter, r *http.Request) {
 	post.Props["recording_url"] = recordingsresponse.Recordings.Recording[0].Playback.Format[0].Url
 
 	post.Props["images"] = strings.Join(recordingsresponse.Recordings.Recording[0].Playback.Format[0].Images, ",")
-	if _, err := p.api.UpdatePost(post); err != nil {
+	if _, err := p.API.UpdatePost(post); err != nil {
 		http.Error(w, err.Error(), err.StatusCode)
 		return
 	}
@@ -427,7 +427,7 @@ func (p *Plugin) handleGetAttendeesInfo(w http.ResponseWriter, r *http.Request) 
 	if postid == "" {
 		panic("no post id found")
 	}
-	post, err := p.api.GetPost(postid)
+	post, err := p.API.GetPost(postid)
 	if err != nil {
 		http.Error(w, err.Error(), err.StatusCode)
 		return
@@ -436,7 +436,7 @@ func (p *Plugin) handleGetAttendeesInfo(w http.ResponseWriter, r *http.Request) 
 	post.Props["user_count"] = Length
 	post.Props["attendees"] = strings.Join(Array, ",")
 
-	if _, err := p.api.UpdatePost(post); err != nil {
+	if _, err := p.API.UpdatePost(post); err != nil {
 		http.Error(w, err.Error(), err.StatusCode)
 		return
 	}
@@ -497,7 +497,7 @@ func (p *Plugin) handlePublishRecordings(w http.ResponseWriter, r *http.Request)
 	if postid == "" {
 		panic("no post id found")
 	}
-	post, err := p.api.GetPost(postid)
+	post, err := p.API.GetPost(postid)
 	if err != nil {
 		http.Error(w, err.Error(), err.StatusCode)
 		return
@@ -505,7 +505,7 @@ func (p *Plugin) handlePublishRecordings(w http.ResponseWriter, r *http.Request)
 
 	post.Props["is_published"] = publish
 
-	if _, err := p.api.UpdatePost(post); err != nil {
+	if _, err := p.API.UpdatePost(post); err != nil {
 		http.Error(w, err.Error(), err.StatusCode)
 		return
 	}
@@ -545,7 +545,7 @@ func (p *Plugin) handleDeleteRecordings(w http.ResponseWriter, r *http.Request) 
 	if postid == "" {
 		panic("no post id found")
 	}
-	post, err := p.api.GetPost(postid)
+	post, err := p.API.GetPost(postid)
 	if err != nil {
 		http.Error(w, err.Error(), err.StatusCode)
 		return
@@ -553,7 +553,7 @@ func (p *Plugin) handleDeleteRecordings(w http.ResponseWriter, r *http.Request) 
 
 	post.Props["is_deleted"] = "true" //careful when setting true like this
 	post.Props["record_status"] = "Recording Deleted"
-	if _, err := p.api.UpdatePost(post); err != nil {
+	if _, err := p.API.UpdatePost(post); err != nil {
 		http.Error(w, err.Error(), err.StatusCode)
 		return
 	}
@@ -576,7 +576,7 @@ func (p *Plugin) Loopthroughrecordings() {
 			if len(recordingsresponse.Recordings.Recording) > 0 {
 				postid := Meeting.PostId
 				if postid != "" {
-					post, _ := p.api.GetPost(postid)
+					post, _ := p.API.GetPost(postid)
 					post.Message = "#BigBlueButton #" + Meeting.Name_ + " #" + Meeting.MeetingID_ + " #recording" + " recordings"
 					post.Props["recording_status"] = "COMPLETE"
 					post.Props["is_published"] = "true"
@@ -584,7 +584,7 @@ func (p *Plugin) Loopthroughrecordings() {
 					post.Props["recording_url"] = recordingsresponse.Recordings.Recording[0].Playback.Format[0].Url
 					post.Props["images"] = strings.Join(recordingsresponse.Recordings.Recording[0].Playback.Format[0].Images, ",")
 
-					if _, err := p.api.UpdatePost(post); err != nil {
+					if _, err := p.API.UpdatePost(post); err != nil {
 						p.MeetingsWaitingforRecordings = append(p.MeetingsWaitingforRecordings[:i], p.MeetingsWaitingforRecordings[i+1:]...)
 						i--
 					}

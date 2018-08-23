@@ -27,12 +27,15 @@ import (
 	BBBwh "github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/webhook"
 	"github.com/mattermost/mattermost-server/model"
 	"github.com/mattermost/mattermost-server/plugin"
-	"github.com/mattermost/mattermost-server/plugin/rpcplugin"
 	"github.com/robfig/cron"
 )
+//test
 
 type Plugin struct {
-	api                          plugin.API
+
+	plugin.MattermostPlugin
+
+	// api                          plugin.API
 	c                            *cron.Cron
 	configuration                atomic.Value
 	Meetings                     []dataStructs.MeetingRoom
@@ -42,8 +45,7 @@ type Plugin struct {
 }
 
 //OnActivate runs as soon as plugin activates
-func (p *Plugin) OnActivate(api plugin.API) error {
-	p.api = api
+func (p *Plugin) OnActivate() error {
 	// we save all the meetings infos that are stored on in our database upon deactivation
 	// loads the details back so everything works
 	p.LoadMeetingsFromStore()
@@ -68,7 +70,7 @@ func (p *Plugin) OnActivate(api plugin.API) error {
 	p.c.Start()
 
 	// register slash command '/bbb' to create a meeting
-	return api.RegisterCommand(&model.Command{
+	return p.API.RegisterCommand(&model.Command{
 		Trigger:          "bbb",
 		AutoComplete:     true,
 		AutoCompleteDesc: "Create a BigBlueButton meeting",
@@ -78,7 +80,7 @@ func (p *Plugin) OnActivate(api plugin.API) error {
 func (p *Plugin) OnConfigurationChange() error {
 	var configuration Configuration
 	// loads configuration from our config ui page
-	err := p.api.LoadPluginConfiguration(&configuration)
+	err := p.API.LoadPluginConfiguration(&configuration)
 	//stores the config in an Atomic.Value place
 	p.configuration.Store(&configuration)
 	return err
@@ -89,7 +91,7 @@ func (p *Plugin) config() *Configuration {
 }
 
 //following method is to create a meeting from '/bbb' slash command
-func (p *Plugin) ExecuteCommand(args *model.CommandArgs) (*model.CommandResponse, *model.AppError) {
+func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*model.CommandResponse, *model.AppError) {
 
 	meetingpointer := new(dataStructs.MeetingRoom)
 	p.PopulateMeeting(meetingpointer, nil, "")
@@ -102,7 +104,7 @@ func (p *Plugin) ExecuteCommand(args *model.CommandArgs) (*model.CommandResponse
 
 //this is the router to handle our server calls
 //methods are all in responsehandlers.go
-func (p *Plugin) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (p *Plugin) ServeHTTP(c *plugin.Context,w http.ResponseWriter, r *http.Request) {
 
 	config := p.config()
 	if err := config.IsValid(); err != nil {
@@ -153,5 +155,5 @@ func (p *Plugin) OnDeactivate() error {
 }
 
 func main() {
-	rpcplugin.Main(&Plugin{})
+	plugin.ClientMain(&Plugin{})
 }

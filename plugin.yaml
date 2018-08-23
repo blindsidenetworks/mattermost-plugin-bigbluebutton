@@ -3,7 +3,7 @@ name: BigBlueButton
 backend:
     executable: server/plugin.exe
 webapp:
-    bundle_path: /static/bigbluebutton_bundle.js
+    bundle_path: webapp/bigbluebutton_bundle.js
 settings_schema:
   settings:
   - key: BASE_URL
