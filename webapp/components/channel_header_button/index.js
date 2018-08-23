@@ -17,10 +17,11 @@ limitations under the License.
 const {connect} = window.ReactRedux;
 const {bindActionCreators} = window.Redux;
 
-import {startMeeting, showRecordings} from '../../actions';
+import {startMeeting, showRecordings,closeRootModal} from '../../actions';
 import {getChannelsInCurrentTeam, getDirectChannels, getSortedUnreadChannelIds, makeGetChannel} from 'mattermost-redux/selectors/entities/channels';
 import {getTheme} from 'mattermost-redux/selectors/entities/preferences';
 import ChannelHeaderButton from './channel_header_button.jsx';
+import {isRootModalVisible} from '../../selectors';
 
 function mapStateToProps(state, ownProps) {
   let channelId = state.entities.channels.currentChannelId;
@@ -32,6 +33,7 @@ function mapStateToProps(state, ownProps) {
   let teamId = state.entities.teams.currentTeamId;
 
   return {
+    visible: isRootModalVisible(state),
     state,
     channelId,
     channel: channel,
@@ -44,10 +46,12 @@ function mapStateToProps(state, ownProps) {
 }
 
 function mapDispatchToProps(dispatch) {
+  let closePopover = closeRootModal
   return {
     actions: bindActionCreators({
       startMeeting,
-      showRecordings
+      showRecordings,
+      closePopover,
     }, dispatch)
   };
 }

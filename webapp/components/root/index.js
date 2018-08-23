@@ -19,10 +19,11 @@ const {bindActionCreators} = window.Redux;
 import {getCurrentTeam} from 'mattermost-redux/selectors/entities/teams';
 import {getCurrentUser} from 'mattermost-redux/selectors/entities/users';
 import {getLastPostPerChannel} from 'mattermost-redux/selectors/entities/posts';
+import {getChannelsInCurrentTeam, getDirectChannels, getSortedUnreadChannelIds, makeGetChannel} from 'mattermost-redux/selectors/entities/channels';
 import {getTheme} from 'mattermost-redux/selectors/entities/preferences';
-
+import {isRootModalVisible} from '../../selectors';
 import {getSortedDirectChannelWithUnreadsIds} from 'mattermost-redux/selectors/entities/channels';
-import {getJoinURL} from '../../actions';
+import {getJoinURL,startMeeting, showRecordings,closeRootModal} from '../../actions';
 
 import Root from './root.jsx';
 
@@ -36,7 +37,23 @@ function mapStateToProps(state, ownProps) {
   let teamname = team.name;
   let cur_user = getCurrentUser(state) || {};
   const keepChannelIdAsUnread = state.views.channel.keepChannelIdAsUnread;
+
+  let channelId = state.entities.channels.currentChannelId;
+  const channel = state.entities.channels.channels[channelId] || {};
+  const userId = state.entities.users.currentUserId;
+  if (channel.name === `${userId}__${userId}`) {
+    channelId = '';
+  }
+  let teamId = state.entities.teams.currentTeamId;
+
   return {
+    visible: isRootModalVisible(state),
+    channelId,
+    channel: channel,
+    channelName: channel.name,
+    directChannels: getDirectChannels(state),
+    teamId,
+
     cur_user,
     teamname,
     state,
@@ -49,9 +66,13 @@ function mapStateToProps(state, ownProps) {
 
 function mapDispatchToProps(dispatch) {
   /* Provide actions here if needed */
+  let closePopover = closeRootModal
   return {
     actions: bindActionCreators({
-      getJoinURL
+      getJoinURL,
+      startMeeting,
+      showRecordings,
+      closePopover,
     }, dispatch)
   };
 }
