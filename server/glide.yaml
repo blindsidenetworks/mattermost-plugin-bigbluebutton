@@ -5,7 +5,7 @@ import:
 - package: github.com/gorilla/mux
   version: ^1.6.2
 - package: github.com/mattermost/mattermost-server
-  version: =5.0.0
+  version: =5.0.3
   subpackages:
   - model
   - plugin
