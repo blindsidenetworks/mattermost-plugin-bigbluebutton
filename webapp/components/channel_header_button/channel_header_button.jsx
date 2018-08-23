@@ -75,21 +75,13 @@ export default class ChannelHeaderButton extends React.PureComponent {
 
     const style = getStyle(this.props.theme);
 
-    let popoverButton = (<div className='more-modal__button'>
-
-      <a className='btn  btn-link' onClick={this.searchRecordings}>
-
-        {'View Recordings'}
-      </a>
-
-    </div>);
 
     return (<div>
       <div >
         <OverlayTrigger trigger={['hover', 'focus']} delayShow={400} ref = "overlay" placement='bottom' overlay={(<Tooltip id='bbbChannelHeaderTooltip'>
             {'BigBlueButton'}
           </Tooltip>)}>
-          <div id='bbbChannelHeaderButton' onClick={(e) => {
+          <div id='bbbChannelHeaderButton' ref = "bbbicon" onClick={(e) => {
               this.refs.overlay.hide();
               this.setState({
                 popoverTarget: e.target,
