@@ -19,7 +19,7 @@ package main
 import (
 	"net/http"
 	"strings"
-
+	"fmt"
 	"sync/atomic"
 
 	bbbAPI "github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/api"
@@ -131,7 +131,14 @@ func (p *Plugin) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		p.handleImmediateEndMeetingCallback(w, r, path)
 	} else if path == "/ismeetingrunning" {
 		p.handleIsMeetingRunning(w, r)
-	} else {
+	} else if path == "/redirect"{
+			fmt.Fprintf(w,`<!doctype html><html><head><script>
+				 								window.onload = function load() {
+													window.open('', '_self', '');
+													window.close();
+													};
+											</script></head><body></body></html>`)
+	}else {
 		http.NotFound(w, r)
 	}
 	return
