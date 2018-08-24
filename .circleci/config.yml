@@ -24,3 +24,5 @@ jobs:
       # specify any bash command here prefixed with `run: `
       - run: 	cd server && go get github.com/Masterminds/glide
       - run: 	cd server && $GOPATH/bin/glide install
+      - run:  cd server && go build -o plugin.exe plugin.go responsehandlers.go helpers.go config.go
+
