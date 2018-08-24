@@ -78,7 +78,6 @@ func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, d
 }
 
 func (p *Plugin) LoadMeetingsFromStore() {
-	// byted, _ := p.api.KeyValueStore().Get(key)
 	byted, _ := p.API.KVGet(key)
 	json.Unmarshal(byted, &p.Meetings)
 
@@ -86,7 +85,6 @@ func (p *Plugin) LoadMeetingsFromStore() {
 func (p *Plugin) SaveMeetingToStore() {
 	byted, _ := json.Marshal(p.Meetings)
 	p.API.KVSet(key, byted)
-	// p.api.KeyValueStore().Set(key, byted)
 }
 
 func (p *Plugin) FindMeeting(meeting_id string) *dataStructs.MeetingRoom {
@@ -127,7 +125,7 @@ func (p *Plugin) createStartMeetingPost(user_id string, channel_id string, m *da
 	}
 
 	textPost := &model.Post{UserId: user_id, ChannelId: channel_id,
-		Message: "#BigBlueButton #" + m.Name_ + " #ID" + m.MeetingID_, Type: "custom_bbb"} //RootId: args.RootId, ParentId: args.ParentId,
+		Message: "#BigBlueButton #" + m.Name_ + " #ID" + m.MeetingID_, Type: "custom_bbb"} 
 
 	textPost.Props = model.StringInterface{
 		"from_webhook":      "true",

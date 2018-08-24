@@ -92,7 +92,6 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 		return
 	} else {
 		//check if meeting has actually been created and can be joined
-		//
 		if !meetingpointer.Created {
 			bbbAPI.CreateMeeting(meetingpointer)
 			meetingpointer.Created = true
@@ -130,7 +129,6 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 		if postid == "" {
 			panic("no post id found")
 		}
-		//TODO: update kvp
 
 		post, err := p.API.GetPost(postid)
 		if err != nil {
@@ -230,7 +228,6 @@ func (p *Plugin) handleEndMeeting(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		//post.Message = "Meeting has ended."
 		post.Props["meeting_status"] = "ENDED"
 		post.Props["attendents"] = strings.Join(meetingpointer.AttendeeNames, ",")
 		post.Props["ended_by"] = username
@@ -482,7 +479,7 @@ func (p *Plugin) handlePublishRecordings(w http.ResponseWriter, r *http.Request)
 	publishrecordingsresponse := bbbAPI.PublishRecordings(recordid, publish)
 
 	if publishrecordingsresponse.ReturnCode != "SUCCESS" {
-		http.Error(w, "Forbidden", http.StatusForbidden) //prob should change this error status
+		http.Error(w, "Forbidden", http.StatusForbidden)
 		return
 	}
 
@@ -521,7 +518,6 @@ type DeleteRecordingsRequestJSON struct {
 func (p *Plugin) handleDeleteRecordings(w http.ResponseWriter, r *http.Request) {
 	body, _ := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
-	//what if we just serve through xml?
 
 	var request DeleteRecordingsRequestJSON
 	json.Unmarshal([]byte(body), &request)
@@ -530,7 +526,7 @@ func (p *Plugin) handleDeleteRecordings(w http.ResponseWriter, r *http.Request) 
 	deleterecordingsresponse := bbbAPI.DeleteRecordings(recordid)
 
 	if deleterecordingsresponse.ReturnCode != "SUCCESS" {
-		http.Error(w, "Forbidden", http.StatusForbidden) //prob should change this error status
+		http.Error(w, "Forbidden", http.StatusForbidden)
 		return
 	}
 
@@ -551,7 +547,7 @@ func (p *Plugin) handleDeleteRecordings(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	post.Props["is_deleted"] = "true" //careful when setting true like this
+	post.Props["is_deleted"] = "true"
 	post.Props["record_status"] = "Recording Deleted"
 	if _, err := p.API.UpdatePost(post); err != nil {
 		http.Error(w, err.Error(), err.StatusCode)

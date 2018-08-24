@@ -37,7 +37,7 @@ function mapStateToProps(state, ownProps) {
   const user = state.entities.users.profiles[post.user_id] || {};
   let channelId = state.entities.channels.currentChannelId;
   const channel = state.entities.channels.channels[channelId]
-  const userid = getCurrentUserId(state) || {}; //dont know if we should have this here
+  const userid = getCurrentUserId(state) || {}; 
   return {
     channelId,
     channel,

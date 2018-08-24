@@ -37,5 +37,4 @@ class PluginClass {
   }
 }
 
-// global.window.plugins['bigbluebutton'] = new PluginClass();
 global.window.registerPlugin(PluginId, new PluginClass());

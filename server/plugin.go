@@ -29,13 +29,11 @@ import (
 	"github.com/mattermost/mattermost-server/plugin"
 	"github.com/robfig/cron"
 )
-//test
 
 type Plugin struct {
 
 	plugin.MattermostPlugin
 
-	// api                          plugin.API
 	c                            *cron.Cron
 	configuration                atomic.Value
 	Meetings                     []dataStructs.MeetingRoom

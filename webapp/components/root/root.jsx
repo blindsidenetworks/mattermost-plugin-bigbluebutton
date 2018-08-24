@@ -14,7 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// const React = window.React;
 import React from 'react';
 import PopoverListMembersItem from './popover_list_members_item.jsx';
 import PropTypes from 'prop-types';
@@ -103,7 +102,6 @@ export default class Root extends React.PureComponent {
       channelURL: channelurl
     });
 
-    console.log("open modal is called")
   };
 
   getJoinURL = async () => {
@@ -141,7 +139,6 @@ export default class Root extends React.PureComponent {
 
     for (var i = 0; i < this.props.unreadChannelIds.length; i++) {
 
-      console.log("root stuff is running")
 
       var channelid = this.props.unreadChannelIds[i];
       if (channelid in this.props.lastpostperchannel) {
@@ -153,7 +150,6 @@ export default class Root extends React.PureComponent {
           var message = this.props.lastpostperchannel[channelid].message;
           var index = message.indexOf('#ID');
           meetingid = message.substr(index + 3)
-          console.log("screened for meeting")
           this.openmodal(postid, channelid, meetingid, src);
 
         }
@@ -175,9 +171,6 @@ export default class Root extends React.PureComponent {
 
     var channel = getChannel(this.props.state, this.props.channelId);
     var channelName = channel.display_name;
-    //target={() => ReactDOM.findDOMNode('bbbChannelHeaderButton')}
-    // target = {() =>{ReactDOM.findDOMNode(bbbicon)}}
-    //target = {() =>{ReactDOM.findDOMNode('ChannelHeaderButton')}}
     return (
       <div>
       <Overlay rootClose={true} show={this.props.visible}  onHide={this.close_the_popover} placement='bottom'>
@@ -245,12 +238,10 @@ export default class Root extends React.PureComponent {
 /* Define CSS styles here */
 const getStyle = makeStyleFromTheme((theme) => {
   var x_pos = (window.innerWidth - 400 + "px");
-  console.log(x_pos)
   return {
     popover: {
       marginLeft: x_pos,
       marginTop: "50px",
-      //left: x_pos,
       maxWidth: '300px',
       height: '105px',
       width: '300px',
@@ -259,7 +250,6 @@ const getStyle = makeStyleFromTheme((theme) => {
     popoverDM: {
       marginLeft: x_pos,
       marginTop: "50px",
-      // marginLeft: '-50px',
       maxWidth: '220px',
       height: '105px',
       width: '220px',

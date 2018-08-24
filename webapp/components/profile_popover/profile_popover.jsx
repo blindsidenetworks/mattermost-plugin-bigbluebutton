@@ -14,7 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// const React = window.React;
 import React from 'react';
 
 import PropTypes from 'prop-types';
@@ -66,34 +65,6 @@ export default class ProfilePopover extends React.PureComponent {
     const myteam = this.props.teamname
     const url = '/' + myteam + '/messages/@' + user.username
 
-    // return (<div style={{
-    //     ...style.container,
-    //     left: this.props.positionLeft,
-    //     top: this.props.positionTop
-    //   }}>
-    //   <h3 style={style.title}>
-    //     <a>{user.username}</a>
-    //   </h3>
-    //   <div style={style.content}>
-    //     <img style={style.img} src={this.props.src}/>
-    //     <div style={style.fullName}>
-    //       {user.first_name + ' ' + user.last_name}
-    //     </div>
-    //     <hr style={{
-    //         margin: '10px -15px 10px'
-    //       }}/> {
-    //       this.props.user.id != this.props.cur_user.id && <div>
-    //           <Link to={url} onClick={this.handleDirectMessage}>
-    //             <i className='fa fa-video-camera'/>{'  Start BigBlueButton Meeting'}
-    //           </Link>
-    //           <br/>
-    //         </div>
-    //     }
-    //     <Link to={url}>
-    //       <i className='fa fa-paper-plane'/>{' Send Message'}
-    //     </Link>
-    //   </div>
-    // </div>);
 
     return (
       <div>
