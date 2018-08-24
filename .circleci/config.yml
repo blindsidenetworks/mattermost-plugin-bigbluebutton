@@ -22,5 +22,5 @@ jobs:
       - checkout
 
       # specify any bash command here prefixed with `run: `
-      - run: cd server && go get github.com/Masterminds/glide
-      - run: cd server && $(shell go env GOPATH)/bin/glide install
+      - run: go get -v -t -d ./...
+      - run: go test -v ./...
