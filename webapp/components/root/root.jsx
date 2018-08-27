@@ -237,7 +237,7 @@ export default class Root extends React.PureComponent {
 
 /* Define CSS styles here */
 const getStyle = makeStyleFromTheme((theme) => {
-  var x_pos = (window.innerWidth - 400 + "px");
+  var x_pos = (window.innerWidth - 400 + "px"); //shouldn't be set here as it doesn't rerender 
   return {
     popover: {
       marginLeft: x_pos,
