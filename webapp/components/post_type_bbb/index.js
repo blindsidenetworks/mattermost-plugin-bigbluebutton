@@ -14,8 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-const {connect} = window['react-redux'];
-const {bindActionCreators} = window.redux;
+const {connect} = window.ReactRedux;
+const {bindActionCreators} = window.Redux;
 
 import {getBool} from 'mattermost-redux/selectors/entities/preferences';
 import {displayUsernameForUser} from '../../utils/user_utils';
@@ -37,7 +37,7 @@ function mapStateToProps(state, ownProps) {
   const user = state.entities.users.profiles[post.user_id] || {};
   let channelId = state.entities.channels.currentChannelId;
   const channel = state.entities.channels.channels[channelId]
-  const userid = getCurrentUserId(state) || {}; //dont know if we should have this here
+  const userid = getCurrentUserId(state) || {}; 
   return {
     channelId,
     channel,

@@ -14,8 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-const React = window.react;
-const {Overlay, OverlayTrigger, Popover, Tooltip} = window['react-bootstrap'];
+
+import React from 'react';
+const {Overlay, OverlayTrigger, Popover, Tooltip} = window.ReactBootstrap;
 
 import PopoverListMembersItem from './popover_list_members_item.jsx';
 
@@ -27,6 +28,8 @@ import {searchPosts} from 'mattermost-redux/actions/search'
 import {getChannel} from 'mattermost-redux/selectors/entities/channels';
 import * as UserUtils from 'mattermost-redux/utils/user_utils';
 
+
+
 export default class ChannelHeaderButton extends React.PureComponent {
   static propTypes = {
     channelId: PropTypes.string.isRequired,
@@ -36,7 +39,8 @@ export default class ChannelHeaderButton extends React.PureComponent {
     directChannels: PropTypes.array.isRequired,
     teamId: PropTypes.string.isRequired,
     channel: PropTypes.object.isRequired,
-    actions: PropTypes.shape({startMeeting: PropTypes.func.isRequired, showRecordings: PropTypes.func.isRequired}).isRequired
+    visible: PropTypes.bool.isRequired,
+    actions: PropTypes.shape({startMeeting: PropTypes.func.isRequired, showRecordings: PropTypes.func.isRequired, closePopover: PropTypes.func.isRequired}).isRequired,
   }
 
   constructor(props) {
@@ -53,6 +57,10 @@ export default class ChannelHeaderButton extends React.PureComponent {
 
   startMeeting = async () => {
     await this.props.actions.startMeeting(this.props.channelId, "", this.props.channel.display_name);
+    this.close_the_popover()
+  }
+  close_the_popover = () =>{
+    this.props.actions.closePopover();
     this.setState({showPopover: false});
   }
 
@@ -67,26 +75,17 @@ export default class ChannelHeaderButton extends React.PureComponent {
 
     const style = getStyle(this.props.theme);
 
-    let popoverButton = (<div className='more-modal__button'>
-
-      <a className='btn  btn-link' onClick={this.searchRecordings}>
-
-        {'View Recordings'}
-      </a>
-
-    </div>);
 
     return (<div>
-      <div id='bbbChannelHeaderPopover' className={this.state.showPopover
-          ? 'channel-header__icon active'
-          : 'channel-header__icon'}>
-        <OverlayTrigger trigger={['hover', 'focus']} delayShow={400} placement='bottom' overlay={(<Tooltip id='bbbChannelHeaderTooltip'>
+      <div >
+        <OverlayTrigger trigger={['hover']} delayShow={400} ref = "overlay" placement='bottom' overlay={(<Tooltip id='bbbChannelHeaderTooltip'>
             {'BigBlueButton'}
           </Tooltip>)}>
           <div id='bbbChannelHeaderButton' onClick={(e) => {
+              this.refs.overlay.hide();
               this.setState({
                 popoverTarget: e.target,
-                showPopover: !this.state.showPopover
+                showPopover: !this.props.visible
               });
             }}>
             <span style={style.iconStyle} aria-hidden='true' dangerouslySetInnerHTML={{
@@ -94,35 +93,11 @@ export default class ChannelHeaderButton extends React.PureComponent {
               }}/>
           </div>
         </OverlayTrigger>
-        <Overlay rootClose={true} show={this.state.showPopover} target={() => this.state.popoverTarget} onHide={() => this.setState({showPopover: false})} placement='bottom'>
-          <Popover id='bbbPopover' style={this.props.channel.type === "D"
-              ? style.popoverDM
-              : style.popover}>
-            <div style={this.props.channel.type === "D"
-                ? style.popoverBodyDM
-                : style.popoverBody}>
-              {
-                this.props.channel.type === "D"
-                  ? <PopoverListMembersItem onItemClick={this.startMeeting} cam={1} text={<span> {
-                        'Call '
-                      }
-                      <strong>{channelName}</strong>
-                    </span>} theme={this.props.theme}/>
-                  : <PopoverListMembersItem onItemClick={this.startMeeting} cam={1} text={<span> {
-                        'Create a BigBlueButton Meeting'
-                      }
-                      </span>} theme={this.props.theme}/>
-              }
-
-            </div>
-            {popoverButton}
-          </Popover>
-        </Overlay>
       </div>
-
     </div>);
   }
 }
+
 
 const getStyle = makeStyleFromTheme((theme) => {
   return {

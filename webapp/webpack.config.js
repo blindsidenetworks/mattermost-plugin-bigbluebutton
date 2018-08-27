@@ -3,6 +3,13 @@ module.exports = {
     output: {
         filename: 'dist/bigbluebutton_bundle.js'
     },
+    externals: {
+      react: 'React',
+      redux: 'Redux',
+      'react-redux': 'ReactRedux',
+      'react-bootstrap': 'ReactBootstrap',
+
+    },
     module: {
         loaders: [
             {

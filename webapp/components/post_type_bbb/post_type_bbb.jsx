@@ -14,7 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-const React = window.react;
+import React from 'react';
+
 const {
   Button,
   Modal,
@@ -23,7 +24,7 @@ const {
   Col,
   Row,
   Panel
-} = window['react-bootstrap'];
+} = window.ReactBootstrap;
 import {bootstrapUtils} from 'react-bootstrap/lib/utils';
 import {getChannel} from 'mattermost-redux/selectors/entities/channels';
 import {formatDate} from '../../utils/date_utils';
@@ -31,7 +32,7 @@ import {formatDate} from '../../utils/date_utils';
 import PropTypes from 'prop-types';
 import {makeStyleFromTheme} from 'mattermost-redux/utils/theme_utils';
 
-const PostUtils = window['post-utils'];
+const PostUtils = window.PostUtils;
 
 export default class PostTypebbb extends React.PureComponent {
   static propTypes = {
@@ -508,8 +509,6 @@ const getStyle = makeStyleFromTheme((theme) => {
       borderWidth: '0px',
       borderColor: '#BDBDBF',
 
-      //margin: '5px 0 5px 20px',
-      //  padding: '2px 5px'
     },
     container: {
       borderLeftStyle: 'solid',
@@ -517,7 +516,6 @@ const getStyle = makeStyleFromTheme((theme) => {
       paddingLeft: '10px',
       paddingBottom: '5px',
       paddingTop: '5px',
-      //padding: '10px',
       borderLeftColor: theme.buttonBg
     },
     body: {
@@ -531,9 +529,6 @@ const getStyle = makeStyleFromTheme((theme) => {
     button: {
       fontFamily: 'Open Sans',
       fontSize: '13px',
-      //fontWeight: 'bold',
-      //letterSpacing: '1px',
-      //  height: '13px',
       lineHeight: '13px',
       marginTop: '10px',
       marginRight: '2px',
@@ -544,8 +539,6 @@ const getStyle = makeStyleFromTheme((theme) => {
     buttonEnd: {
       fontFamily: 'Open Sans',
       fontSize: '13px',
-      //fontWeight: 'bold',
-      //letterSpacing: '1px',
       lineHeight: '13px',
       marginTop: '10px',
       marginRight: '2px',
@@ -570,7 +563,6 @@ const getStyle = makeStyleFromTheme((theme) => {
     summaryItem: {
       fontFamily: 'Open Sans',
       fontSize: '14px',
-      //  lineHeight: '26px'
     },
     recordingBody: {
       lineHeight: '26px'

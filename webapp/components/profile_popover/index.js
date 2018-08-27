@@ -14,8 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-const {connect} = window['react-redux'];
-const {bindActionCreators} = window.redux;
+const {connect} = window.ReactRedux;
+const {bindActionCreators} = window.Redux;
 import {getCurrentTeam} from 'mattermost-redux/selectors/entities/teams';
 import {getCurrentUser} from 'mattermost-redux/selectors/entities/users';
 import ProfilePopover from './profile_popover.jsx';
