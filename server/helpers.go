@@ -21,9 +21,9 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
-	bbbAPI "github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/api"
-	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/dataStructs"
-	BBBwh "github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/webhook"
+	bbbAPI "github.com/ypgao1/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/api"
+	"github.com/ypgao1/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/dataStructs"
+	BBBwh "github.com/ypgao1/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/webhook"
 	"github.com/mattermost/mattermost-server/model"
 	"github.com/segmentio/ksuid"
 )
@@ -81,10 +81,16 @@ func (p *Plugin) LoadMeetingsFromStore() {
 	byted, _ := p.API.KVGet(key)
 	json.Unmarshal(byted, &p.Meetings)
 
+	recordings_byted, _ := p.API.KVGet("recording_queue")
+	json.Unmarshal(recordings_byted, &p.MeetingsWaitingforRecordings)
+
 }
 func (p *Plugin) SaveMeetingToStore() {
 	byted, _ := json.Marshal(p.Meetings)
 	p.API.KVSet(key, byted)
+
+	recordings_byted, _ := json.Marshal(p.MeetingsWaitingforRecordings)
+	p.API.KVSet("recording_queue", recordings_byted)
 }
 
 func (p *Plugin) FindMeeting(meeting_id string) *dataStructs.MeetingRoom {
@@ -125,7 +131,7 @@ func (p *Plugin) createStartMeetingPost(user_id string, channel_id string, m *da
 	}
 
 	textPost := &model.Post{UserId: user_id, ChannelId: channel_id,
-		Message: "#BigBlueButton #" + m.Name_ + " #ID" + m.MeetingID_, Type: "custom_bbb"} 
+		Message: "#BigBlueButton #" + m.Name_ + " #ID" + m.MeetingID_, Type: "custom_bbb"}
 
 	textPost.Props = model.StringInterface{
 		"from_webhook":      "true",

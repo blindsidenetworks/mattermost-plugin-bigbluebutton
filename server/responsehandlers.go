@@ -25,8 +25,8 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
-	bbbAPI "github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/api"
-	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/dataStructs"
+	bbbAPI "github.com/ypgao1/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/api"
+	"github.com/ypgao1/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/dataStructs"
 	"github.com/mattermost/mattermost-server/model"
 )
 
@@ -349,7 +349,7 @@ type MyCustomClaims struct {
 }
 
 func (p *Plugin) handleRecordingReady(w http.ResponseWriter, r *http.Request) {
-
+	p.API.LogDebug("handleRecordingReady reached")
 	r.ParseForm()
 	parameters := (r.FormValue("signed_parameters"))
 	token, _ := jwt.ParseWithClaims(parameters, &MyCustomClaims{}, func(token *jwt.Token) (interface{}, error) {
@@ -358,41 +358,41 @@ func (p *Plugin) handleRecordingReady(w http.ResponseWriter, r *http.Request) {
 	claims, _ := token.Claims.(*MyCustomClaims)
 	meetingid := claims.MeetingID
 	recordid := claims.RecordID
-
-	recordingsresponse, _ := bbbAPI.GetRecordings(meetingid, recordid, "")
-	if recordingsresponse.ReturnCode != "SUCCESS" {
-		w.WriteHeader(http.StatusOK)
-		return
-	}
-
-	meetingpointer := p.FindMeeting(meetingid)
-
-	if meetingpointer == nil {
-		w.WriteHeader(http.StatusOK)
-		return
-	}
-
-	postid := meetingpointer.PostId
-	if postid == "" {
-		panic("no post id found")
-	}
-	post, err := p.API.GetPost(postid)
-	if err != nil {
-		http.Error(w, err.Error(), err.StatusCode)
-		return
-	}
-
-	post.Message = "#BigBlueButton #" + meetingpointer.Name_ + " #" + recordid + " #recording" + " recordings"
-	post.Props["recording_status"] = "COMPLETE"
-	post.Props["is_published"] = "true"
-	post.Props["record_id"] = recordid
-	post.Props["recording_url"] = recordingsresponse.Recordings.Recording[0].Playback.Format[0].Url
-
-	post.Props["images"] = strings.Join(recordingsresponse.Recordings.Recording[0].Playback.Format[0].Images, ",")
-	if _, err := p.API.UpdatePost(post); err != nil {
-		http.Error(w, err.Error(), err.StatusCode)
-		return
-	}
+	p.API.LogDebug(meetingid + " " + recordid)
+	// recordingsresponse, _ := bbbAPI.GetRecordings(meetingid, recordid, "")
+	// if recordingsresponse.ReturnCode != "SUCCESS" {
+	// 	w.WriteHeader(http.StatusOK)
+	// 	return
+	// }
+	//
+	// meetingpointer := p.FindMeeting(meetingid)
+	//
+	// if meetingpointer == nil {
+	// 	w.WriteHeader(http.StatusOK)
+	// 	return
+	// }
+	//
+	// postid := meetingpointer.PostId
+	// if postid == "" {
+	// 	panic("no post id found")
+	// }
+	// post, err := p.API.GetPost(postid)
+	// if err != nil {
+	// 	http.Error(w, err.Error(), err.StatusCode)
+	// 	return
+	// }
+	//
+	// post.Message = "#BigBlueButton #" + meetingpointer.Name_ + " #" + recordid + " #recording" + " recordings"
+	// post.Props["recording_status"] = "COMPLETE"
+	// post.Props["is_published"] = "true"
+	// post.Props["record_id"] = recordid
+	// post.Props["recording_url"] = recordingsresponse.Recordings.Recording[0].Playback.Format[0].Url
+	//
+	// post.Props["images"] = strings.Join(recordingsresponse.Recordings.Recording[0].Playback.Format[0].Images, ",")
+	// if _, err := p.API.UpdatePost(post); err != nil {
+	// 	http.Error(w, err.Error(), err.StatusCode)
+	// 	return
+	// }
 
 	w.WriteHeader(http.StatusOK)
 	return
