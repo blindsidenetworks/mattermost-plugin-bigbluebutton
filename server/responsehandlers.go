@@ -349,16 +349,16 @@ type MyCustomClaims struct {
 }
 
 func (p *Plugin) handleRecordingReady(w http.ResponseWriter, r *http.Request) {
-	p.API.LogDebug("handleRecordingReady reached")
-	r.ParseForm()
-	parameters := (r.FormValue("signed_parameters"))
-	token, _ := jwt.ParseWithClaims(parameters, &MyCustomClaims{}, func(token *jwt.Token) (interface{}, error) {
-		return []byte("AllYourBase"), nil
-	})
-	claims, _ := token.Claims.(*MyCustomClaims)
-	meetingid := claims.MeetingID
-	recordid := claims.RecordID
-	p.API.LogDebug(meetingid + " " + recordid)
+	// p.API.LogDebug("handleRecordingReady reached")
+	// r.ParseForm()
+	// parameters := (r.FormValue("signed_parameters"))
+	// token, _ := jwt.ParseWithClaims(parameters, &MyCustomClaims{}, func(token *jwt.Token) (interface{}, error) {
+	// 	return []byte("AllYourBase"), nil
+	// })
+	// claims, _ := token.Claims.(*MyCustomClaims)
+	// meetingid := claims.MeetingID
+	// recordid := claims.RecordID
+	// p.API.LogDebug(meetingid + " " + recordid)
 	// recordingsresponse, _ := bbbAPI.GetRecordings(meetingid, recordid, "")
 	// if recordingsresponse.ReturnCode != "SUCCESS" {
 	// 	w.WriteHeader(http.StatusOK)
@@ -422,7 +422,8 @@ func (p *Plugin) handleGetAttendeesInfo(w http.ResponseWriter, r *http.Request) 
 
 	postid := meetingpointer.PostId
 	if postid == "" {
-		panic("no post id found")
+		w.WriteHeader(http.StatusOK)
+		return
 	}
 	post, err := p.API.GetPost(postid)
 	if err != nil {
