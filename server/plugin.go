@@ -24,7 +24,6 @@ import (
 
 	bbbAPI "github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/api"
 	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/dataStructs"
-	BBBwh "github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/webhook"
 	"github.com/mattermost/mattermost-server/model"
 	"github.com/mattermost/mattermost-server/plugin"
 	"github.com/robfig/cron"
@@ -38,8 +37,6 @@ type Plugin struct {
 	configuration                atomic.Value
 	Meetings                     []dataStructs.MeetingRoom
 	MeetingsWaitingforRecordings []dataStructs.MeetingRoom
-	webhooks                     []*dataStructs.WebHook
-	Hookid                       string
 }
 
 //OnActivate runs as soon as plugin activates
@@ -56,14 +53,9 @@ func (p *Plugin) OnActivate() error {
 		return err
 	}
 
-	BBBwh.SetWebhookAPI(config.BASE_URL+"/hooks/", config.SALT)
 	bbbAPI.SetAPI(config.BASE_URL+"/", config.SALT)
 
-	hookid := p.createEndMeetingWebook(config.CallBack_URL+"/plugins/bigbluebutton/webhookendmeeting", "")
-	p.Hookid = hookid
-
 	//every 2 minutes, look through active meetings and check if recordings are done
-
 	p.c = cron.New()
 	p.c.AddFunc("@every 2m", p.Loopthroughrecordings)
 	p.c.Start()
@@ -76,18 +68,6 @@ func (p *Plugin) OnActivate() error {
 	})
 }
 
-func (p *Plugin) OnConfigurationChange() error {
-	var configuration Configuration
-	// loads configuration from our config ui page
-	err := p.API.LoadPluginConfiguration(&configuration)
-	//stores the config in an Atomic.Value place
-	p.configuration.Store(&configuration)
-	return err
-}
-func (p *Plugin) config() *Configuration {
-	//returns the config file we had stored in Atomic.Value
-	return p.configuration.Load().(*Configuration)
-}
 
 //following method is to create a meeting from '/bbb' slash command
 func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*model.CommandResponse, *model.AppError) {
@@ -118,8 +98,6 @@ func (p *Plugin) ServeHTTP(c *plugin.Context,w http.ResponseWriter, r *http.Requ
 		p.handleEndMeeting(w, r)
 	} else if path == "/create" {
 		p.handleCreateMeeting(w, r)
-	} else if strings.HasPrefix(path, "/webhookendmeeting") {
-		p.handleWebhookMeetingEnded(w, r)
 	} else if strings.HasPrefix(path, "/recordingready") {
 		p.handleRecordingReady(w, r)
 	} else if path == "/getattendees" {
@@ -133,6 +111,7 @@ func (p *Plugin) ServeHTTP(c *plugin.Context,w http.ResponseWriter, r *http.Requ
 	} else if path == "/ismeetingrunning" {
 		p.handleIsMeetingRunning(w, r)
 	} else if path == "/redirect"{
+		// html file to automatically close a window
 			fmt.Fprintf(w,`<!doctype html><html><head><script>
 				 								window.onload = function load() {
 													window.open('', '_self', '');
@@ -149,7 +128,6 @@ func (p *Plugin) OnDeactivate() error {
 	//on deactivate, save meetings details, stop check recordings looper, destroy webhook
 	p.SaveMeetingToStore()
 	p.c.Stop()
-	BBBwh.DestroyHook(p.Hookid)
 	return nil
 }
 

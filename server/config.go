@@ -26,6 +26,19 @@ type Configuration struct {
 	CallBack_URL string
 }
 
+func (p *Plugin) OnConfigurationChange() error {
+	var configuration Configuration
+	// loads configuration from our config ui page
+	err := p.API.LoadPluginConfiguration(&configuration)
+	//stores the config in an Atomic.Value place
+	p.configuration.Store(&configuration)
+	return err
+}
+func (p *Plugin) config() *Configuration {
+	//returns the config file we had stored in Atomic.Value
+	return p.configuration.Load().(*Configuration)
+}
+
 func (c *Configuration) IsValid() error {
 	if len(c.BASE_URL) == 0 {
 		return fmt.Errorf("BASE URL is not configured.")
