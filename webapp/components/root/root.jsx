@@ -163,7 +163,13 @@ export default class Root extends React.PureComponent {
       </a>
 
     </div>);
-    const style = getStyle(this.props.theme);
+
+    var pos_width = (window.innerWidth - 400 + "px");
+    var style = getStyle(pos_width,this.props.theme);
+
+    style.popover["marginLeft"] = pos_width
+    style.popoverDM["marginLeft"] = pos_width
+
     const myteam = this.props.teamname
     const tooltip = (<Tooltip id="tooltip">
       Go to this channel
@@ -236,8 +242,8 @@ export default class Root extends React.PureComponent {
 }
 
 /* Define CSS styles here */
-const getStyle = makeStyleFromTheme((theme) => {
-  var x_pos = (window.innerWidth - 400 + "px"); //shouldn't be set here as it doesn't rerender 
+var getStyle = makeStyleFromTheme((theme) => {
+  var x_pos = (window.innerWidth - 400 + "px"); //shouldn't be set here as it doesn't rerender
   return {
     popover: {
       marginLeft: x_pos,
