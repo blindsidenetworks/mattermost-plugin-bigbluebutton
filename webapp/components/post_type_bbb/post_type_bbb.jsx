@@ -141,9 +141,13 @@ export default class PostTypebbb extends React.PureComponent {
   }
 
   getAttendees = async () => {
-    var resp = await this.props.actions.getAttendees(this.props.channelId, this.props.post.props.meeting_id);
-    await this.setState({users: resp.attendees, userCount: resp.num});
-    return resp.num;
+    var isRunning = await this.isMeetingRunning(this.props.post.props.meeting_id);
+    if (isRunning) {
+      var resp = await this.props.actions.getAttendees(this.props.channelId, this.props.post.props.meeting_id);
+      await this.setState({users: resp.attendees, userCount: resp.num});
+      return resp.num;
+    }return 0;
+
   }
 
   publishRecordings = async () => {
@@ -364,7 +368,7 @@ export default class PostTypebbb extends React.PureComponent {
 
           for (var i = 0; i < imagesArray.length; i++) {
             images.push(<Col sm={3} xs={3} md={2} lg={2}>
-              <Thumbnail href={imagesArray[i]} responsive="responsive" src={props.recording_url}/>
+              <Thumbnail href={props.recording_url} responsive="responsive" src={imagesArray[i]}/>
             </Col>);
           }
 

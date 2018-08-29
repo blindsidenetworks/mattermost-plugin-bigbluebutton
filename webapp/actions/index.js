@@ -199,6 +199,7 @@ export function getAttendees(channelId, meetingid) {
 }
 
 export function publishRecordings(channelId, recordid, publish, meetingId) {
+  console.log(recordid + " " + publish)
   return async (dispatch, getState) => {
 
     try {
@@ -217,7 +218,7 @@ export function publishRecordings(channelId, recordid, publish, meetingId) {
         root_id: '',
         parent_id: '',
         original_id: '',
-        message: 'Cant publish/unpublish',
+        message: error.response.text ,
         type: 'system_ephemeral',
         props: {},
         hashtags: '',
@@ -257,7 +258,7 @@ export function deleteRecordings(channelId, recordid, meetingId) {
         root_id: '',
         parent_id: '',
         original_id: '',
-        message: JSON.stringify(error),
+        message: error.response.text,
         type: 'system_ephemeral',
         props: {},
         hashtags: '',

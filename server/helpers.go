@@ -23,12 +23,9 @@ import (
 	"strings"
 	bbbAPI "github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/api"
 	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/dataStructs"
-	BBBwh "github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/webhook"
 	"github.com/mattermost/mattermost-server/model"
 	"github.com/segmentio/ksuid"
 )
-
-const key = "key"
 
 func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, description string) {
 
@@ -78,15 +75,22 @@ func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, d
 }
 
 func (p *Plugin) LoadMeetingsFromStore() {
-	byted, _ := p.API.KVGet(key)
+	byted, _ := p.API.KVGet("all_meetings")
 	json.Unmarshal(byted, &p.Meetings)
+
+	recordings_byted, _ := p.API.KVGet("recording_queue")
+	json.Unmarshal(recordings_byted, &p.MeetingsWaitingforRecordings)
 
 }
 func (p *Plugin) SaveMeetingToStore() {
 	byted, _ := json.Marshal(p.Meetings)
-	p.API.KVSet(key, byted)
+	p.API.KVSet("all_meetings", byted)
+
+	recordings_byted, _ := json.Marshal(p.MeetingsWaitingforRecordings)
+	p.API.KVSet("recording_queue", recordings_byted)
 }
 
+//returns a meeting pointer so we'll be able to manipulate its content from outside the array
 func (p *Plugin) FindMeeting(meeting_id string) *dataStructs.MeetingRoom {
 	for i := range p.Meetings {
 		if p.Meetings[i].MeetingID_ == meeting_id {
@@ -104,17 +108,6 @@ func (p *Plugin) FindMeetingfromInternal(meeting_id string) *dataStructs.Meeting
 	return nil
 }
 
-func (p *Plugin) createEndMeetingWebook(callback_url string, meeting_id string) string {
-	webhook := new(dataStructs.WebHook)
-	webhook.CallBackURL = callback_url
-	if meeting_id != "" {
-		webhook.MeetingId = meeting_id
-	}
-	BBBwh.CreateHook(webhook)
-	p.webhooks = append(p.webhooks, webhook)
-
-	return webhook.HookID
-}
 
 func (p *Plugin) createStartMeetingPost(user_id string, channel_id string, m *dataStructs.MeetingRoom) {
 
@@ -125,14 +118,13 @@ func (p *Plugin) createStartMeetingPost(user_id string, channel_id string, m *da
 	}
 
 	textPost := &model.Post{UserId: user_id, ChannelId: channel_id,
-		Message: "#BigBlueButton #" + m.Name_ + " #ID" + m.MeetingID_, Type: "custom_bbb"} 
+		Message: "#BigBlueButton #" + m.Name_ + " #ID" + m.MeetingID_, Type: "custom_bbb"}
 
 	textPost.Props = model.StringInterface{
 		"from_webhook":      "true",
 		"override_username": "BigBlueButton",
 		"override_icon_url": "https://pbs.twimg.com/profile_images/467451035837923328/JxPpOTL6_400x400.jpeg",
 		"meeting_id":        m.MeetingID_,
-		"meeting_link":      "www.google.com",
 		"meeting_status":    "STARTED",
 		"meeting_personal":  false,
 		"meeting_topic":     m.Name_, //fill in this meeting topic
@@ -142,19 +134,6 @@ func (p *Plugin) createStartMeetingPost(user_id string, channel_id string, m *da
 
 	postpointer, _ := p.API.CreatePost(textPost)
 	m.PostId = postpointer.Id
-}
-
-func (p *Plugin) UpdatePostButtons(postid string, message string) {
-	post, err := p.API.GetPost(postid)
-	if err != nil {
-		return
-	}
-	post.Message = message
-	post.Props = nil
-
-	p.API.UpdatePost(post)
-	return
-
 }
 
 func (p *Plugin) DeleteMeeting(meeting_id string) {
