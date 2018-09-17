@@ -19,6 +19,8 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"errors"
+   // "log"
 	"net/url"
 	"strings"
 	bbbAPI "github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/api"
@@ -27,9 +29,9 @@ import (
 	"github.com/segmentio/ksuid"
 )
 
-func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, description string) {
+func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, description string) error {
 
-	config := p.config()
+	 // config := p.config()
 
 	if len(details) == 2 {
 		m.Name_ = details[1]
@@ -37,7 +39,15 @@ func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, d
 		m.Name_ = "Big Blue Button Meeting"
 	}
 
-	callbackURL := config.CallBack_URL
+
+	siteconfig := p.API.GetConfig()
+
+	var callbackURL string
+	if siteconfig.ServiceSettings.SiteURL != nil{
+		callbackURL = *siteconfig.ServiceSettings.SiteURL
+	}else{
+		return errors.New("SiteURL not set")
+	}
 	if !strings.HasPrefix(callbackURL, "http"){
 		callbackURL = "http://" + callbackURL
 	}
@@ -71,7 +81,7 @@ func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, d
 	UrlEnd.Path += "/plugins/bigbluebutton/meetingendedcallback?" + m.MeetingID_ + "&" + m.ValidToken
 	Endmeetingcallback := UrlEnd.String()
 	m.Meta_endcallbackurl = Endmeetingcallback
-
+	return nil
 }
 
 func (p *Plugin) LoadMeetingsFromStore() {
@@ -88,6 +98,7 @@ func (p *Plugin) SaveMeetingToStore() {
 
 	recordings_byted, _ := json.Marshal(p.MeetingsWaitingforRecordings)
 	p.API.KVSet("recording_queue", recordings_byted)
+
 }
 
 //returns a meeting pointer so we'll be able to manipulate its content from outside the array

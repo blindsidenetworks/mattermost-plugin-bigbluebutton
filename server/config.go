@@ -21,9 +21,8 @@ import (
 )
 
 type Configuration struct {
-	BASE_URL     string
+	BASE_URL     string //change "Base_URL" to something like "BBB_server_url"
 	SALT         string
-	CallBack_URL string
 }
 
 func (p *Plugin) OnConfigurationChange() error {
@@ -44,8 +43,6 @@ func (c *Configuration) IsValid() error {
 		return fmt.Errorf("BASE URL is not configured.")
 	} else if len(c.SALT) == 0 {
 		return fmt.Errorf("SALT is not configured.")
-	} else if len(c.CallBack_URL) == 0 {
-		return fmt.Errorf("Callback URL is not configured.")
 	}
 
 	return nil

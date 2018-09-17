@@ -20,9 +20,4 @@ settings_schema:
     help_text: >
       The secret you generated to securely connect to your BigBlueButton. Default for
       test-install is: 8cd8ef52e8e101574e400365b55e11a6
-  - key: CallBack_URL
-    display_name: Site URL
-    type: text
-    help_text: >
-      Your mattermost server URL, ie: https://mycompany.mattermost.com
   footer: All forms must be filled or pluging will fail to activate. Deactivate and reactivate your plugin when changing to a new configuration. Don't worry, no data will be lost

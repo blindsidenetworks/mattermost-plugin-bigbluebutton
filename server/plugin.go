@@ -73,7 +73,10 @@ func (p *Plugin) OnActivate() error {
 func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*model.CommandResponse, *model.AppError) {
 
 	meetingpointer := new(dataStructs.MeetingRoom)
-	p.PopulateMeeting(meetingpointer, nil, "")
+	err := p.PopulateMeeting(meetingpointer, nil, "") 
+	if err != nil {
+		return nil, model.NewAppError("ExecuteCommand", "Please provide a 'Site URL' in Settings > General > Configuration", nil, err.Error(), http.StatusInternalServerError)
+	}
 
 	p.createStartMeetingPost(args.UserId, args.ChannelId, meetingpointer)
 	p.Meetings = append(p.Meetings, *meetingpointer)

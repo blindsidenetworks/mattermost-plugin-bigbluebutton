@@ -47,11 +47,18 @@ func (p *Plugin) handleCreateMeeting(w http.ResponseWriter, r *http.Request) {
 	json.Unmarshal([]byte(body), &request)
 
 	meetingpointer := new(dataStructs.MeetingRoom)
+	var err error
 	if request.Topic == "" {
-		p.PopulateMeeting(meetingpointer, nil, request.Desc)
+		err = p.PopulateMeeting(meetingpointer, nil, request.Desc)
 	} else {
-		p.PopulateMeeting(meetingpointer, []string{"create", request.Topic}, request.Desc)
+		err = p.PopulateMeeting(meetingpointer, []string{"create", request.Topic}, request.Desc)
 	}
+
+	if err != nil{
+		http.Error(w, "Please provide a 'Site URL' in Settings > General > Configuration.", http.StatusUnprocessableEntity)
+		return
+	}
+
 	//creates the start meeting post
 	p.createStartMeetingPost(request.User_id, request.Channel_id, meetingpointer)
 
@@ -418,10 +425,8 @@ func (p *Plugin) handleGetAttendeesInfo(w http.ResponseWriter, r *http.Request) 
 		Num:       Length,
 		Attendees: Array,
 	}
-	userJson, err2 := json.Marshal(myresp)
-	if err2 != nil {
-		panic(err2)
-	}
+	userJson, _ := json.Marshal(myresp)
+
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(userJson)
@@ -453,6 +458,14 @@ func (p *Plugin) handlePublishRecordings(w http.ResponseWriter, r *http.Request)
 	recordid := request.RecordId
 	publish := request.Publish
 
+
+
+	meetingpointer := p.FindMeeting(request.MeetingId)
+	if meetingpointer == nil {
+		http.Error(w, "Error: Cannot find the meeting_id for the recording, MeetingID#"+request.MeetingId, http.StatusForbidden)
+		return
+	}
+
 	publishrecordingsresponse := bbbAPI.PublishRecordings(recordid, publish)
 
 	if publishrecordingsresponse.ReturnCode != "SUCCESS" {
@@ -460,12 +473,6 @@ func (p *Plugin) handlePublishRecordings(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-
-	meetingpointer := p.FindMeeting(request.MeetingId)
-	if meetingpointer == nil {
-		http.Error(w, "Error: Cannot find the meeting_id for the recording", http.StatusForbidden)
-		return
-	}
 
 
 	post, err := p.API.GetPost(meetingpointer.PostId)
