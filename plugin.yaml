@@ -11,15 +11,15 @@ settings_schema:
     type: text
     default: http://test-install.blindsidenetworks.com/bigbluebutton/api
     help_text: >
-      Enter the url of your BigBlueButton server ending with `/bigbluebutton/api`
-      Default: `http://test-install.blindsidenetworks.com/bigbluebutton/api`
+      The URL of your BigBlueButton server. Ends with /bigbluebutton/api
+      Default: `http://test-install.blindsidenetworks.com/bigbluebutton/api`.
   - key: SALT
     display_name: Secret
     type: text
     default: 8cd8ef52e8e101574e400365b55e11a6
     help_text: >
-      The secret you generated to securely connect to your BigBlueButton. Default for
-      test-install is: 8cd8ef52e8e101574e400365b55e11a6
+      The secret you generated to securely connect to your BigBlueButton server. Default for
+      test-install: 8cd8ef52e8e101574e400365b55e11a6
   - key: CallBack_URL
     display_name: Site URL
     type: text
