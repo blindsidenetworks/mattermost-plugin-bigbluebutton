@@ -19,6 +19,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"errors"
 	"net/url"
 	"strings"
 	bbbAPI "github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/api"
@@ -27,9 +28,7 @@ import (
 	"github.com/segmentio/ksuid"
 )
 
-func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, description string) {
-
-	config := p.config()
+func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, description string) error {
 
 	if len(details) == 2 {
 		m.Name_ = details[1]
@@ -37,7 +36,15 @@ func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, d
 		m.Name_ = "Big Blue Button Meeting"
 	}
 
-	callbackURL := config.CallBack_URL
+
+	siteconfig := p.API.GetConfig()
+
+	var callbackURL string
+	if siteconfig.ServiceSettings.SiteURL != nil {
+		callbackURL = *siteconfig.ServiceSettings.SiteURL
+	} else {
+		return errors.New("SiteURL not set")
+	}
 	if !strings.HasPrefix(callbackURL, "http"){
 		callbackURL = "http://" + callbackURL
 	}
@@ -52,12 +59,10 @@ func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, d
 	var RedirectUrl *url.URL
 	RedirectUrl, _ = url.Parse(callbackURL)
 	RedirectUrl.Path += "/plugins/bigbluebutton/redirect"
-  StringRedirectUrl := RedirectUrl.String()
+	StringRedirectUrl := RedirectUrl.String()
 	m.LogoutURL = StringRedirectUrl
 	m.LoopCount = 0
 	m.ValidToken = GenerateRandomID()
-
-
 
 	var recordingcallbackurl string
 	var Url *url.URL
@@ -71,7 +76,7 @@ func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, d
 	UrlEnd.Path += "/plugins/bigbluebutton/meetingendedcallback?" + m.MeetingID_ + "&" + m.ValidToken
 	Endmeetingcallback := UrlEnd.String()
 	m.Meta_endcallbackurl = Endmeetingcallback
-
+	return nil
 }
 
 func (p *Plugin) LoadMeetingsFromStore() {
@@ -88,9 +93,10 @@ func (p *Plugin) SaveMeetingToStore() {
 
 	recordings_byted, _ := json.Marshal(p.MeetingsWaitingforRecordings)
 	p.API.KVSet("recording_queue", recordings_byted)
+
 }
 
-//returns a meeting pointer so we'll be able to manipulate its content from outside the array
+// Returns a meeting pointer so we'll be able to manipulate its content from outside the array.
 func (p *Plugin) FindMeeting(meeting_id string) *dataStructs.MeetingRoom {
 	for i := range p.Meetings {
 		if p.Meetings[i].MeetingID_ == meeting_id {
@@ -112,7 +118,7 @@ func (p *Plugin) FindMeetingfromInternal(meeting_id string) *dataStructs.Meeting
 func (p *Plugin) createStartMeetingPost(user_id string, channel_id string, m *dataStructs.MeetingRoom) {
 
 	config := p.config()
-	//if config page is not set uh oh
+	// If config page is not set uh oh.
 	if err := config.IsValid(); err != nil {
 		return
 	}
@@ -127,7 +133,7 @@ func (p *Plugin) createStartMeetingPost(user_id string, channel_id string, m *da
 		"meeting_id":        m.MeetingID_,
 		"meeting_status":    "STARTED",
 		"meeting_personal":  false,
-		"meeting_topic":     m.Name_, //fill in this meeting topic
+		"meeting_topic":     m.Name_, // Fill in this meeting topic.
 		"meeting_desc":      m.Meta,
 		"user_count":        0,
 	}
@@ -147,26 +153,6 @@ func (p *Plugin) DeleteMeeting(meeting_id string) {
 	p.Meetings = append(p.Meetings[:index], p.Meetings[index+1:]...)
 }
 
-// check if an attendee is a MODERATOR, useful feature decided not to include
-// func (p *Plugin) IsModerator(meeting_id string, modpw string, fullname string) bool {
-// 	var meetinginfo dataStructs.GetMeetingInfoResponse
-// 	resp := bbbAPI.GetMeetingInfo(meeting_id, modpw, &meetinginfo)
-// 	if resp == "FAILED" {
-// 		return true
-// 	}
-// 	attendeesArray := meetinginfo.Attendees.Attendees
-// 	for i := 0; i < len(attendeesArray); i++ {
-// 		if attendeesArray[i].FullName == fullname {
-// 			if attendeesArray[i].Role == "VIEWER" {
-// 				return false
-// 			} else if attendeesArray[i].Role == "MODERATOR" {
-// 				return true
-// 			}
-// 		}
-// 	}
-// 	return false
-// }
-
 func GetAttendees(meeting_id string, modpw string) (int, []string) {
 	var meetinginfo dataStructs.GetMeetingInfoResponse
 	resp := bbbAPI.GetMeetingInfo(meeting_id, modpw, &meetinginfo)
@@ -182,6 +168,7 @@ func GetAttendees(meeting_id string, modpw string) (int, []string) {
 	}
 	return NumAttendees, Fullnames
 }
+
 func FormatSeconds(seconds int64) string {
 	var hours int64
 	hours = seconds / 3600
