@@ -40,9 +40,9 @@ func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, d
 	siteconfig := p.API.GetConfig()
 
 	var callbackURL string
-	if siteconfig.ServiceSettings.SiteURL != nil{
+	if siteconfig.ServiceSettings.SiteURL != nil {
 		callbackURL = *siteconfig.ServiceSettings.SiteURL
-	}else{
+	} else {
 		return errors.New("SiteURL not set")
 	}
 	if !strings.HasPrefix(callbackURL, "http"){
