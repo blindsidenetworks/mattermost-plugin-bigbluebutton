@@ -21,7 +21,7 @@ import (
 )
 
 type Configuration struct {
-	BASE_URL     string //change "Base_URL" to something like "BBB_server_url"
+	BASE_URL     string
 	SALT         string
 }
 
@@ -29,12 +29,12 @@ func (p *Plugin) OnConfigurationChange() error {
 	var configuration Configuration
 	// loads configuration from our config ui page
 	err := p.API.LoadPluginConfiguration(&configuration)
-	//stores the config in an Atomic.Value place
+	// stores the config in an Atomic.Value place
 	p.configuration.Store(&configuration)
 	return err
 }
 func (p *Plugin) config() *Configuration {
-	//returns the config file we had stored in Atomic.Value
+	// returns the config file we had stored in Atomic.Value
 	return p.configuration.Load().(*Configuration)
 }
 
