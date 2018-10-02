@@ -59,7 +59,7 @@ func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, d
 	var RedirectUrl *url.URL
 	RedirectUrl, _ = url.Parse(callbackURL)
 	RedirectUrl.Path += "/plugins/bigbluebutton/redirect"
-        StringRedirectUrl := RedirectUrl.String()
+	StringRedirectUrl := RedirectUrl.String()
 	m.LogoutURL = StringRedirectUrl
 	m.LoopCount = 0
 	m.ValidToken = GenerateRandomID()
