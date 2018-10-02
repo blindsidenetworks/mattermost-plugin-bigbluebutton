@@ -46,7 +46,7 @@ export function startMeeting(channelId, description = '', topic = '', meetingId 
       await Client.startMeeting(getState().entities.users.currentUserId, channelId, topic, description);
     } catch (error) {
       var message_text = 'BigBlueButton did not successfully start a meeting';
-      if (error.status == 422 ){ //SiteURL is not set
+      if (error.status == 422 ) { // SiteURL is not set
          message_text =error.response.text;
       }
       const post = {
