@@ -28,7 +28,7 @@ Want to see how the BigBlueButton integration with MatterMost works.  Checkout t
 	 - Restart your Mattermost with `sudo systemctl restart mattermost` assuming you used *systemd* for Mattermost 	services
  5. Go to **System Console > Plugins > Management** and upload your `bigbluebutton.tar.gz`. The BigBlueButton Plugin should appear under **Installed Plugins**.    ![
 ](https://raw.githubusercontent.com/blindsidenetworks/mattermost-plugin-bigbluebutton/master/docs_images/PluginManagement.png)
- 6. Before activating the plugin, you must configure the plugin settings. By default, you are given a BigBlueButton test server to try it out. However, oyou have options.  Like MatterMost, BigBlueButton is open source.  You are (more than) welcome to [setup your own BigBlueButton server](http://docs.bigbluebutton.org/install/install.html#Install_).  If you do, the command `sudo bbb-conf --secret` will print out the server's URL and secret key for configuration with MatterMost.  Alternatively, you can [contact](https://blindsidenetworks.com/contact/) Blindside Networks for [hosting options](https://blindsidenetworks.com/services/).
+ 6. Before activating the plugin, you must configure the plugin settings. By default, you are given a BigBlueButton test server to try it out. However, you have options.  Like MatterMost, BigBlueButton is open source.  You are (more than) welcome to [setup your own BigBlueButton server](http://docs.bigbluebutton.org/install/install.html#Install_).  If you do, the command `sudo bbb-conf --secret` will print out the server's URL and secret key for configuration with MatterMost.  Alternatively, you can [contact](https://blindsidenetworks.com/contact/) Blindside Networks for [hosting options](https://blindsidenetworks.com/services/).
 
 	The **Site URL** is the site of your Mattermost without any paths. For example, if the location of your Mattermost Town Square is : `https://mysite.mattermost.com/core/channels/town-square`, enter: `https://mysite.mattermost.com`![
 ](https://raw.githubusercontent.com/blindsidenetworks/mattermost-plugin-bigbluebutton/master/docs_images/BBBsettingspage.png)
@@ -78,6 +78,10 @@ You can type `/bbb` in any channel to create a meeting.  When
 
 ![
 ](https://raw.githubusercontent.com/blindsidenetworks/mattermost-plugin-bigbluebutton/master/docs_images/slashcommand.png)
+
+## Setting up your own BigBlueButton server
+
+Using the [bbb-install.sh](https://github.com/bigbluebutton/bbb-install) script you can setup your own BigBlueButton server in about 15 minutes.  If your interested in going through the steps in detail, see [BigBlueButton install guide](http://docs.bigbluebutton.org/install/install.html).
 
 ## Contributing
 
