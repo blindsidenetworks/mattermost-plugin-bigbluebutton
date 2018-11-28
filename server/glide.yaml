@@ -1,4 +1,4 @@
-package: github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server
+package: github.com/ypgao1/mattermost-plugin-bigbluebutton/server
 import:
 - package: github.com/dgrijalva/jwt-go
   version: ^3.2.0
