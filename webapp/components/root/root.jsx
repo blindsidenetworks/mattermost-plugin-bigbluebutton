@@ -37,12 +37,12 @@ export default class Root extends React.PureComponent {
     lastpostperchannel: PropTypes.object.isRequired,
     unreadChannelIds: PropTypes.array.isRequired,
     theme: PropTypes.object.isRequired,
+    channelName: PropTypes.string.isRequired,
+    channel: PropTypes.object.isRequired,
     actions: PropTypes.shape({getJoinURL: PropTypes.func.isRequired,
       channelId: PropTypes.string.isRequired,
-      channelName: PropTypes.string.isRequired,
       directChannels: PropTypes.array.isRequired,
       teamId: PropTypes.string.isRequired,
-      channel: PropTypes.object.isRequired,
       visible: PropTypes.bool.isRequired,
       actions: PropTypes.shape({startMeeting: PropTypes.func.isRequired, showRecordings: PropTypes.func.isRequired, closePopover: PropTypes.func.isRequired}).isRequired,
 
@@ -110,12 +110,12 @@ export default class Root extends React.PureComponent {
     var myvar;
     //for electron apps
     if (userAgent.indexOf(' electron/') > -1) {
-      myurl = await this.props.actions.getJoinURL(this.props.channelId, this.props.post.props.meeting_id, this.props.creatorId);
+      var myurl = await this.props.actions.getJoinURL(this.state.channelId, this.state.meetingId, "");
       myvar = await myurl.data.joinurl.url;
       window.open(myvar);
     }else{ //for webapps to circumvent popup blockers
       var newtab = await window.open('https://blindsidenetworks.com/', '_blank');
-      myurl = await this.props.actions.getJoinURL(this.props.channelId, this.props.post.props.meeting_id, this.props.creatorId);
+      var myurl = await this.props.actions.getJoinURL(this.state.channelId, this.state.meetingId, "");
       myvar = await myurl.data.joinurl.url;
       newtab.location.href = myvar;
     }
@@ -176,9 +176,20 @@ export default class Root extends React.PureComponent {
     </Tooltip>);
 
     var channel = getChannel(this.props.state, this.props.channelId);
-    var channelName = channel.display_name;
+    // console.log(channel)
+    var channelName = "";
+    var ownChannel = false;
+    if (channel == undefined){
+       ownChannel = true;
+    }
+    else{
+      channelName = channel.display_name;
+    }
+
+
     return (
       <div>
+      { !ownChannel && //shows popup when not on own channel
       <Overlay rootClose={true} show={this.props.visible}  onHide={this.close_the_popover} placement='bottom'>
         <Popover id='bbbPopover' style={this.props.channel.type === "D"
             ? style.popoverDM
@@ -202,6 +213,7 @@ export default class Root extends React.PureComponent {
           {popoverButton}
         </Popover>
       </Overlay>
+    }
 
       <Modal show={this.state.show} onHide={this.handleClose}>
       <Modal.Header closeButton={true} style={style.header}></Modal.Header>

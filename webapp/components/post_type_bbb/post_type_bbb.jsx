@@ -79,9 +79,13 @@ export default class PostTypebbb extends React.PureComponent {
     };
   }
 
-  componentWillUnmount() {
-    this.endMeetingForUnmount()
-  }
+//Purpose of this code was for when someone manually deletes, we end meeting on
+// react component unmount. However switching channels also ends unmounts the component
+// and we dont want to end the meeting
+
+  // componentWillUnmount() {
+  //   this.endMeetingForUnmount()
+  // }
 
   handleClose = () => {
     this.setState({show: false});

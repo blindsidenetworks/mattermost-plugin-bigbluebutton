@@ -22,6 +22,7 @@ import (
 	"net/http"
 	"strings"
 	"time"
+	"log"
 
 	"github.com/mattermost/mattermost-server/model"
 	bbbAPI "github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/api"
@@ -182,6 +183,10 @@ func (p *Plugin) handleImmediateEndMeetingCallback(w http.ResponseWriter, r *htt
 
 //when user clicks endmeeting button inside Mattermost
 func (p *Plugin) handleEndMeeting(w http.ResponseWriter, r *http.Request) {
+
+	//for debugging
+	log.Println("Processing End Meeting Request")
+
 	body, _ := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
 
@@ -202,6 +207,8 @@ func (p *Plugin) handleEndMeeting(w http.ResponseWriter, r *http.Request) {
 		return
 	} else {
 		bbbAPI.EndMeeting(meetingpointer.MeetingID_, meetingpointer.ModeratorPW_)
+		//for debugging
+		log.Println("Meeting Ended")
 
 		if meetingpointer.EndedAt == 0 {
 			meetingpointer.EndedAt = time.Now().Unix()
