@@ -1,0 +1,40 @@
+{
+  "name": "bigbluebutton",
+  "version": "1.0.0",
+  "description": "",
+  "dependencies": {
+    "bootstrap": "^4.1.3",
+    "history": "^4.7.2",
+    "key-mirror": "^1.0.1",
+    "mattermost-redux": "^1.2.0",
+    "prop-types": "15.5.10",
+    "react": "^16.4.2",
+    "react-bootstrap": "^0.32.3",
+    "react-dom": "^16.4.2",
+    "react-intl": "^2.4.0",
+    "react-popup": "^0.9.3",
+    "react-router-dom": "^4.3.1",
+    "react-select": "^1.3.0",
+    "reactjs-popup": "^1.2.0",
+    "redux-batched-actions": "^0.3.0",
+    "superagent": "^3.8.3",
+    "xml2js": "^0.4.19",
+    "xml2json": "^0.11.2"
+  },
+  "devDependencies": {
+    "babel-core": "6.25.0",
+    "babel-loader": "7.1.1",
+    "babel-plugin-transform-runtime": "6.23.0",
+    "babel-polyfill": "6.23.0",
+    "babel-preset-es2015": "6.24.1",
+    "babel-preset-react": "6.24.1",
+    "babel-preset-stage-0": "6.24.1",
+    "eslint": "3.17.1",
+    "eslint-plugin-react": "6.10.0",
+    "webpack": "2.2.1"
+  },
+  "scripts": {
+    "build": "webpack --display-error-details --verbose --progress",
+    "check": "eslint --ext \".jsx\" --ext \".js\" --ignore-pattern node_modules --quiet ."
+  }
+}
