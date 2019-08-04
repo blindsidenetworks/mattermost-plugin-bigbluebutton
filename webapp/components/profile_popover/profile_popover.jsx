@@ -50,12 +50,12 @@ export default class ProfilePopover extends React.PureComponent {
     super(props);
   }
 
-  handleDirectMessage = async () => {
+  handleDirectMessage = async (e, href) => {
+    e.preventDefault();
     const dispatch = window.store.dispatch;
     const result = await ChannelActions.createDirectChannel(this.props.user.id, this.props.cur_user.id)(dispatch, this.props.state);
-
     await this.props.actions.startMeeting(result.data.id, "", this.props.cur_user.username + " " + this.props.user.username);
-
+    window.location = href;
   }
 
   render() {
@@ -72,9 +72,9 @@ export default class ProfilePopover extends React.PureComponent {
                 margin: '10px -15px 10px'
               }}/> {
               this.props.user.id != this.props.cur_user.id && <div>
-                  <Link to={url} onClick={this.handleDirectMessage}>
+                  <a onClick={(e) => this.handleDirectMessage(e, url)}>
                     <i className='fa fa-video-camera'/>{'  Start BigBlueButton Meeting'}
-                  </Link>
+                  </a>
                   <br/>
                 </div>
             }
