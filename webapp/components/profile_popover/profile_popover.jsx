@@ -56,7 +56,7 @@ export default class ProfilePopover extends React.PureComponent {
     const result = await ChannelActions.createDirectChannel(this.props.user.id, this.props.cur_user.id)(dispatch, this.props.state);
     await this.props.actions.startMeeting(result.data.id, "", this.props.cur_user.username + " " + this.props.user.username);
     window.location = href;
-  }
+  };
 
   render() {
     const style = getStyle(this.props.theme);

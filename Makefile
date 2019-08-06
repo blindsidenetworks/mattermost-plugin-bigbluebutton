@@ -6,12 +6,10 @@ build:
 	cd server && go get github.com/Masterminds/glide
 	cd server && $(shell go env GOPATH)/bin/glide install
 
-	cd server && go get github.com/mitchellh/gox
-	$(shell go env GOPATH)/bin/gox -osarch='linux/amd64' -gcflags='all=-N -l' -output 'dist/plugin_{{.OS}}_{{.Arch}}' ./server
-	#cd server && go build -o plugin.exe plugin.go responsehandlers.go helpers.go config.go
+	cd server && go build -o plugin.exe plugin.go responsehandlers.go helpers.go config.go
 
 	mkdir -p dist/bigbluebutton/server
-	mv dist/plugin_linux_amd64 dist/bigbluebutton/server/plugin.exe
+	cp server/plugin.exe dist/bigbluebutton/server
 
 	# Clean old dist
 	rm -rf webapp/dist
