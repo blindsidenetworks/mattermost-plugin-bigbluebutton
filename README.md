@@ -85,7 +85,7 @@ Using the [bbb-install.sh](https://github.com/bigbluebutton/bbb-install) script 
 
 ## Contributing
 
-Plugin is written in Golang for server side and Javascript for client side. Use `make build` to build the plugin.
+Plugin is written in Golang for server side and Javascript for client side. Use `make build` to build the plugin. You can also use `make quickbuild` following first build for faster builds.
 The dependencies are managed with Glide for Go and NPM for javascript.
 
 The plugin should be placed in a directory such as `~/go/src/github.com/blindsidenetworks/mattermost-plugin-bigbluebutton`

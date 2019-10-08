@@ -1,5 +1,6 @@
 id: bigbluebutton
 name: BigBlueButton
+version: 2.1.0
 backend:
     executable: server/plugin.exe
 webapp:
