@@ -87,7 +87,9 @@ export default class ChannelHeaderButton extends React.PureComponent {
                 popoverTarget: e.target,
                 showPopover: !this.props.visible
               });
-            }}>
+            }}
+               style={style.foo}
+          >
             <span style={style.iconStyle} aria-hidden='true' dangerouslySetInnerHTML={{
                 __html: Svgs.SHARE
               }}/>
@@ -136,6 +138,10 @@ const getStyle = makeStyleFromTheme((theme) => {
       left: '-14px',
       top: '-9px',
       borderBottom: '1px solid #D8D8D9'
+    },
+    foo: {
+      width: '28px',
+      height: '28px',
     }
   };
 });
