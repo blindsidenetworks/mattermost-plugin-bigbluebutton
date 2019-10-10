@@ -1,3 +1,8 @@
+# Note
+We are currently updating the Mattermost plugin.  Until an updated version is released (and this notice is removed), the Mattermost plugin will not work with the default BigBlueButton server credentials.  
+
+It will, however, continue to work when configured with your own BigBlueButton server.
+
 # BigBlueButton Plugin for Mattermost
 BigBlueButton is an open source web conferencing system for online learning. Teams can create, join and manage their BigBlueButton meetings from inside Mattermost.
 
