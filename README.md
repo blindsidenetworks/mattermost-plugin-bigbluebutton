@@ -9,10 +9,10 @@ BigBlueButton is an open source web conferencing system for online learning. Tea
 Jump to:
 
 - [Installation and Setup](#installation-and-setup)  
-- [Usage](usage)
-- [Contributing](contributing)
+- [Usage](#usage)
+- [Contributing](#contributing)
 
-Want to see how the BigBlueButton integration with MatterMost works.  Checkout the video below.
+Want to see how the BigBlueButton integration with MatterMost works?  Checkout the video below.
 
 [![Alt text](https://img.youtube.com/vi/gg7J9B4wGa4/0.jpg)](https://www.youtube.com/watch?v=gg7J9B4wGa4)
 
