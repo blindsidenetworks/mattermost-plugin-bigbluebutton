@@ -74,6 +74,7 @@ type ButtonRequestJSON struct {
 	MeetingId string `json:"meeting_id"`
 	IsMod     string `json:"is_mod"`
 }
+
 type ButtonResponseJSON struct {
 	Url string `json:"url"`
 }
@@ -242,6 +243,7 @@ func (p *Plugin) handleEndMeeting(w http.ResponseWriter, r *http.Request) {
 type isRunningRequestJSON struct {
 	MeetingId string `json:"meeting_id"`
 }
+
 type isRunningResponseJSON struct {
 	IsRunning bool `json:"running"`
 }
@@ -391,6 +393,7 @@ func (p *Plugin) handleRecordingReady(w http.ResponseWriter, r *http.Request) {
 type AttendeesRequestJSON struct {
 	MeetingId string `json:"meeting_id"`
 }
+
 type AttendeesResponseJSON struct {
 	Num       int      `json:"num"`
 	Attendees []string `json:"attendees"`
@@ -441,9 +444,11 @@ func (p *Plugin) handleGetAttendeesInfo(w http.ResponseWriter, r *http.Request) 
 type RecordingsRequestJSON struct {
 	ChannelId string `json:"channel_id"`
 }
+
 type RecordingsResponseJSON struct {
 	Recordings []SingleRecording `json:"recordings"`
 }
+
 type SingleRecording struct {
 	RecordingUrl string `json:"recordingurl"`
 	Title        string `json:"title"`
@@ -563,7 +568,6 @@ func (p *Plugin) Loopthroughrecordings() {
 						p.MeetingsWaitingforRecordings = append(p.MeetingsWaitingforRecordings[:i], p.MeetingsWaitingforRecordings[i+1:]...)
 						i--
 					}
-
 				}
 			}
 		}

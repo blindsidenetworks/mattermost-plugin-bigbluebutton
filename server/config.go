@@ -33,6 +33,7 @@ func (p *Plugin) OnConfigurationChange() error {
 	p.configuration.Store(&configuration)
 	return err
 }
+
 func (p *Plugin) config() *Configuration {
 	// returns the config file we had stored in Atomic.Value
 	return p.configuration.Load().(*Configuration)

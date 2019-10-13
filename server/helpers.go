@@ -86,6 +86,7 @@ func (p *Plugin) LoadMeetingsFromStore() {
 	json.Unmarshal(recordings_byted, &p.MeetingsWaitingforRecordings)
 
 }
+
 func (p *Plugin) SaveMeetingToStore() {
 	byted, _ := json.Marshal(p.Meetings)
 	p.API.KVSet("all_meetings", byted)
@@ -104,6 +105,7 @@ func (p *Plugin) FindMeeting(meeting_id string) *dataStructs.MeetingRoom {
 	}
 	return nil
 }
+
 func (p *Plugin) FindMeetingfromInternal(meeting_id string) *dataStructs.MeetingRoom {
 	for i := range p.Meetings {
 		if p.Meetings[i].InternalMeetingId == meeting_id {

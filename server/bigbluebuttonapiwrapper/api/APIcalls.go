@@ -39,7 +39,7 @@ func SetAPI(url string, saltParam string) {
 //CreateMeeting creates A BigBlueButton meeting
 // note: a BigBlueButton meeting will terminate 1 minute after its creation
 // if there are no attendees currently present in the meeting
-
+//
 // see http://docs.bigbluebutton.org/dev/api.html for API documentation
 func CreateMeeting(meetingRoom *dataStructs.MeetingRoom) string {
 	if meetingRoom.Name_ == "" || meetingRoom.MeetingID_ == "" ||
