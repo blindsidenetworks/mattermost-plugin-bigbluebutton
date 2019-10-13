@@ -23,6 +23,7 @@ import (
 	"net/url"
 	"strconv"
 )
+
 //url of the BigBlueButton server
 var BaseUrl string
 
@@ -251,6 +252,7 @@ func GetMeetings() dataStructs.GetMeetingsResponse {
 	return XMLResp
 
 }
+
 //GetRecordings gets a recording for a BBB meeting
 func GetRecordings(meeting_id string, record_id string, metachannelid string) (dataStructs.GetRecordingsResponse, string) {
 
@@ -287,6 +289,7 @@ func GetRecordings(meeting_id string, record_id string, metachannelid string) (d
 	}
 	return XMLResp, response
 }
+
 //PublishRecordings
 func PublishRecordings(recordid string, publish string) dataStructs.PublishRecordingsResponse {
 	recordID := "recordID=" + url.QueryEscape(recordid)
@@ -304,6 +307,7 @@ func PublishRecordings(recordid string, publish string) dataStructs.PublishRecor
 
 	return XMLResp
 }
+
 //DeleteRecordings
 func DeleteRecordings(recordid string) dataStructs.DeleteRecordingsResponse {
 	recordID := "recordID=" + url.QueryEscape(recordid)

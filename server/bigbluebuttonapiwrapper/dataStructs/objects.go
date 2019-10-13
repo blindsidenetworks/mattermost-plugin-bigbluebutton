@@ -65,7 +65,7 @@ type MeetingRoom struct {
 	EndedAt                 int64
 	AttendeeNames           []string
 	LoopCount               int
-	ValidToken							string
+	ValidToken              string
 
 	Meta_bn_recording_ready_url string //this needs to be properly url encoded
 	Meta_channelid              string

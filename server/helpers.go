@@ -18,14 +18,14 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"errors"
-	"net/url"
-	"strings"
+	"fmt"
 	bbbAPI "github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/api"
 	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/dataStructs"
 	"github.com/mattermost/mattermost-server/model"
 	"github.com/segmentio/ksuid"
+	"net/url"
+	"strings"
 )
 
 func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, description string) error {
@@ -36,7 +36,6 @@ func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, d
 		m.Name_ = "Big Blue Button Meeting"
 	}
 
-
 	siteconfig := p.API.GetConfig()
 
 	var callbackURL string
@@ -45,7 +44,7 @@ func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, d
 	} else {
 		return errors.New("SiteURL not set")
 	}
-	if !strings.HasPrefix(callbackURL, "http"){
+	if !strings.HasPrefix(callbackURL, "http") {
 		callbackURL = "http://" + callbackURL
 	}
 
@@ -113,7 +112,6 @@ func (p *Plugin) FindMeetingfromInternal(meeting_id string) *dataStructs.Meeting
 	}
 	return nil
 }
-
 
 func (p *Plugin) createStartMeetingPost(user_id string, channel_id string, m *dataStructs.MeetingRoom) {
 

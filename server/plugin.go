@@ -17,9 +17,9 @@ limitations under the License.
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
-	"fmt"
 	"sync/atomic"
 
 	bbbAPI "github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/api"
@@ -30,7 +30,6 @@ import (
 )
 
 type Plugin struct {
-
 	plugin.MattermostPlugin
 
 	c                            *cron.Cron
@@ -68,12 +67,11 @@ func (p *Plugin) OnActivate() error {
 	})
 }
 
-
 //following method is to create a meeting from '/bbb' slash command
 func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*model.CommandResponse, *model.AppError) {
 
 	meetingpointer := new(dataStructs.MeetingRoom)
-	err := p.PopulateMeeting(meetingpointer, nil, "") 
+	err := p.PopulateMeeting(meetingpointer, nil, "")
 	if err != nil {
 		return nil, model.NewAppError("ExecuteCommand", "Please provide a 'Site URL' in Settings > General > Configuration", nil, err.Error(), http.StatusInternalServerError)
 	}
@@ -86,7 +84,7 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 
 //this is the router to handle our server calls
 //methods are all in responsehandlers.go
-func (p *Plugin) ServeHTTP(c *plugin.Context,w http.ResponseWriter, r *http.Request) {
+func (p *Plugin) ServeHTTP(c *plugin.Context, w http.ResponseWriter, r *http.Request) {
 
 	config := p.config()
 	if err := config.IsValid(); err != nil {
@@ -113,15 +111,15 @@ func (p *Plugin) ServeHTTP(c *plugin.Context,w http.ResponseWriter, r *http.Requ
 		p.handleImmediateEndMeetingCallback(w, r, path)
 	} else if path == "/ismeetingrunning" {
 		p.handleIsMeetingRunning(w, r)
-	} else if path == "/redirect"{
+	} else if path == "/redirect" {
 		// html file to automatically close a window
-			fmt.Fprintf(w,`<!doctype html><html><head><script>
+		fmt.Fprintf(w, `<!doctype html><html><head><script>
 				 								window.onload = function load() {
 													window.open('', '_self', '');
 													window.close();
 													};
 											</script></head><body></body></html>`)
-	}else {
+	} else {
 		http.NotFound(w, r)
 	}
 	return

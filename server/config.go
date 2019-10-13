@@ -21,8 +21,8 @@ import (
 )
 
 type Configuration struct {
-	BASE_URL     string
-	SALT         string
+	BASE_URL string
+	SALT     string
 }
 
 func (p *Plugin) OnConfigurationChange() error {

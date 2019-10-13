@@ -19,14 +19,14 @@ package main
 import (
 	"encoding/json"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strings"
 	"time"
-	"log"
 
-	"github.com/mattermost/mattermost-server/model"
 	bbbAPI "github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/api"
 	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/dataStructs"
+	"github.com/mattermost/mattermost-server/model"
 )
 
 type RequestCreateMeetingJSON struct {
@@ -55,7 +55,7 @@ func (p *Plugin) handleCreateMeeting(w http.ResponseWriter, r *http.Request) {
 		err = p.PopulateMeeting(meetingpointer, []string{"create", request.Topic}, request.Desc)
 	}
 
-	if err != nil{
+	if err != nil {
 		http.Error(w, "Please provide a 'Site URL' in Settings > General > Configuration.", http.StatusUnprocessableEntity)
 		return
 	}
@@ -434,7 +434,6 @@ func (p *Plugin) handleGetAttendeesInfo(w http.ResponseWriter, r *http.Request) 
 	}
 	userJson, _ := json.Marshal(myresp)
 
-
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(userJson)
 }
@@ -465,8 +464,6 @@ func (p *Plugin) handlePublishRecordings(w http.ResponseWriter, r *http.Request)
 	recordid := request.RecordId
 	publish := request.Publish
 
-
-
 	meetingpointer := p.FindMeeting(request.MeetingId)
 	if meetingpointer == nil {
 		http.Error(w, "Error: Cannot find the meeting_id for the recording, MeetingID#"+request.MeetingId, http.StatusForbidden)
@@ -480,11 +477,9 @@ func (p *Plugin) handlePublishRecordings(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-
-
 	post, err := p.API.GetPost(meetingpointer.PostId)
 	if err != nil {
-		http.Error(w, "Error: cannot find the post message for this recording \n" +err.Error(), err.StatusCode)
+		http.Error(w, "Error: cannot find the post message for this recording \n"+err.Error(), err.StatusCode)
 		return
 	}
 
@@ -527,14 +522,14 @@ func (p *Plugin) handleDeleteRecordings(w http.ResponseWriter, r *http.Request) 
 
 	post, err := p.API.GetPost(meetingpointer.PostId)
 	if err != nil {
-		http.Error(w, "Error: cannot find the post message for this recording \n" + err.Error(), err.StatusCode)
+		http.Error(w, "Error: cannot find the post message for this recording \n"+err.Error(), err.StatusCode)
 		return
 	}
 
 	post.Props["is_deleted"] = "true"
 	post.Props["record_status"] = "Recording Deleted"
 	if _, err := p.API.UpdatePost(post); err != nil {
-		http.Error(w, "Error: could not update post \n" +err.Error(), err.StatusCode)
+		http.Error(w, "Error: could not update post \n"+err.Error(), err.StatusCode)
 		return
 	}
 
