@@ -28,11 +28,11 @@ import (
 //webhook was designed to be used for
 
 var BASE_URL string
-var SALT string
+var salt string
 
-func SetWebhookAPI(url string, salt string) {
+func SetWebhookAPI(url string, saltParam string) {
 	BASE_URL = url
-	SALT = salt
+	salt = saltParam
 }
 
 func CreateHook(wh *dataStructs.WebHook) string {
@@ -42,7 +42,7 @@ func CreateHook(wh *dataStructs.WebHook) string {
 	callback := "callbackURL=" + url.QueryEscape(wh.CallBackURL)
 	getRaw := "&getRaw=true"
 	params := callback + getRaw
-	checkSum := helpers.GetChecksum("hooks/create" + params + SALT)
+	checkSum := helpers.GetChecksum("hooks/create" + params + salt)
 
 	response := helpers.HttpGet(BASE_URL + "create?" + params + "&checksum=" + checkSum)
 
@@ -67,7 +67,7 @@ func CreateHook(wh *dataStructs.WebHook) string {
 func DestroyHook(hookID string) string {
 	hook_id := "hookID=" + url.QueryEscape(hookID)
 	params := hook_id
-	checkSum := helpers.GetChecksum("hooks/destroy" + params + SALT)
+	checkSum := helpers.GetChecksum("hooks/destroy" + params + salt)
 
 	response := helpers.HttpGet(BASE_URL + "destroy?" + params + "&checksum=" + checkSum)
 
