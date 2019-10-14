@@ -22,6 +22,8 @@ import (
 	"strings"
 	"sync/atomic"
 
+	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/mattermost"
+
 	bbbAPI "github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/api"
 	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/dataStructs"
 	"github.com/mattermost/mattermost-server/model"
@@ -40,6 +42,8 @@ type Plugin struct {
 
 //OnActivate runs as soon as plugin activates
 func (p *Plugin) OnActivate() error {
+	mattermost.API = p.API
+
 	// we save all the meetings infos that are stored on in our database upon deactivation
 	// loads the details back so everything works
 	p.LoadMeetingsFromStore()
@@ -47,6 +51,7 @@ func (p *Plugin) OnActivate() error {
 	if err := p.OnConfigurationChange(); err != nil {
 		return err
 	}
+
 	config := p.config()
 	if err := config.IsValid(); err != nil {
 		return err
@@ -69,7 +74,6 @@ func (p *Plugin) OnActivate() error {
 
 //following method is to create a meeting from '/bbb' slash command
 func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*model.CommandResponse, *model.AppError) {
-
 	meetingpointer := new(dataStructs.MeetingRoom)
 	err := p.PopulateMeeting(meetingpointer, nil, "")
 	if err != nil {

@@ -17,7 +17,7 @@ limitations under the License.
 package main
 
 import (
-	"fmt"
+	"github.com/pkg/errors"
 )
 
 type Configuration struct {
@@ -41,9 +41,9 @@ func (p *Plugin) config() *Configuration {
 
 func (c *Configuration) IsValid() error {
 	if len(c.BASE_URL) == 0 {
-		return fmt.Errorf("BASE URL is not configured.")
+		return errors.New("BASE URL is not configured.")
 	} else if len(c.SALT) == 0 {
-		return fmt.Errorf("SALT is not configured.")
+		return errors.New("SALT is not configured.")
 	}
 
 	return nil

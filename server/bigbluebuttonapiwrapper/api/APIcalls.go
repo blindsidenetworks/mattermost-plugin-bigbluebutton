@@ -19,6 +19,8 @@ package api
 import (
 	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/dataStructs"
 	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/helpers"
+	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/config"
+	"github.com/pkg/errors"
 	"log"
 	"net/url"
 	"strconv"
@@ -41,11 +43,21 @@ func SetAPI(url string, saltParam string) {
 // if there are no attendees currently present in the meeting
 //
 // see http://docs.bigbluebutton.org/dev/api.html for API documentation
-func CreateMeeting(meetingRoom *dataStructs.MeetingRoom) string {
-	if meetingRoom.Name_ == "" || meetingRoom.MeetingID_ == "" ||
-		meetingRoom.AttendeePW_ == "" || meetingRoom.ModeratorPW_ == "" {
-		log.Println("ERROR: PARAM ERROR.")
-		return "ERROR: PARAM ERROR."
+func CreateMeeting(meetingRoom *dataStructs.MeetingRoom) (string, error) {
+	if meetingRoom.Name_ == "" {
+		return "", errors.New("meeting name cannot be empty")
+	}
+
+	if meetingRoom.MeetingID_ == "" {
+		return "", errors.New("meeting ID cannot be empty")
+	}
+
+	if meetingRoom.AttendeePW_ == "" {
+		return "", errors.New("attendee PW cannot be empty")
+	}
+
+	if meetingRoom.ModeratorPW_ == "" {
+		return "", errors.New("moderator PW cannot be empty")
 	}
 
 	name := "name=" + url.QueryEscape(meetingRoom.Name_)
@@ -79,25 +91,22 @@ func CreateMeeting(meetingRoom *dataStructs.MeetingRoom) string {
 		checksum)
 
 	if "ERROR" == response {
-		log.Println("ERROR: HTTP ERROR.")
-		return "ERROR: HTTP ERROR."
+		config.Mattermost.LogError("ERROR: HTTP ERROR: " + response)
+		return "", errors.New(response)
 	}
-	err := helpers.ReadXML(response, &meetingRoom.CreateMeetingResponse)
 
-	if nil != err {
-		log.Println("XML PARSE ERROR: " + err.Error())
-		return "ERROR: XML PARSE ERROR."
+	if err := helpers.ReadXML(response, &meetingRoom.CreateMeetingResponse); err != nil {
+		return "", err
 	}
 
 	if "SUCCESS" == meetingRoom.CreateMeetingResponse.Returncode {
-		log.Println("SUCCESS CREATE MEETINGROOM. MEETING ID: " +
+		config.Mattermost.LogInfo("SUCCESS CREATE MEETINGROOM. MEETING ID: " +
 			meetingRoom.CreateMeetingResponse.MeetingID)
-		return meetingRoom.CreateMeetingResponse.MeetingID
+		return meetingRoom.CreateMeetingResponse.MeetingID, nil
 	} else {
-		log.Println("CREATE MEETINGROOM FAILD: " + response)
-		return "FAILED"
+		config.Mattermost.LogError("CREATE MEETINGROOM FAILD: " + response)
+		return "", errors.New(response)
 	}
-	return "ERROR: UNKNOWN."
 }
 
 // GetJoinURL: we send in a Participant struct and get back a joinurl that participant can go to
@@ -299,7 +308,6 @@ func PublishRecordings(recordid string, publish string) dataStructs.PublishRecor
 	checksum := helpers.GetChecksum("publishRecordings" + param + salt)
 
 	getURL := BaseUrl + "publishRecordings?" + param + "&checksum=" + checksum
-	//log.Println(getURL)
 	response := helpers.HttpGet(getURL)
 	var XMLResp dataStructs.PublishRecordingsResponse
 

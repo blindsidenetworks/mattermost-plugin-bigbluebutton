@@ -20,30 +20,29 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"encoding/xml"
+	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/mattermost"
 	"io/ioutil"
-	"log"
 	"net/http"
 )
 
 //sends a get request to the url given, returns the result as a string
-func HttpGet(url string) string {
+func HttpGet(url string) (string, error) {
 	response, err := http.Get(url)
 
 	if err != nil {
-		log.Println("HTTP GET ERROR: " + err.Error())
-		return "ERROR"
+		mattermost.API.LogError("HTTP GET ERROR: " + err.Error())
+		return "", err
 	}
 
 	defer response.Body.Close()
 
 	body, err := ioutil.ReadAll(response.Body)
-
 	if nil != err {
-		log.Println("HTTP GET ERROR: " + err.Error())
-		return "ERROR"
+		mattermost.API.LogError("HTTP GET ERROR: " + err.Error())
+		return "", err
 	}
 
-	return string(body)
+	return string(body), nil
 }
 
 func GetChecksum(toConvert string) string {
@@ -56,7 +55,7 @@ func GetChecksum(toConvert string) string {
 func ReadXML(response string, data interface{}) error {
 	err := xml.Unmarshal([]byte(response), data)
 	if nil != err {
-		log.Println("XML PARSE ERROR: " + err.Error())
+		mattermost.API.LogError("XML PARSE ERROR: " + err.Error())
 	}
 	return err
 }
