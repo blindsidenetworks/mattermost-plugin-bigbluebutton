@@ -256,7 +256,7 @@ func (p *Plugin) handleIsMeetingRunning(w http.ResponseWriter, r *http.Request) 
 	json.Unmarshal([]byte(body), &request)
 	meetingID := request.MeetingId
 
-	resp := bbbAPI.IsMeetingRunning(meetingID)
+	resp, _ := bbbAPI.IsMeetingRunning(meetingID)
 
 	myresp := isRunningResponseJSON{
 		IsRunning: resp,
@@ -475,16 +475,15 @@ func (p *Plugin) handlePublishRecordings(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	publishrecordingsresponse := bbbAPI.PublishRecordings(recordid, publish)
-
-	if publishrecordingsresponse.ReturnCode != "SUCCESS" {
+	_, err := bbbAPI.PublishRecordings(recordid, publish)
+	if err != nil {
 		http.Error(w, "Error: Recording not found", http.StatusForbidden)
 		return
 	}
 
-	post, err := p.API.GetPost(meetingpointer.PostId)
-	if err != nil {
-		http.Error(w, "Error: cannot find the post message for this recording \n"+err.Error(), err.StatusCode)
+	post, appErr := p.API.GetPost(meetingpointer.PostId)
+	if appErr != nil {
+		http.Error(w, "Error: cannot find the post message for this recording \n"+appErr.Error(), appErr.StatusCode)
 		return
 	}
 
@@ -511,9 +510,8 @@ func (p *Plugin) handleDeleteRecordings(w http.ResponseWriter, r *http.Request) 
 	json.Unmarshal([]byte(body), &request)
 	recordid := request.RecordId
 
-	deleterecordingsresponse := bbbAPI.DeleteRecordings(recordid)
-
-	if deleterecordingsresponse.ReturnCode != "SUCCESS" {
+	_, err := bbbAPI.DeleteRecordings(recordid)
+	if err != nil {
 		http.Error(w, "Error: Recording not found", http.StatusForbidden)
 		return
 	}
@@ -525,9 +523,9 @@ func (p *Plugin) handleDeleteRecordings(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	post, err := p.API.GetPost(meetingpointer.PostId)
-	if err != nil {
-		http.Error(w, "Error: cannot find the post message for this recording \n"+err.Error(), err.StatusCode)
+	post, appErr := p.API.GetPost(meetingpointer.PostId)
+	if appErr != nil {
+		http.Error(w, "Error: cannot find the post message for this recording \n"+appErr.Error(), appErr.StatusCode)
 		return
 	}
 
@@ -551,7 +549,7 @@ func (p *Plugin) Loopthroughrecordings() {
 			continue
 		}
 
-		recordingsresponse, _ := bbbAPI.GetRecordings(Meeting.MeetingID_, "", "")
+		recordingsresponse, _, _ := bbbAPI.GetRecordings(Meeting.MeetingID_, "", "")
 		if recordingsresponse.ReturnCode == "SUCCESS" {
 			if len(recordingsresponse.Recordings.Recording) > 0 {
 				postid := Meeting.PostId

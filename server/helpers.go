@@ -155,8 +155,8 @@ func (p *Plugin) DeleteMeeting(meeting_id string) {
 
 func GetAttendees(meeting_id string, modpw string) (int, []string) {
 	var meetinginfo dataStructs.GetMeetingInfoResponse
-	resp := bbbAPI.GetMeetingInfo(meeting_id, modpw, &meetinginfo)
-	if resp == "FAILED" {
+
+	if _, err := bbbAPI.GetMeetingInfo(meeting_id, modpw, &meetinginfo); err != nil {
 		return 0, []string{}
 	}
 	attendeesArray := meetinginfo.Attendees.Attendees
