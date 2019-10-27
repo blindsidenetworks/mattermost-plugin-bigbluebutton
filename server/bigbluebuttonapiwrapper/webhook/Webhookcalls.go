@@ -17,7 +17,7 @@ limitations under the License.
 package webhook
 
 import (
-	"log"
+	"errors"
 	"net/url"
 
 	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/dataStructs"
@@ -35,55 +35,49 @@ func SetWebhookAPI(url string, saltParam string) {
 	salt = saltParam
 }
 
-func CreateHook(wh *dataStructs.WebHook) string {
+func CreateHook(wh *dataStructs.WebHook) (string, error) {
 	if wh.CallBackURL == "" {
-		return "Error, must indicate callback url"
+		return "", errors.New("Error, must indicate callback url")
 	}
 	callback := "callbackURL=" + url.QueryEscape(wh.CallBackURL)
 	getRaw := "&getRaw=true"
 	params := callback + getRaw
 	checkSum := helpers.GetChecksum("hooks/create" + params + salt)
 
-	response := helpers.HttpGet(BASE_URL + "create?" + params + "&checksum=" + checkSum)
-
-	if "ERROR" == response {
-		log.Println("ERROR: HTTP ERROR.")
-		return "ERROR: HTTP ERROR."
+	response, err := helpers.HttpGet(BASE_URL + "create?" + params + "&checksum=" + checkSum)
+	if err != nil {
+		return "", err
 	}
-	err := helpers.ReadXML(response, &(wh.WebhookResponse))
+	err = helpers.ReadXML(response, &(wh.WebhookResponse))
 
 	if nil != err {
-		log.Println("XML PARSE ERROR: " + err.Error())
-		return "ERROR: XML PARSE ERROR."
+		return "", err
 	}
 	wh.HookID = wh.WebhookResponse.HookID
 	if wh.WebhookResponse.Returncode == "SUCCESS" {
-		return "webhook successfully created " + wh.HookID
+		return "webhook successfully created " + wh.HookID, nil
 	} else {
-		return wh.WebhookResponse.Message
+		return "", errors.New(wh.WebhookResponse.Message)
 	}
 }
 
-func DestroyHook(hookID string) string {
+func DestroyHook(hookID string) (string, error) {
 	hook_id := "hookID=" + url.QueryEscape(hookID)
 	params := hook_id
 	checkSum := helpers.GetChecksum("hooks/destroy" + params + salt)
 
-	response := helpers.HttpGet(BASE_URL + "destroy?" + params + "&checksum=" + checkSum)
-
-	if "ERROR" == response {
-		log.Println("ERROR: HTTP ERROR.")
-		return "ERROR: HTTP ERROR."
+	response, err := helpers.HttpGet(BASE_URL + "destroy?" + params + "&checksum=" + checkSum)
+	if err != nil {
+		return "", err
 	}
 	var responseXML dataStructs.DestroyedWebhookResponse
-	err := helpers.ReadXML(response, &responseXML)
+	err = helpers.ReadXML(response, &responseXML)
 
 	if nil != err {
-		log.Println("XML PARSE ERROR: " + err.Error())
-		return "ERROR: XML PARSE ERROR."
+		return "", err
 	}
 	if responseXML.Returncode == "SUCCESS" {
-		return "webhook " + hookID + " destroyed"
+		return "webhook " + hookID + " destroyed", nil
 	}
-	return "Can't delete webbook " + hookID + " : " + responseXML.Message
+	return "", errors.New("Can't delete webbook " + hookID + " : " + responseXML.Message)
 }

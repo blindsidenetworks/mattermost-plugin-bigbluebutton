@@ -315,7 +315,6 @@ func DeleteRecordings(recordid string) (dataStructs.DeleteRecordingsResponse, er
 	checksum := helpers.GetChecksum("deleteRecordings" + param + salt)
 
 	getURL := BaseUrl + "deleteRecordings?" + param + "&checksum=" + checksum
-	//log.Println(getURL)
 	response, err := helpers.HttpGet(getURL)
 	if err != nil {
 		return dataStructs.DeleteRecordingsResponse{}, err

@@ -18,8 +18,8 @@ package main
 
 import (
 	"encoding/json"
+	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/mattermost"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -186,7 +186,7 @@ func (p *Plugin) handleImmediateEndMeetingCallback(w http.ResponseWriter, r *htt
 func (p *Plugin) handleEndMeeting(w http.ResponseWriter, r *http.Request) {
 
 	//for debugging
-	log.Println("Processing End Meeting Request")
+	mattermost.API.LogInfo("Processing End Meeting Request")
 
 	body, _ := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
@@ -209,7 +209,7 @@ func (p *Plugin) handleEndMeeting(w http.ResponseWriter, r *http.Request) {
 	} else {
 		bbbAPI.EndMeeting(meetingpointer.MeetingID_, meetingpointer.ModeratorPW_)
 		//for debugging
-		log.Println("Meeting Ended")
+		mattermost.API.LogInfo("Meeting Ended")
 
 		if meetingpointer.EndedAt == 0 {
 			meetingpointer.EndedAt = time.Now().Unix()
