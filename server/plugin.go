@@ -31,6 +31,14 @@ import (
 	"github.com/robfig/cron"
 )
 
+const closeWindowScript = `<!doctype html>
+				<html>
+						<head><script>
+							window.onload = function load() {window.open('', '_self', ''); window.close();};
+						</script></head>
+					<body></body>
+				</html>`
+
 type Plugin struct {
 	plugin.MattermostPlugin
 
@@ -75,8 +83,8 @@ func (p *Plugin) OnActivate() error {
 //following method is to create a meeting from '/bbb' slash command
 func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*model.CommandResponse, *model.AppError) {
 	meetingpointer := new(dataStructs.MeetingRoom)
-	err := p.PopulateMeeting(meetingpointer, nil, "")
-	if err != nil {
+
+	if err := p.PopulateMeeting(meetingpointer, nil, ""); err != nil {
 		return nil, model.NewAppError("ExecuteCommand", "Please provide a 'Site URL' in Settings > General > Configuration", nil, err.Error(), http.StatusInternalServerError)
 	}
 
@@ -117,12 +125,7 @@ func (p *Plugin) ServeHTTP(c *plugin.Context, w http.ResponseWriter, r *http.Req
 		p.handleIsMeetingRunning(w, r)
 	} else if path == "/redirect" {
 		// html file to automatically close a window
-		fmt.Fprintf(w, `<!doctype html><html><head><script>
-				 								window.onload = function load() {
-													window.open('', '_self', '');
-													window.close();
-													};
-											</script></head><body></body></html>`)
+		_, _ = fmt.Fprintf(w, closeWindowScript)
 	} else {
 		http.NotFound(w, r)
 	}

@@ -18,6 +18,7 @@ package main
 
 import (
 	"github.com/pkg/errors"
+	"strings"
 )
 
 type Configuration struct {
@@ -29,6 +30,10 @@ func (p *Plugin) OnConfigurationChange() error {
 	var configuration Configuration
 	// loads configuration from our config ui page
 	err := p.API.LoadPluginConfiguration(&configuration)
+
+	configuration.BASE_URL = strings.Trim(configuration.BASE_URL, "/")
+	configuration.BASE_URL = strings.Trim(configuration.BASE_URL, " ")
+
 	// stores the config in an Atomic.Value place
 	p.configuration.Store(&configuration)
 	return err

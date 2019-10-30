@@ -108,7 +108,7 @@ func CreateMeeting(meetingRoom *dataStructs.MeetingRoom) (string, error) {
 }
 
 // GetJoinURL: we send in a Participant struct and get back a joinurl that participant can go to
-func GetJoinURL(participants *(dataStructs.Participants)) string {
+func GetJoinURL(participants *dataStructs.Participants) string {
 	if "" == participants.FullName_ || "" == participants.MeetingID_ ||
 		"" == participants.Password_ {
 		return "ERROR: PARAM ERROR."
@@ -145,10 +145,10 @@ func GetJoinURL(participants *(dataStructs.Participants)) string {
 		redirect = "&redirect=true"
 		clientURL = "&clientURL=" + url.QueryEscape(participants.ClientURL)
 	}
-	joinviahtml := "&joinViaHtml5=true"
+	joinViaHtml5 := "&joinViaHtml5=true"
 
 	joinParam := fullName + meetingID + password + createTime + userID +
-		configToken + avatarURL + redirect + clientURL + joinviahtml
+		configToken + avatarURL + redirect + clientURL + joinViaHtml5
 
 	checksum := helpers.GetChecksum("join" + joinParam + salt)
 	joinUrl := BaseUrl + "join?" + joinParam + "&checksum=" + checksum
@@ -165,19 +165,19 @@ func IsMeetingRunning(meetingID string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	var XMLResp dataStructs.IsMeetingRunningResponse
-	err = helpers.ReadXML(response, &XMLResp)
+	var xmlResp dataStructs.IsMeetingRunningResponse
+	err = helpers.ReadXML(response, &xmlResp)
 	if nil != err {
 		return false, err
 	}
 
-	return XMLResp.Running, nil
+	return xmlResp.Running, nil
 }
 
 //EndMeeting ends a BBB meeting
-func EndMeeting(meeting_ID string, mod_PW string) (string, error) {
+func EndMeeting(meeting_ID string, modPw string) (string, error) {
 	meetingID := "meetingID=" + url.QueryEscape(meeting_ID)
-	modPW := "&password=" + url.QueryEscape(mod_PW)
+	modPW := "&password=" + url.QueryEscape(modPw)
 	param := meetingID + modPW
 	checksum := helpers.GetChecksum("end" + param + salt)
 
@@ -255,7 +255,6 @@ func GetMeetings() (dataStructs.GetMeetingsResponse, error) {
 
 //GetRecordings gets a recording for a BBB meeting
 func GetRecordings(meeting_id string, record_id string, metachannelid string) (dataStructs.GetRecordingsResponse, string, error) {
-
 	meetingID := "meetingID=" + url.QueryEscape(meeting_id)
 	recordid := "&recordID=" + url.QueryEscape(record_id)
 	var param string

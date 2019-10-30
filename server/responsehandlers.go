@@ -475,8 +475,7 @@ func (p *Plugin) handlePublishRecordings(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	_, err := bbbAPI.PublishRecordings(recordid, publish)
-	if err != nil {
+	if _, err := bbbAPI.PublishRecordings(recordid, publish); err != nil {
 		http.Error(w, "Error: Recording not found", http.StatusForbidden)
 		return
 	}
@@ -510,8 +509,7 @@ func (p *Plugin) handleDeleteRecordings(w http.ResponseWriter, r *http.Request) 
 	json.Unmarshal([]byte(body), &request)
 	recordid := request.RecordId
 
-	_, err := bbbAPI.DeleteRecordings(recordid)
-	if err != nil {
+	if _, err := bbbAPI.DeleteRecordings(recordid); err != nil {
 		http.Error(w, "Error: Recording not found", http.StatusForbidden)
 		return
 	}
