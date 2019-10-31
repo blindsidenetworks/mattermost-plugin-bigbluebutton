@@ -22,8 +22,8 @@ import (
 )
 
 type Configuration struct {
-	BASE_URL string
-	SALT     string
+	BaseURL string
+	Salt    string
 }
 
 func (p *Plugin) OnConfigurationChange() error {
@@ -31,8 +31,8 @@ func (p *Plugin) OnConfigurationChange() error {
 	// loads configuration from our config ui page
 	err := p.API.LoadPluginConfiguration(&configuration)
 
-	configuration.BASE_URL = strings.Trim(configuration.BASE_URL, "/")
-	configuration.BASE_URL = strings.Trim(configuration.BASE_URL, " ")
+	configuration.BaseURL = strings.Trim(configuration.BaseURL, "/")
+	configuration.BaseURL = strings.Trim(configuration.BaseURL, " ")
 
 	// stores the config in an Atomic.Value place
 	p.configuration.Store(&configuration)
@@ -45,10 +45,10 @@ func (p *Plugin) config() *Configuration {
 }
 
 func (c *Configuration) IsValid() error {
-	if len(c.BASE_URL) == 0 {
+	if len(c.BaseURL) == 0 {
 		return errors.New("BASE URL is not configured.")
-	} else if len(c.SALT) == 0 {
-		return errors.New("SALT is not configured.")
+	} else if len(c.Salt) == 0 {
+		return errors.New("Salt is not configured.")
 	}
 
 	return nil

@@ -30,10 +30,10 @@ import (
 )
 
 type RequestCreateMeetingJSON struct {
-	User_id    string `json:"user_id"`
-	Channel_id string `json:"channel_id"`
-	Topic      string `json:"title"`
-	Desc       string `json:"description"`
+	UserId    string `json:"user_id"`
+	ChannelId string `json:"channel_id"`
+	Topic     string `json:"title"`
+	Desc      string `json:"description"`
 }
 
 //Create meeting doesn't call the BBB api to start a meeting
@@ -45,7 +45,7 @@ func (p *Plugin) handleCreateMeeting(w http.ResponseWriter, r *http.Request) {
 	body, _ := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
 	var request RequestCreateMeetingJSON
-	json.Unmarshal([]byte(body), &request)
+	json.Unmarshal(body, &request)
 
 	meetingpointer := new(dataStructs.MeetingRoom)
 	var err error
@@ -61,7 +61,7 @@ func (p *Plugin) handleCreateMeeting(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//creates the start meeting post
-	p.createStartMeetingPost(request.User_id, request.Channel_id, meetingpointer)
+	p.createStartMeetingPost(request.UserId, request.ChannelId, meetingpointer)
 
 	// add our newly created meeting to our array of meetings
 	p.Meetings = append(p.Meetings, *meetingpointer)
@@ -70,7 +70,7 @@ func (p *Plugin) handleCreateMeeting(w http.ResponseWriter, r *http.Request) {
 }
 
 type ButtonRequestJSON struct {
-	User_id   string `json:"user_id"`
+	UserId    string `json:"user_id"`
 	MeetingId string `json:"meeting_id"`
 	IsMod     string `json:"is_mod"`
 }
@@ -85,7 +85,7 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	var request ButtonRequestJSON
-	json.Unmarshal([]byte(body), &request)
+	json.Unmarshal(body, &request)
 	meetingID := request.MeetingId
 	meetingpointer := p.FindMeeting(meetingID)
 
@@ -107,7 +107,7 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 			meetingpointer.CreatedAt = time.Now().Unix()
 		}
 
-		user, _ := p.API.GetUser(request.User_id)
+		user, _ := p.API.GetUser(request.UserId)
 		username := user.Username
 
 		//golang doesnt have sets so have to iterate through array to check if meeting participant is already in meeeting
@@ -120,16 +120,20 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 		participant.MeetingID_ = meetingID
 
 		participant.Password_ = meetingpointer.ModeratorPW_ //make everyone in channel a mod
-		joinURL := bbbAPI.GetJoinURL(&participant)
+		joinURL, err := bbbAPI.GetJoinURL(&participant)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 
 		myresp := ButtonResponseJSON{
 			Url: joinURL,
 		}
 		userJson, _ := json.Marshal(myresp)
 
-		post, err := p.API.GetPost(meetingpointer.PostId)
-		if err != nil {
-			http.Error(w, err.Error(), err.StatusCode)
+		post, appErr := p.API.GetPost(meetingpointer.PostId)
+		if appErr != nil {
+			http.Error(w, appErr.Error(), appErr.StatusCode)
 			return
 		}
 		Length, attendantsarray := GetAttendees(meetingID, meetingpointer.ModeratorPW_)
@@ -192,11 +196,11 @@ func (p *Plugin) handleEndMeeting(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	var request ButtonRequestJSON
-	json.Unmarshal([]byte(body), &request)
+	json.Unmarshal(body, &request)
 	meetingID := request.MeetingId
 	meetingpointer := p.FindMeeting(meetingID)
 
-	user, _ := p.API.GetUser(request.User_id)
+	user, _ := p.API.GetUser(request.UserId)
 	username := user.Username
 
 	if meetingpointer == nil {
@@ -253,7 +257,7 @@ func (p *Plugin) handleIsMeetingRunning(w http.ResponseWriter, r *http.Request) 
 	defer r.Body.Close()
 
 	var request ButtonRequestJSON
-	json.Unmarshal([]byte(body), &request)
+	json.Unmarshal(body, &request)
 	meetingID := request.MeetingId
 
 	resp, _ := bbbAPI.IsMeetingRunning(meetingID)
@@ -405,7 +409,7 @@ func (p *Plugin) handleGetAttendeesInfo(w http.ResponseWriter, r *http.Request) 
 	defer r.Body.Close()
 
 	var request AttendeesRequestJSON
-	json.Unmarshal([]byte(body), &request)
+	json.Unmarshal(body, &request)
 	meetingID := request.MeetingId
 	meetingpointer := p.FindMeeting(meetingID)
 	if meetingpointer == nil {
@@ -465,7 +469,7 @@ func (p *Plugin) handlePublishRecordings(w http.ResponseWriter, r *http.Request)
 	defer r.Body.Close()
 
 	var request PublishRecordingsRequestJSON
-	json.Unmarshal([]byte(body), &request)
+	json.Unmarshal(body, &request)
 	recordid := request.RecordId
 	publish := request.Publish
 
@@ -506,7 +510,7 @@ func (p *Plugin) handleDeleteRecordings(w http.ResponseWriter, r *http.Request) 
 	defer r.Body.Close()
 
 	var request DeleteRecordingsRequestJSON
-	json.Unmarshal([]byte(body), &request)
+	json.Unmarshal(body, &request)
 	recordid := request.RecordId
 
 	if _, err := bbbAPI.DeleteRecordings(recordid); err != nil {

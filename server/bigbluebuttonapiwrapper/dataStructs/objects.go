@@ -16,6 +16,8 @@ limitations under the License.
 
 package dataStructs
 
+import "errors"
+
 //the following structs are the types we create to interact with the API
 // ie participants, meetingRooms, recordings
 
@@ -40,6 +42,22 @@ type Participants struct {
 	Redirect     string
 	ClientURL    string
 	JoinURL      string
+}
+
+func (p *Participants) IsValid() error {
+	if p.FullName_ == "" {
+		return errors.New("full name cannot be empty")
+	}
+
+	if p.MeetingID_ == "" {
+		return errors.New("meeting ID cannot be empty")
+	}
+
+	if p.Password_ == "" {
+		return errors.New("password cannot be empty")
+	}
+
+	return nil
 }
 
 type MeetingRoom struct {

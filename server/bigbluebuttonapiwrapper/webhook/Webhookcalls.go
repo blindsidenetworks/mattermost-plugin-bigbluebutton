@@ -27,24 +27,24 @@ import (
 //see documentation:http://docs.bigbluebutton.org/dev/webhooks.html
 //webhook was designed to be used for
 
-var BASE_URL string
+var BaseUrl string
 var salt string
 
 func SetWebhookAPI(url string, saltParam string) {
-	BASE_URL = url
+	BaseUrl = url
 	salt = saltParam
 }
 
 func CreateHook(wh *dataStructs.WebHook) (string, error) {
 	if wh.CallBackURL == "" {
-		return "", errors.New("Error, must indicate callback url")
+		return "", errors.New("error, must indicate callback url")
 	}
 	callback := "callbackURL=" + url.QueryEscape(wh.CallBackURL)
 	getRaw := "&getRaw=true"
 	params := callback + getRaw
 	checkSum := helpers.GetChecksum("hooks/create" + params + salt)
 
-	response, err := helpers.HttpGet(BASE_URL + "create?" + params + "&checksum=" + checkSum)
+	response, err := helpers.HttpGet(BaseUrl + "create?" + params + "&checksum=" + checkSum)
 	if err != nil {
 		return "", err
 	}
@@ -62,11 +62,11 @@ func CreateHook(wh *dataStructs.WebHook) (string, error) {
 }
 
 func DestroyHook(hookID string) (string, error) {
-	hook_id := "hookID=" + url.QueryEscape(hookID)
-	params := hook_id
+	hookId := "hookID=" + url.QueryEscape(hookID)
+	params := hookId
 	checkSum := helpers.GetChecksum("hooks/destroy" + params + salt)
 
-	response, err := helpers.HttpGet(BASE_URL + "destroy?" + params + "&checksum=" + checkSum)
+	response, err := helpers.HttpGet(BaseUrl + "destroy?" + params + "&checksum=" + checkSum)
 	if err != nil {
 		return "", err
 	}

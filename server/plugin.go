@@ -65,7 +65,7 @@ func (p *Plugin) OnActivate() error {
 		return err
 	}
 
-	bbbAPI.SetAPI(config.BASE_URL+"/", config.SALT)
+	bbbAPI.SetAPI(config.BaseURL+"/", config.Salt)
 
 	//every 2 minutes, look through active meetings and check if recordings are done
 	p.c = cron.New()

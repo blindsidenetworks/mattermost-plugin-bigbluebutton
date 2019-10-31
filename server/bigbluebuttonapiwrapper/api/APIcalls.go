@@ -72,17 +72,17 @@ func CreateMeeting(meetingRoom *dataStructs.MeetingRoom) (string, error) {
 		url.QueryEscape(strconv.FormatBool(meetingRoom.AllowStartStopRecording))
 	moderatorOnlyMessage := "&moderatorOnlyMessage=" +
 		url.QueryEscape(meetingRoom.ModeratorOnlyMessage)
-	meta_bn_recording_ready_url := "&meta_bn-recording-ready-url=" +
+	metaBnRecordingReadyUrl := "&meta_bn-recording-ready-url=" +
 		url.QueryEscape(meetingRoom.Meta_bn_recording_ready_url)
-	meta_channelid := "&meta_channelid=" +
+	metaChannelId := "&meta_channelid=" +
 		url.QueryEscape(meetingRoom.Meta_channelid)
-	meta_endcallback := "&meta_endcallbackurl=" +
+	metaEndcallback := "&meta_endcallbackurl=" +
 		url.QueryEscape(meetingRoom.Meta_endcallbackurl)
 	voiceBridge := "&voiceBridge=" + url.QueryEscape(meetingRoom.VoiceBridge)
 
 	createParam := name + meetingID + attendeePW + moderatorPW + welcome + dialNumber +
-		voiceBridge + logoutURL + record + duration + moderatorOnlyMessage + meta_bn_recording_ready_url + meta_channelid +
-		meta_endcallback + allowStartStopRecording
+		voiceBridge + logoutURL + record + duration + moderatorOnlyMessage + metaBnRecordingReadyUrl + metaChannelId +
+		metaEndcallback + allowStartStopRecording
 
 	checksum := helpers.GetChecksum("create" + createParam + salt)
 
@@ -101,17 +101,16 @@ func CreateMeeting(meetingRoom *dataStructs.MeetingRoom) (string, error) {
 		mattermost.API.LogInfo("SUCCESS CREATE MEETINGROOM. MEETING ID: " +
 			meetingRoom.CreateMeetingResponse.MeetingID)
 		return meetingRoom.CreateMeetingResponse.MeetingID, nil
-	} else {
-		mattermost.API.LogError("CREATE MEETINGROOM FAILD: " + response)
-		return "", errors.New(response)
 	}
+
+	mattermost.API.LogError("CREATE MEETINGROOM FAILD: " + response)
+	return "", errors.New(response)
 }
 
 // GetJoinURL: we send in a Participant struct and get back a joinurl that participant can go to
-func GetJoinURL(participants *dataStructs.Participants) string {
-	if "" == participants.FullName_ || "" == participants.MeetingID_ ||
-		"" == participants.Password_ {
-		return "ERROR: PARAM ERROR."
+func GetJoinURL(participants *dataStructs.Participants) (string, error) {
+	if err := participants.IsValid(); err != nil {
+		return "", err
 	}
 
 	fullName := "fullName=" + url.QueryEscape(participants.FullName_)
@@ -154,7 +153,7 @@ func GetJoinURL(participants *dataStructs.Participants) string {
 	joinUrl := BaseUrl + "join?" + joinParam + "&checksum=" + checksum
 	participants.JoinURL = joinUrl
 
-	return joinUrl
+	return joinUrl, nil
 }
 
 //IsMeetingRunning: only returns true when someone has joined the meeting
@@ -175,8 +174,8 @@ func IsMeetingRunning(meetingID string) (bool, error) {
 }
 
 //EndMeeting ends a BBB meeting
-func EndMeeting(meeting_ID string, modPw string) (string, error) {
-	meetingID := "meetingID=" + url.QueryEscape(meeting_ID)
+func EndMeeting(meetingId string, modPw string) (string, error) {
+	meetingID := "meetingID=" + url.QueryEscape(meetingId)
 	modPW := "&password=" + url.QueryEscape(modPw)
 	param := meetingID + modPW
 	checksum := helpers.GetChecksum("end" + param + salt)
@@ -195,18 +194,17 @@ func EndMeeting(meeting_ID string, modPw string) (string, error) {
 	}
 
 	if "SUCCESS" == XMLResp.ReturnCode {
-		return "Successfully ended meeting " + meeting_ID, nil
-	} else {
-		return "", errors.New("Could not end meeting " + meeting_ID)
+		return "Successfully ended meeting " + meetingId, nil
 	}
 
+	return "", errors.New("Could not end meeting " + meetingId)
 }
 
 //GetMeetingInfo: pass in meeting id, moderator password and address of a response structure,
 // able to see new response info without having to get passed back the structure
-func GetMeetingInfo(meeting_ID string, mod_PW string, responseXML *dataStructs.GetMeetingInfoResponse) (string, error) {
-	meetingID := "meetingID=" + url.QueryEscape(meeting_ID)
-	modPW := "&password=" + url.QueryEscape(mod_PW)
+func GetMeetingInfo(meetingId string, modPw string, responseXML *dataStructs.GetMeetingInfoResponse) (string, error) {
+	meetingID := "meetingID=" + url.QueryEscape(meetingId)
+	modPW := "&password=" + url.QueryEscape(modPw)
 	param := meetingID + modPW
 	checksum := helpers.GetChecksum("getMeetingInfo" + param + salt)
 
@@ -223,7 +221,7 @@ func GetMeetingInfo(meeting_ID string, mod_PW string, responseXML *dataStructs.G
 
 	if "SUCCESS" == responseXML.ReturnCode {
 		mattermost.API.LogInfo("Successfully got meeting info")
-		return "Successfully got meeting info" + meeting_ID, nil
+		return "Successfully got meeting info" + meetingId, nil
 	} else {
 		return "", errors.New("Could not get meeting info ")
 	}
@@ -245,26 +243,25 @@ func GetMeetings() (dataStructs.GetMeetingsResponse, error) {
 	}
 
 	if "SUCCESS" == XMLResp.ReturnCode {
-		println("Successfully got meetings info")
-
+		mattermost.API.LogInfo("Successfully got meetings info")
 	} else {
-		println("Could not get meetings info ")
+		mattermost.API.LogError("Could not get meetings info ")
 	}
 	return XMLResp, nil
 }
 
 //GetRecordings gets a recording for a BBB meeting
-func GetRecordings(meeting_id string, record_id string, metachannelid string) (dataStructs.GetRecordingsResponse, string, error) {
-	meetingID := "meetingID=" + url.QueryEscape(meeting_id)
-	recordid := "&recordID=" + url.QueryEscape(record_id)
+func GetRecordings(meetingId string, recordId string, metachannelid string) (dataStructs.GetRecordingsResponse, string, error) {
+	meetingID := "meetingID=" + url.QueryEscape(meetingId)
+	recordid := "&recordID=" + url.QueryEscape(recordId)
 	var param string
 	if metachannelid != "" {
-		meta_channelid := "meta_channelid=" +
+		metaChannelId := "meta_channelid=" +
 			url.QueryEscape(metachannelid)
-		param = meta_channelid
-	} else if meeting_id != "" && record_id != "" {
+		param = metaChannelId
+	} else if meetingId != "" && recordId != "" {
 		param = meetingID + recordid
-	} else if meeting_id != "" {
+	} else if meetingId != "" {
 		param = meetingID
 	}
 	checksum := helpers.GetChecksum("getRecordings" + param + salt)
