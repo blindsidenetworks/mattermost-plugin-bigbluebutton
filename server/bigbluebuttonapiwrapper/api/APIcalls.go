@@ -19,32 +19,44 @@ package api
 import (
 	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/dataStructs"
 	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/helpers"
-	"log"
+	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/mattermost"
+	"github.com/pkg/errors"
 	"net/url"
 	"strconv"
 )
+
 //url of the BigBlueButton server
 var BaseUrl string
 
 //Secret of the BigBlueButton server
-var SALT string
+var secret string
 
-//Sets the BaseUrl and SALT
-func SetAPI(url string, salt string) {
+//Sets the BaseUrl and secret
+func SetAPI(url string, secretParam string) {
 	BaseUrl = url
-	SALT = salt
+	secret = secretParam
 }
 
 //CreateMeeting creates A BigBlueButton meeting
 // note: a BigBlueButton meeting will terminate 1 minute after its creation
 // if there are no attendees currently present in the meeting
-
+//
 // see http://docs.bigbluebutton.org/dev/api.html for API documentation
-func CreateMeeting(meetingRoom *dataStructs.MeetingRoom) string {
-	if meetingRoom.Name_ == "" || meetingRoom.MeetingID_ == "" ||
-		meetingRoom.AttendeePW_ == "" || meetingRoom.ModeratorPW_ == "" {
-		log.Println("ERROR: PARAM ERROR.")
-		return "ERROR: PARAM ERROR."
+func CreateMeeting(meetingRoom *dataStructs.MeetingRoom) (string, error) {
+	if meetingRoom.Name_ == "" {
+		return "", errors.New("meeting name cannot be empty")
+	}
+
+	if meetingRoom.MeetingID_ == "" {
+		return "", errors.New("meeting ID cannot be empty")
+	}
+
+	if meetingRoom.AttendeePW_ == "" {
+		return "", errors.New("attendee PW cannot be empty")
+	}
+
+	if meetingRoom.ModeratorPW_ == "" {
+		return "", errors.New("moderator PW cannot be empty")
 	}
 
 	name := "name=" + url.QueryEscape(meetingRoom.Name_)
@@ -60,50 +72,45 @@ func CreateMeeting(meetingRoom *dataStructs.MeetingRoom) string {
 		url.QueryEscape(strconv.FormatBool(meetingRoom.AllowStartStopRecording))
 	moderatorOnlyMessage := "&moderatorOnlyMessage=" +
 		url.QueryEscape(meetingRoom.ModeratorOnlyMessage)
-	meta_bn_recording_ready_url := "&meta_bn-recording-ready-url=" +
+	metaBnRecordingReadyUrl := "&meta_bn-recording-ready-url=" +
 		url.QueryEscape(meetingRoom.Meta_bn_recording_ready_url)
-	meta_channelid := "&meta_channelid=" +
+	metaChannelId := "&meta_channelid=" +
 		url.QueryEscape(meetingRoom.Meta_channelid)
-	meta_endcallback := "&meta_endcallbackurl=" +
+	metaEndcallback := "&meta_endcallbackurl=" +
 		url.QueryEscape(meetingRoom.Meta_endcallbackurl)
 	voiceBridge := "&voiceBridge=" + url.QueryEscape(meetingRoom.VoiceBridge)
 
 	createParam := name + meetingID + attendeePW + moderatorPW + welcome + dialNumber +
-		voiceBridge + logoutURL + record + duration + moderatorOnlyMessage + meta_bn_recording_ready_url + meta_channelid +
-		meta_endcallback + allowStartStopRecording
+		voiceBridge + logoutURL + record + duration + moderatorOnlyMessage + metaBnRecordingReadyUrl + metaChannelId +
+		metaEndcallback + allowStartStopRecording
 
-	checksum := helpers.GetChecksum("create" + createParam + SALT)
+	checksum := helpers.GetChecksum("create" + createParam + secret)
 
-	response := helpers.HttpGet(BaseUrl + "create?" + createParam + "&checksum=" +
-		checksum)
+	response, err := helpers.HttpGet(BaseUrl + "create?" + createParam + "&checksum=" + checksum)
 
-	if "ERROR" == response {
-		log.Println("ERROR: HTTP ERROR.")
-		return "ERROR: HTTP ERROR."
+	if err != nil {
+		mattermost.API.LogError("ERROR: HTTP ERROR: " + response)
+		return "", errors.New(response)
 	}
-	err := helpers.ReadXML(response, &meetingRoom.CreateMeetingResponse)
 
-	if nil != err {
-		log.Println("XML PARSE ERROR: " + err.Error())
-		return "ERROR: XML PARSE ERROR."
+	if err := helpers.ReadXML(response, &meetingRoom.CreateMeetingResponse); err != nil {
+		return "", err
 	}
 
 	if "SUCCESS" == meetingRoom.CreateMeetingResponse.Returncode {
-		log.Println("SUCCESS CREATE MEETINGROOM. MEETING ID: " +
+		mattermost.API.LogInfo("SUCCESS CREATE MEETINGROOM. MEETING ID: " +
 			meetingRoom.CreateMeetingResponse.MeetingID)
-		return meetingRoom.CreateMeetingResponse.MeetingID
-	} else {
-		log.Println("CREATE MEETINGROOM FAILD: " + response)
-		return "FAILED"
+		return meetingRoom.CreateMeetingResponse.MeetingID, nil
 	}
-	return "ERROR: UNKNOWN."
+
+	mattermost.API.LogError("CREATE MEETINGROOM FAILD: " + response)
+	return "", errors.New(response)
 }
 
 // GetJoinURL: we send in a Participant struct and get back a joinurl that participant can go to
-func GetJoinURL(participants *(dataStructs.Participants)) string {
-	if "" == participants.FullName_ || "" == participants.MeetingID_ ||
-		"" == participants.Password_ {
-		return "ERROR: PARAM ERROR."
+func GetJoinURL(participants *dataStructs.Participants) (string, error) {
+	if err := participants.IsValid(); err != nil {
+		return "", err
 	}
 
 	fullName := "fullName=" + url.QueryEscape(participants.FullName_)
@@ -137,185 +144,179 @@ func GetJoinURL(participants *(dataStructs.Participants)) string {
 		redirect = "&redirect=true"
 		clientURL = "&clientURL=" + url.QueryEscape(participants.ClientURL)
 	}
-	joinviahtml := "&joinViaHtml5=true"
+	joinViaHtml5 := "&joinViaHtml5=true"
 
 	joinParam := fullName + meetingID + password + createTime + userID +
-		configToken + avatarURL + redirect + clientURL + joinviahtml
+		configToken + avatarURL + redirect + clientURL + joinViaHtml5
 
-	checksum := helpers.GetChecksum("join" + joinParam + SALT)
+	checksum := helpers.GetChecksum("join" + joinParam + secret)
 	joinUrl := BaseUrl + "join?" + joinParam + "&checksum=" + checksum
 	participants.JoinURL = joinUrl
 
-	return joinUrl
+	return joinUrl, nil
 }
 
 //IsMeetingRunning: only returns true when someone has joined the meeting
-func IsMeetingRunning(meetingID string) bool {
-	checksum := helpers.GetChecksum("isMeetingRunning" + "meetingID=" + meetingID + SALT)
+func IsMeetingRunning(meetingID string) (bool, error) {
+	checksum := helpers.GetChecksum("isMeetingRunning" + "meetingID=" + meetingID + secret)
 	getURL := BaseUrl + "isMeetingRunning?" + "meetingID=" + meetingID + "&checksum=" + checksum
-	response := helpers.HttpGet(getURL)
-	if "ERROR" == response {
-		log.Println("ERROR: HTTP ERROR.")
-		return false
+	response, err := helpers.HttpGet(getURL)
+	if err != nil {
+		return false, err
 	}
-	var XMLResp dataStructs.IsMeetingRunningResponse
-	err := helpers.ReadXML(response, &XMLResp)
+	var xmlResp dataStructs.IsMeetingRunningResponse
+	err = helpers.ReadXML(response, &xmlResp)
 	if nil != err {
-		return false
+		return false, err
 	}
 
-	return XMLResp.Running
+	return xmlResp.Running, nil
 }
 
 //EndMeeting ends a BBB meeting
-func EndMeeting(meeting_ID string, mod_PW string) string {
-	meetingID := "meetingID=" + url.QueryEscape(meeting_ID)
-	modPW := "&password=" + url.QueryEscape(mod_PW)
+func EndMeeting(meetingId string, modPw string) (string, error) {
+	meetingID := "meetingID=" + url.QueryEscape(meetingId)
+	modPW := "&password=" + url.QueryEscape(modPw)
 	param := meetingID + modPW
-	checksum := helpers.GetChecksum("end" + param + SALT)
+	checksum := helpers.GetChecksum("end" + param + secret)
 
 	getURL := BaseUrl + "end?" + param + "&checksum=" + checksum
 
-	response := helpers.HttpGet(getURL)
-
-	if "ERROR" == response {
-		log.Println("ERROR: HTTP ERROR.")
-		return "Could not end meeting " + meeting_ID
+	response, err := helpers.HttpGet(getURL)
+	if err != nil {
+		return "", err
 	}
 	var XMLResp dataStructs.EndResponse
 
-	err := helpers.ReadXML(response, &XMLResp)
+	err = helpers.ReadXML(response, &XMLResp)
 	if nil != err {
-		return "Could not end meeting " + meeting_ID
+		return "", err
 	}
 
 	if "SUCCESS" == XMLResp.ReturnCode {
-
-		return "Successfully ended meeting " + meeting_ID
-	} else {
-		return "Could not end meeting " + meeting_ID
+		return "Successfully ended meeting " + meetingId, nil
 	}
 
+	return "", errors.New("Could not end meeting " + meetingId)
 }
 
 //GetMeetingInfo: pass in meeting id, moderator password and address of a response structure,
 // able to see new response info without having to get passed back the structure
-func GetMeetingInfo(meeting_ID string, mod_PW string, responseXML *dataStructs.GetMeetingInfoResponse) string {
-	meetingID := "meetingID=" + url.QueryEscape(meeting_ID)
-	modPW := "&password=" + url.QueryEscape(mod_PW)
+func GetMeetingInfo(meetingId string, modPw string, responseXML *dataStructs.GetMeetingInfoResponse) (string, error) {
+	meetingID := "meetingID=" + url.QueryEscape(meetingId)
+	modPW := "&password=" + url.QueryEscape(modPw)
 	param := meetingID + modPW
-	checksum := helpers.GetChecksum("getMeetingInfo" + param + SALT)
+	checksum := helpers.GetChecksum("getMeetingInfo" + param + secret)
 
 	getURL := BaseUrl + "getMeetingInfo?" + param + "&checksum=" + checksum
-	response := helpers.HttpGet(getURL)
-
-	if "ERROR" == response {
-		log.Println("ERROR: HTTP ERROR.")
-		return "FAILED"
+	response, err := helpers.HttpGet(getURL)
+	if err != nil {
+		return "", err
 	}
 
-	err := helpers.ReadXML(response, responseXML)
+	err = helpers.ReadXML(response, responseXML)
 	if nil != err {
-		return "FAILED"
+		return "", err
 	}
 
 	if "SUCCESS" == responseXML.ReturnCode {
-		println("Successfully got meeting info")
-		return "Successfully got meeting info" + meeting_ID
+		mattermost.API.LogInfo("Successfully got meeting info")
+		return "Successfully got meeting info" + meetingId, nil
 	} else {
-		println("Could not get meeting info ")
-		return "FAILED"
+		return "", errors.New("Could not get meeting info ")
 	}
-
 }
 
 //GetMeetings: Gets all meetings and the details by returning a struct
-func GetMeetings() dataStructs.GetMeetingsResponse {
-	checksum := helpers.GetChecksum("getMeetings" + SALT)
+func GetMeetings() (dataStructs.GetMeetingsResponse, error) {
+	checksum := helpers.GetChecksum("getMeetings" + secret)
 	getURL := BaseUrl + "getMeetings?" + "&checksum=" + checksum
-	response := helpers.HttpGet(getURL)
+	response, err := helpers.HttpGet(getURL)
 
-	if "ERROR" == response {
-		log.Println("ERROR: HTTP ERROR.")
+	if err != nil {
+		return dataStructs.GetMeetingsResponse{}, err
 	}
 	var XMLResp dataStructs.GetMeetingsResponse
 
-	helpers.ReadXML(response, &XMLResp)
+	if err := helpers.ReadXML(response, &XMLResp); err != nil {
+		return dataStructs.GetMeetingsResponse{}, err
+	}
 
 	if "SUCCESS" == XMLResp.ReturnCode {
-		println("Successfully got meetings info")
-
+		mattermost.API.LogInfo("Successfully got meetings info")
 	} else {
-		println("Could not get meetings info ")
+		mattermost.API.LogError("Could not get meetings info ")
 	}
-	return XMLResp
-
+	return XMLResp, nil
 }
-//GetRecordings gets a recording for a BBB meeting
-func GetRecordings(meeting_id string, record_id string, metachannelid string) (dataStructs.GetRecordingsResponse, string) {
 
-	meetingID := "meetingID=" + url.QueryEscape(meeting_id)
-	recordid := "&recordID=" + url.QueryEscape(record_id)
+//GetRecordings gets a recording for a BBB meeting
+func GetRecordings(meetingId string, recordId string, metachannelid string) (dataStructs.GetRecordingsResponse, string, error) {
+	meetingID := "meetingID=" + url.QueryEscape(meetingId)
+	recordid := "&recordID=" + url.QueryEscape(recordId)
 	var param string
 	if metachannelid != "" {
-		meta_channelid := "meta_channelid=" +
+		metaChannelId := "meta_channelid=" +
 			url.QueryEscape(metachannelid)
-		param = meta_channelid
-	} else if meeting_id != "" && record_id != "" {
+		param = metaChannelId
+	} else if meetingId != "" && recordId != "" {
 		param = meetingID + recordid
-	} else if meeting_id != "" {
+	} else if meetingId != "" {
 		param = meetingID
 	}
-	checksum := helpers.GetChecksum("getRecordings" + param + SALT)
+	checksum := helpers.GetChecksum("getRecordings" + param + secret)
 	getURL := BaseUrl + "getRecordings?" + param + "&checksum=" + checksum
-	response := helpers.HttpGet(getURL)
+	response, err := helpers.HttpGet(getURL)
 
-	if "ERROR" == response {
-		log.Println("ERROR: HTTP ERROR.")
+	if err != nil {
+		return dataStructs.GetRecordingsResponse{}, "", err
 	}
 	var XMLResp dataStructs.GetRecordingsResponse
 
-	err := helpers.ReadXML(response, &XMLResp)
-	if nil != err {
-
+	if err := helpers.ReadXML(response, &XMLResp); nil != err {
+		return dataStructs.GetRecordingsResponse{}, "", err
 	}
+
 	if "SUCCESS" == XMLResp.ReturnCode {
-		println("Successfully got recordings info")
-
+		mattermost.API.LogInfo("Successfully got recordings info")
 	} else {
-		println("Could not get recordings info ")
+		return dataStructs.GetRecordingsResponse{}, "", errors.New("Could not get recordings info")
 	}
-	return XMLResp, response
+	return XMLResp, response, nil
 }
+
 //PublishRecordings
-func PublishRecordings(recordid string, publish string) dataStructs.PublishRecordingsResponse {
+func PublishRecordings(recordid string, publish string) (dataStructs.PublishRecordingsResponse, error) {
 	recordID := "recordID=" + url.QueryEscape(recordid)
 	Publish := "&publish=" + url.QueryEscape(publish)
 
 	param := recordID + Publish
-	checksum := helpers.GetChecksum("publishRecordings" + param + SALT)
+	checksum := helpers.GetChecksum("publishRecordings" + param + secret)
 
 	getURL := BaseUrl + "publishRecordings?" + param + "&checksum=" + checksum
-	//log.Println(getURL)
-	response := helpers.HttpGet(getURL)
+	response, err := helpers.HttpGet(getURL)
+	if err != nil {
+		return dataStructs.PublishRecordingsResponse{}, err
+	}
+
 	var XMLResp dataStructs.PublishRecordingsResponse
-
 	helpers.ReadXML(response, &XMLResp)
-
-	return XMLResp
+	return XMLResp, nil
 }
+
 //DeleteRecordings
-func DeleteRecordings(recordid string) dataStructs.DeleteRecordingsResponse {
+func DeleteRecordings(recordid string) (dataStructs.DeleteRecordingsResponse, error) {
 	recordID := "recordID=" + url.QueryEscape(recordid)
 	param := recordID
-	checksum := helpers.GetChecksum("deleteRecordings" + param + SALT)
+	checksum := helpers.GetChecksum("deleteRecordings" + param + secret)
 
 	getURL := BaseUrl + "deleteRecordings?" + param + "&checksum=" + checksum
-	//log.Println(getURL)
-	response := helpers.HttpGet(getURL)
+	response, err := helpers.HttpGet(getURL)
+	if err != nil {
+		return dataStructs.DeleteRecordingsResponse{}, err
+	}
+
 	var XMLResp dataStructs.DeleteRecordingsResponse
-
 	helpers.ReadXML(response, &XMLResp)
-
-	return XMLResp
+	return XMLResp, nil
 }

@@ -30,6 +30,7 @@ type CreateMeetingResponse struct {
 	MessageKey           string `xml:"messageKey"`
 	Message              string `xml:"message"`
 }
+
 type IsMeetingRunningResponse struct {
 	ReturnCode string `xml:"returncode"`
 	Running    bool   `xml:"running"`
@@ -40,10 +41,12 @@ type EndResponse struct {
 	MessageKey string `xml:"messageKey"`
 	Message    string `xml:"message"`
 }
+
 type GetMeetingsResponse struct {
 	ReturnCode string      `xml:"returncode"`
 	Meetings   allMeetings `xml:"meetings"`
 }
+
 type allMeetings struct {
 	MeetingInfo []GetMeetingInfoResponse `xml:"meeting"`
 }
@@ -79,6 +82,7 @@ type GetMeetingInfoResponse struct {
 	//untested
 	BreakoutRooms breakoutRooms `xml:"breakoutRooms"`
 }
+
 type breakoutRooms struct {
 	BreakoutRooms []string `xml:"breakout"`
 }
@@ -102,9 +106,11 @@ type GetRecordingsResponse struct {
 	ReturnCode string     `xml:"returncode"`
 	Recordings recordings `xml:"recordings"`
 }
+
 type recordings struct {
 	Recording []recording `xml:"recording"`
 }
+
 type recording struct {
 	RecordID     string   `xml:"recordID"`
 	MeetingID    string   `xml:"meetingID"`
@@ -140,6 +146,7 @@ type CreateWebhookResponse struct {
 	Message    string `xml:"message"`
 	HookID     string `xml:"hookID"`
 }
+
 type DestroyedWebhookResponse struct {
 	Returncode string `xml:"returncode"`
 	MessageKey string `xml:"messageKey"`

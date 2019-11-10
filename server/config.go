@@ -17,32 +17,38 @@ limitations under the License.
 package main
 
 import (
-	"fmt"
+	"github.com/pkg/errors"
+	"strings"
 )
 
 type Configuration struct {
-	BASE_URL     string
-	SALT         string
+	BaseURL string `json:"BASE_URL"`
+	Secret  string `json:"SALT"`
 }
 
 func (p *Plugin) OnConfigurationChange() error {
 	var configuration Configuration
 	// loads configuration from our config ui page
 	err := p.API.LoadPluginConfiguration(&configuration)
+
+	configuration.BaseURL = strings.Trim(configuration.BaseURL, "/")
+	configuration.BaseURL = strings.Trim(configuration.BaseURL, " ")
+
 	// stores the config in an Atomic.Value place
 	p.configuration.Store(&configuration)
 	return err
 }
+
 func (p *Plugin) config() *Configuration {
 	// returns the config file we had stored in Atomic.Value
 	return p.configuration.Load().(*Configuration)
 }
 
 func (c *Configuration) IsValid() error {
-	if len(c.BASE_URL) == 0 {
-		return fmt.Errorf("BASE URL is not configured.")
-	} else if len(c.SALT) == 0 {
-		return fmt.Errorf("SALT is not configured.")
+	if len(c.BaseURL) == 0 {
+		return errors.New("BASE URL is not configured.")
+	} else if len(c.Secret) == 0 {
+		return errors.New("Secret is not configured.")
 	}
 
 	return nil

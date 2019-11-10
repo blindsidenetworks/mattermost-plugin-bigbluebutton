@@ -18,14 +18,14 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"errors"
-	"net/url"
-	"strings"
+	"fmt"
 	bbbAPI "github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/api"
 	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/dataStructs"
 	"github.com/mattermost/mattermost-server/model"
 	"github.com/segmentio/ksuid"
+	"net/url"
+	"strings"
 )
 
 func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, description string) error {
@@ -36,7 +36,6 @@ func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, d
 		m.Name_ = "Big Blue Button Meeting"
 	}
 
-
 	siteconfig := p.API.GetConfig()
 
 	var callbackURL string
@@ -45,7 +44,7 @@ func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, d
 	} else {
 		return errors.New("SiteURL not set")
 	}
-	if !strings.HasPrefix(callbackURL, "http"){
+	if !strings.HasPrefix(callbackURL, "http") {
 		callbackURL = "http://" + callbackURL
 	}
 
@@ -83,39 +82,40 @@ func (p *Plugin) LoadMeetingsFromStore() {
 	byted, _ := p.API.KVGet("all_meetings")
 	json.Unmarshal(byted, &p.Meetings)
 
-	recordings_byted, _ := p.API.KVGet("recording_queue")
-	json.Unmarshal(recordings_byted, &p.MeetingsWaitingforRecordings)
+	recordingsBytes, _ := p.API.KVGet("recording_queue")
+	json.Unmarshal(recordingsBytes, &p.MeetingsWaitingforRecordings)
 
 }
+
 func (p *Plugin) SaveMeetingToStore() {
 	byted, _ := json.Marshal(p.Meetings)
 	p.API.KVSet("all_meetings", byted)
 
-	recordings_byted, _ := json.Marshal(p.MeetingsWaitingforRecordings)
-	p.API.KVSet("recording_queue", recordings_byted)
+	recordingBytes, _ := json.Marshal(p.MeetingsWaitingforRecordings)
+	p.API.KVSet("recording_queue", recordingBytes)
 
 }
 
 // Returns a meeting pointer so we'll be able to manipulate its content from outside the array.
-func (p *Plugin) FindMeeting(meeting_id string) *dataStructs.MeetingRoom {
+func (p *Plugin) FindMeeting(meetingId string) *dataStructs.MeetingRoom {
 	for i := range p.Meetings {
-		if p.Meetings[i].MeetingID_ == meeting_id {
-			return &(p.Meetings[i])
-		}
-	}
-	return nil
-}
-func (p *Plugin) FindMeetingfromInternal(meeting_id string) *dataStructs.MeetingRoom {
-	for i := range p.Meetings {
-		if p.Meetings[i].InternalMeetingId == meeting_id {
+		if p.Meetings[i].MeetingID_ == meetingId {
 			return &(p.Meetings[i])
 		}
 	}
 	return nil
 }
 
+func (p *Plugin) FindMeetingfromInternal(meetingId string) *dataStructs.MeetingRoom {
+	for i := range p.Meetings {
+		if p.Meetings[i].InternalMeetingId == meetingId {
+			return &(p.Meetings[i])
+		}
+	}
+	return nil
+}
 
-func (p *Plugin) createStartMeetingPost(user_id string, channel_id string, m *dataStructs.MeetingRoom) {
+func (p *Plugin) createStartMeetingPost(userId string, channelId string, m *dataStructs.MeetingRoom) {
 
 	config := p.config()
 	// If config page is not set uh oh.
@@ -123,7 +123,7 @@ func (p *Plugin) createStartMeetingPost(user_id string, channel_id string, m *da
 		return
 	}
 
-	textPost := &model.Post{UserId: user_id, ChannelId: channel_id,
+	textPost := &model.Post{UserId: userId, ChannelId: channelId,
 		Message: "#BigBlueButton #" + m.Name_ + " #ID" + m.MeetingID_, Type: "custom_bbb"}
 
 	textPost.Props = model.StringInterface{
@@ -142,10 +142,10 @@ func (p *Plugin) createStartMeetingPost(user_id string, channel_id string, m *da
 	m.PostId = postpointer.Id
 }
 
-func (p *Plugin) DeleteMeeting(meeting_id string) {
+func (p *Plugin) DeleteMeeting(meetingId string) {
 	var index int
 	for i := range p.Meetings {
-		if p.Meetings[i].MeetingID_ == meeting_id {
+		if p.Meetings[i].MeetingID_ == meetingId {
 			index = i
 			break
 		}
@@ -153,10 +153,10 @@ func (p *Plugin) DeleteMeeting(meeting_id string) {
 	p.Meetings = append(p.Meetings[:index], p.Meetings[index+1:]...)
 }
 
-func GetAttendees(meeting_id string, modpw string) (int, []string) {
+func GetAttendees(meetingId string, modPw string) (int, []string) {
 	var meetinginfo dataStructs.GetMeetingInfoResponse
-	resp := bbbAPI.GetMeetingInfo(meeting_id, modpw, &meetinginfo)
-	if resp == "FAILED" {
+
+	if _, err := bbbAPI.GetMeetingInfo(meetingId, modPw, &meetinginfo); err != nil {
 		return 0, []string{}
 	}
 	attendeesArray := meetinginfo.Attendees.Attendees

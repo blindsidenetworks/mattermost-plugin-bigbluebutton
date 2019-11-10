@@ -18,22 +18,22 @@ package main
 
 import (
 	"encoding/json"
+	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/mattermost"
 	"io/ioutil"
 	"net/http"
 	"strings"
 	"time"
-	"log"
 
-	"github.com/mattermost/mattermost-server/model"
 	bbbAPI "github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/api"
 	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/dataStructs"
+	"github.com/mattermost/mattermost-server/model"
 )
 
 type RequestCreateMeetingJSON struct {
-	User_id    string `json:"user_id"`
-	Channel_id string `json:"channel_id"`
-	Topic      string `json:"title"`
-	Desc       string `json:"description"`
+	UserId    string `json:"user_id"`
+	ChannelId string `json:"channel_id"`
+	Topic     string `json:"title"`
+	Desc      string `json:"description"`
 }
 
 //Create meeting doesn't call the BBB api to start a meeting
@@ -45,7 +45,7 @@ func (p *Plugin) handleCreateMeeting(w http.ResponseWriter, r *http.Request) {
 	body, _ := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
 	var request RequestCreateMeetingJSON
-	json.Unmarshal([]byte(body), &request)
+	json.Unmarshal(body, &request)
 
 	meetingpointer := new(dataStructs.MeetingRoom)
 	var err error
@@ -55,13 +55,13 @@ func (p *Plugin) handleCreateMeeting(w http.ResponseWriter, r *http.Request) {
 		err = p.PopulateMeeting(meetingpointer, []string{"create", request.Topic}, request.Desc)
 	}
 
-	if err != nil{
+	if err != nil {
 		http.Error(w, "Please provide a 'Site URL' in Settings > General > Configuration.", http.StatusUnprocessableEntity)
 		return
 	}
 
 	//creates the start meeting post
-	p.createStartMeetingPost(request.User_id, request.Channel_id, meetingpointer)
+	p.createStartMeetingPost(request.UserId, request.ChannelId, meetingpointer)
 
 	// add our newly created meeting to our array of meetings
 	p.Meetings = append(p.Meetings, *meetingpointer)
@@ -70,10 +70,11 @@ func (p *Plugin) handleCreateMeeting(w http.ResponseWriter, r *http.Request) {
 }
 
 type ButtonRequestJSON struct {
-	User_id   string `json:"user_id"`
+	UserId    string `json:"user_id"`
 	MeetingId string `json:"meeting_id"`
 	IsMod     string `json:"is_mod"`
 }
+
 type ButtonResponseJSON struct {
 	Url string `json:"url"`
 }
@@ -84,7 +85,7 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	var request ButtonRequestJSON
-	json.Unmarshal([]byte(body), &request)
+	json.Unmarshal(body, &request)
 	meetingID := request.MeetingId
 	meetingpointer := p.FindMeeting(meetingID)
 
@@ -106,7 +107,7 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 			meetingpointer.CreatedAt = time.Now().Unix()
 		}
 
-		user, _ := p.API.GetUser(request.User_id)
+		user, _ := p.API.GetUser(request.UserId)
 		username := user.Username
 
 		//golang doesnt have sets so have to iterate through array to check if meeting participant is already in meeeting
@@ -119,16 +120,20 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 		participant.MeetingID_ = meetingID
 
 		participant.Password_ = meetingpointer.ModeratorPW_ //make everyone in channel a mod
-		joinURL := bbbAPI.GetJoinURL(&participant)
+		joinURL, err := bbbAPI.GetJoinURL(&participant)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 
 		myresp := ButtonResponseJSON{
 			Url: joinURL,
 		}
 		userJson, _ := json.Marshal(myresp)
 
-		post, err := p.API.GetPost(meetingpointer.PostId)
-		if err != nil {
-			http.Error(w, err.Error(), err.StatusCode)
+		post, appErr := p.API.GetPost(meetingpointer.PostId)
+		if appErr != nil {
+			http.Error(w, appErr.Error(), appErr.StatusCode)
 			return
 		}
 		Length, attendantsarray := GetAttendees(meetingID, meetingpointer.ModeratorPW_)
@@ -185,17 +190,17 @@ func (p *Plugin) handleImmediateEndMeetingCallback(w http.ResponseWriter, r *htt
 func (p *Plugin) handleEndMeeting(w http.ResponseWriter, r *http.Request) {
 
 	//for debugging
-	log.Println("Processing End Meeting Request")
+	mattermost.API.LogInfo("Processing End Meeting Request")
 
 	body, _ := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
 
 	var request ButtonRequestJSON
-	json.Unmarshal([]byte(body), &request)
+	json.Unmarshal(body, &request)
 	meetingID := request.MeetingId
 	meetingpointer := p.FindMeeting(meetingID)
 
-	user, _ := p.API.GetUser(request.User_id)
+	user, _ := p.API.GetUser(request.UserId)
 	username := user.Username
 
 	if meetingpointer == nil {
@@ -208,7 +213,7 @@ func (p *Plugin) handleEndMeeting(w http.ResponseWriter, r *http.Request) {
 	} else {
 		bbbAPI.EndMeeting(meetingpointer.MeetingID_, meetingpointer.ModeratorPW_)
 		//for debugging
-		log.Println("Meeting Ended")
+		mattermost.API.LogInfo("Meeting Ended")
 
 		if meetingpointer.EndedAt == 0 {
 			meetingpointer.EndedAt = time.Now().Unix()
@@ -242,6 +247,7 @@ func (p *Plugin) handleEndMeeting(w http.ResponseWriter, r *http.Request) {
 type isRunningRequestJSON struct {
 	MeetingId string `json:"meeting_id"`
 }
+
 type isRunningResponseJSON struct {
 	IsRunning bool `json:"running"`
 }
@@ -251,10 +257,10 @@ func (p *Plugin) handleIsMeetingRunning(w http.ResponseWriter, r *http.Request) 
 	defer r.Body.Close()
 
 	var request ButtonRequestJSON
-	json.Unmarshal([]byte(body), &request)
+	json.Unmarshal(body, &request)
 	meetingID := request.MeetingId
 
-	resp := bbbAPI.IsMeetingRunning(meetingID)
+	resp, _ := bbbAPI.IsMeetingRunning(meetingID)
 
 	myresp := isRunningResponseJSON{
 		IsRunning: resp,
@@ -391,6 +397,7 @@ func (p *Plugin) handleRecordingReady(w http.ResponseWriter, r *http.Request) {
 type AttendeesRequestJSON struct {
 	MeetingId string `json:"meeting_id"`
 }
+
 type AttendeesResponseJSON struct {
 	Num       int      `json:"num"`
 	Attendees []string `json:"attendees"`
@@ -402,7 +409,7 @@ func (p *Plugin) handleGetAttendeesInfo(w http.ResponseWriter, r *http.Request) 
 	defer r.Body.Close()
 
 	var request AttendeesRequestJSON
-	json.Unmarshal([]byte(body), &request)
+	json.Unmarshal(body, &request)
 	meetingID := request.MeetingId
 	meetingpointer := p.FindMeeting(meetingID)
 	if meetingpointer == nil {
@@ -434,7 +441,6 @@ func (p *Plugin) handleGetAttendeesInfo(w http.ResponseWriter, r *http.Request) 
 	}
 	userJson, _ := json.Marshal(myresp)
 
-
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(userJson)
 }
@@ -442,9 +448,11 @@ func (p *Plugin) handleGetAttendeesInfo(w http.ResponseWriter, r *http.Request) 
 type RecordingsRequestJSON struct {
 	ChannelId string `json:"channel_id"`
 }
+
 type RecordingsResponseJSON struct {
 	Recordings []SingleRecording `json:"recordings"`
 }
+
 type SingleRecording struct {
 	RecordingUrl string `json:"recordingurl"`
 	Title        string `json:"title"`
@@ -461,11 +469,9 @@ func (p *Plugin) handlePublishRecordings(w http.ResponseWriter, r *http.Request)
 	defer r.Body.Close()
 
 	var request PublishRecordingsRequestJSON
-	json.Unmarshal([]byte(body), &request)
+	json.Unmarshal(body, &request)
 	recordid := request.RecordId
 	publish := request.Publish
-
-
 
 	meetingpointer := p.FindMeeting(request.MeetingId)
 	if meetingpointer == nil {
@@ -473,18 +479,14 @@ func (p *Plugin) handlePublishRecordings(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	publishrecordingsresponse := bbbAPI.PublishRecordings(recordid, publish)
-
-	if publishrecordingsresponse.ReturnCode != "SUCCESS" {
+	if _, err := bbbAPI.PublishRecordings(recordid, publish); err != nil {
 		http.Error(w, "Error: Recording not found", http.StatusForbidden)
 		return
 	}
 
-
-
-	post, err := p.API.GetPost(meetingpointer.PostId)
-	if err != nil {
-		http.Error(w, "Error: cannot find the post message for this recording \n" +err.Error(), err.StatusCode)
+	post, appErr := p.API.GetPost(meetingpointer.PostId)
+	if appErr != nil {
+		http.Error(w, "Error: cannot find the post message for this recording \n"+appErr.Error(), appErr.StatusCode)
 		return
 	}
 
@@ -508,12 +510,10 @@ func (p *Plugin) handleDeleteRecordings(w http.ResponseWriter, r *http.Request) 
 	defer r.Body.Close()
 
 	var request DeleteRecordingsRequestJSON
-	json.Unmarshal([]byte(body), &request)
+	json.Unmarshal(body, &request)
 	recordid := request.RecordId
 
-	deleterecordingsresponse := bbbAPI.DeleteRecordings(recordid)
-
-	if deleterecordingsresponse.ReturnCode != "SUCCESS" {
+	if _, err := bbbAPI.DeleteRecordings(recordid); err != nil {
 		http.Error(w, "Error: Recording not found", http.StatusForbidden)
 		return
 	}
@@ -525,16 +525,16 @@ func (p *Plugin) handleDeleteRecordings(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	post, err := p.API.GetPost(meetingpointer.PostId)
-	if err != nil {
-		http.Error(w, "Error: cannot find the post message for this recording \n" + err.Error(), err.StatusCode)
+	post, appErr := p.API.GetPost(meetingpointer.PostId)
+	if appErr != nil {
+		http.Error(w, "Error: cannot find the post message for this recording \n"+appErr.Error(), appErr.StatusCode)
 		return
 	}
 
 	post.Props["is_deleted"] = "true"
 	post.Props["record_status"] = "Recording Deleted"
 	if _, err := p.API.UpdatePost(post); err != nil {
-		http.Error(w, "Error: could not update post \n" +err.Error(), err.StatusCode)
+		http.Error(w, "Error: could not update post \n"+err.Error(), err.StatusCode)
 		return
 	}
 
@@ -545,13 +545,15 @@ func (p *Plugin) Loopthroughrecordings() {
 
 	for i := 0; i < len(p.MeetingsWaitingforRecordings); i++ {
 		Meeting := p.MeetingsWaitingforRecordings[i]
+		// TODO Harshil Sharma: explore better alternative of waiting for specific count of re-tries
+		// instead of duration of re-tries.
 		if Meeting.LoopCount > 144 {
 			p.MeetingsWaitingforRecordings = append(p.MeetingsWaitingforRecordings[:i], p.MeetingsWaitingforRecordings[i+1:]...)
 			i--
 			continue
 		}
 
-		recordingsresponse, _ := bbbAPI.GetRecordings(Meeting.MeetingID_, "", "")
+		recordingsresponse, _, _ := bbbAPI.GetRecordings(Meeting.MeetingID_, "", "")
 		if recordingsresponse.ReturnCode == "SUCCESS" {
 			if len(recordingsresponse.Recordings.Recording) > 0 {
 				postid := Meeting.PostId
@@ -568,7 +570,6 @@ func (p *Plugin) Loopthroughrecordings() {
 						p.MeetingsWaitingforRecordings = append(p.MeetingsWaitingforRecordings[:i], p.MeetingsWaitingforRecordings[i+1:]...)
 						i--
 					}
-
 				}
 			}
 		}
