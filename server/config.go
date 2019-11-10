@@ -22,8 +22,8 @@ import (
 )
 
 type Configuration struct {
-	BaseURL string
-	Salt    string
+	BaseURL string `json:"BASE_URL"`
+	Secret  string `json:"SALT"`
 }
 
 func (p *Plugin) OnConfigurationChange() error {
@@ -47,8 +47,8 @@ func (p *Plugin) config() *Configuration {
 func (c *Configuration) IsValid() error {
 	if len(c.BaseURL) == 0 {
 		return errors.New("BASE URL is not configured.")
-	} else if len(c.Salt) == 0 {
-		return errors.New("Salt is not configured.")
+	} else if len(c.Secret) == 0 {
+		return errors.New("Secret is not configured.")
 	}
 
 	return nil

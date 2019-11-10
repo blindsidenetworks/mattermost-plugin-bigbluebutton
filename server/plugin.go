@@ -57,15 +57,17 @@ func (p *Plugin) OnActivate() error {
 	p.LoadMeetingsFromStore()
 
 	if err := p.OnConfigurationChange(); err != nil {
+		p.API.LogError(err.Error())
 		return err
 	}
 
 	config := p.config()
 	if err := config.IsValid(); err != nil {
+		p.API.LogError(err.Error())
 		return err
 	}
 
-	bbbAPI.SetAPI(config.BaseURL+"/", config.Salt)
+	bbbAPI.SetAPI(config.BaseURL+"/", config.Secret)
 
 	//every 2 minutes, look through active meetings and check if recordings are done
 	p.c = cron.New()

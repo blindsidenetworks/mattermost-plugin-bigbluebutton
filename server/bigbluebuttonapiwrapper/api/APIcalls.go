@@ -29,12 +29,12 @@ import (
 var BaseUrl string
 
 //Secret of the BigBlueButton server
-var salt string
+var secret string
 
-//Sets the BaseUrl and salt
-func SetAPI(url string, saltParam string) {
+//Sets the BaseUrl and secret
+func SetAPI(url string, secretParam string) {
 	BaseUrl = url
-	salt = saltParam
+	secret = secretParam
 }
 
 //CreateMeeting creates A BigBlueButton meeting
@@ -84,7 +84,7 @@ func CreateMeeting(meetingRoom *dataStructs.MeetingRoom) (string, error) {
 		voiceBridge + logoutURL + record + duration + moderatorOnlyMessage + metaBnRecordingReadyUrl + metaChannelId +
 		metaEndcallback + allowStartStopRecording
 
-	checksum := helpers.GetChecksum("create" + createParam + salt)
+	checksum := helpers.GetChecksum("create" + createParam + secret)
 
 	response, err := helpers.HttpGet(BaseUrl + "create?" + createParam + "&checksum=" + checksum)
 
@@ -149,7 +149,7 @@ func GetJoinURL(participants *dataStructs.Participants) (string, error) {
 	joinParam := fullName + meetingID + password + createTime + userID +
 		configToken + avatarURL + redirect + clientURL + joinViaHtml5
 
-	checksum := helpers.GetChecksum("join" + joinParam + salt)
+	checksum := helpers.GetChecksum("join" + joinParam + secret)
 	joinUrl := BaseUrl + "join?" + joinParam + "&checksum=" + checksum
 	participants.JoinURL = joinUrl
 
@@ -158,7 +158,7 @@ func GetJoinURL(participants *dataStructs.Participants) (string, error) {
 
 //IsMeetingRunning: only returns true when someone has joined the meeting
 func IsMeetingRunning(meetingID string) (bool, error) {
-	checksum := helpers.GetChecksum("isMeetingRunning" + "meetingID=" + meetingID + salt)
+	checksum := helpers.GetChecksum("isMeetingRunning" + "meetingID=" + meetingID + secret)
 	getURL := BaseUrl + "isMeetingRunning?" + "meetingID=" + meetingID + "&checksum=" + checksum
 	response, err := helpers.HttpGet(getURL)
 	if err != nil {
@@ -178,7 +178,7 @@ func EndMeeting(meetingId string, modPw string) (string, error) {
 	meetingID := "meetingID=" + url.QueryEscape(meetingId)
 	modPW := "&password=" + url.QueryEscape(modPw)
 	param := meetingID + modPW
-	checksum := helpers.GetChecksum("end" + param + salt)
+	checksum := helpers.GetChecksum("end" + param + secret)
 
 	getURL := BaseUrl + "end?" + param + "&checksum=" + checksum
 
@@ -206,7 +206,7 @@ func GetMeetingInfo(meetingId string, modPw string, responseXML *dataStructs.Get
 	meetingID := "meetingID=" + url.QueryEscape(meetingId)
 	modPW := "&password=" + url.QueryEscape(modPw)
 	param := meetingID + modPW
-	checksum := helpers.GetChecksum("getMeetingInfo" + param + salt)
+	checksum := helpers.GetChecksum("getMeetingInfo" + param + secret)
 
 	getURL := BaseUrl + "getMeetingInfo?" + param + "&checksum=" + checksum
 	response, err := helpers.HttpGet(getURL)
@@ -229,7 +229,7 @@ func GetMeetingInfo(meetingId string, modPw string, responseXML *dataStructs.Get
 
 //GetMeetings: Gets all meetings and the details by returning a struct
 func GetMeetings() (dataStructs.GetMeetingsResponse, error) {
-	checksum := helpers.GetChecksum("getMeetings" + salt)
+	checksum := helpers.GetChecksum("getMeetings" + secret)
 	getURL := BaseUrl + "getMeetings?" + "&checksum=" + checksum
 	response, err := helpers.HttpGet(getURL)
 
@@ -264,7 +264,7 @@ func GetRecordings(meetingId string, recordId string, metachannelid string) (dat
 	} else if meetingId != "" {
 		param = meetingID
 	}
-	checksum := helpers.GetChecksum("getRecordings" + param + salt)
+	checksum := helpers.GetChecksum("getRecordings" + param + secret)
 	getURL := BaseUrl + "getRecordings?" + param + "&checksum=" + checksum
 	response, err := helpers.HttpGet(getURL)
 
@@ -291,7 +291,7 @@ func PublishRecordings(recordid string, publish string) (dataStructs.PublishReco
 	Publish := "&publish=" + url.QueryEscape(publish)
 
 	param := recordID + Publish
-	checksum := helpers.GetChecksum("publishRecordings" + param + salt)
+	checksum := helpers.GetChecksum("publishRecordings" + param + secret)
 
 	getURL := BaseUrl + "publishRecordings?" + param + "&checksum=" + checksum
 	response, err := helpers.HttpGet(getURL)
@@ -308,7 +308,7 @@ func PublishRecordings(recordid string, publish string) (dataStructs.PublishReco
 func DeleteRecordings(recordid string) (dataStructs.DeleteRecordingsResponse, error) {
 	recordID := "recordID=" + url.QueryEscape(recordid)
 	param := recordID
-	checksum := helpers.GetChecksum("deleteRecordings" + param + salt)
+	checksum := helpers.GetChecksum("deleteRecordings" + param + secret)
 
 	getURL := BaseUrl + "deleteRecordings?" + param + "&checksum=" + checksum
 	response, err := helpers.HttpGet(getURL)

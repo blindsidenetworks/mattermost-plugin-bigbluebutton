@@ -545,6 +545,8 @@ func (p *Plugin) Loopthroughrecordings() {
 
 	for i := 0; i < len(p.MeetingsWaitingforRecordings); i++ {
 		Meeting := p.MeetingsWaitingforRecordings[i]
+		// TODO Harshil Sharma: explore better alternative of waiting for specific count of re-tries
+		// instead of duration of re-tries.
 		if Meeting.LoopCount > 144 {
 			p.MeetingsWaitingforRecordings = append(p.MeetingsWaitingforRecordings[:i], p.MeetingsWaitingforRecordings[i+1:]...)
 			i--
