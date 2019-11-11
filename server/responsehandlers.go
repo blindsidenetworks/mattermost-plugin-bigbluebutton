@@ -566,7 +566,7 @@ func (p *Plugin) Loopthroughrecordings() {
 					post.Props["recording_url"] = recordingsresponse.Recordings.Recording[0].Playback.Format[0].Url
 					post.Props["images"] = strings.Join(recordingsresponse.Recordings.Recording[0].Playback.Format[0].Images, ",")
 
-					if _, err := p.API.UpdatePost(post); err != nil {
+					if _, err := p.API.UpdatePost(post); err == nil {
 						p.MeetingsWaitingforRecordings = append(p.MeetingsWaitingforRecordings[:i], p.MeetingsWaitingforRecordings[i+1:]...)
 						i--
 					}
