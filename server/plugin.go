@@ -18,6 +18,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/helpers"
 	"net/http"
 	"strings"
 	"sync/atomic"
@@ -30,6 +31,8 @@ import (
 	"github.com/mattermost/mattermost-server/plugin"
 	"github.com/robfig/cron"
 )
+
+var PluginVersion string
 
 const closeWindowScript = `<!doctype html>
 				<html>
@@ -73,6 +76,8 @@ func (p *Plugin) OnActivate() error {
 	p.c = cron.New()
 	p.c.AddFunc("@every 2m", p.Loopthroughrecordings)
 	p.c.Start()
+
+	helpers.PluginVersion = PluginVersion
 
 	// register slash command '/bbb' to create a meeting
 	return p.API.RegisterCommand(&model.Command{

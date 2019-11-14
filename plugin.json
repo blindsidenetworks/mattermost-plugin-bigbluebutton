@@ -1,0 +1,30 @@
+{
+  "id": "bigbluebutton",
+  "name": "BigBlueButton",
+  "version": "2.1.0",
+  "backend": {
+    "executable": "server/plugin.exe"
+  },
+  "webapp": {
+    "bundle_path": "webapp/bigbluebutton_bundle.js"
+  },
+  "settings_schema": {
+    "settings": [
+      {
+        "key": "BASE_URL",
+        "display_name": "BigBlueButton Server URL",
+        "type": "text",
+        "default": "http://test-install.blindsidenetworks.com/bigbluebutton/api",
+        "help_text": "Enter the url of your BigBlueButton server ending with `/bigbluebutton/api` Default: `http://test-install.blindsidenetworks.com/bigbluebutton/api`\n"
+      },
+      {
+        "key": "SALT",
+        "display_name": "Secret",
+        "type": "text",
+        "default": "8cd8ef52e8e101574e400365b55e11a6",
+        "help_text": "The secret you generated to securely connect to your BigBlueButton. Default for test-install is: 8cd8ef52e8e101574e400365b55e11a6\n"
+      }
+    ],
+    "footer": "All forms must be filled or pluging will fail to activate. Deactivate and reactivate your plugin when changing to a new configuration. Don't worry, no data will be lost"
+  }
+}

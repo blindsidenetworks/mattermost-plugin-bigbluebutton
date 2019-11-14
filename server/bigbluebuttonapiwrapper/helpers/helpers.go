@@ -25,6 +25,8 @@ import (
 	"net/http"
 )
 
+var PluginVersion string
+
 //sends a get request to the url given, returns the result as a string
 func HttpGet(url string) (string, error) {
 	client := http.Client{}
@@ -33,7 +35,7 @@ func HttpGet(url string) (string, error) {
 		return "", err
 	}
 
-	req.Header.Set("User-Agent", "BBB_MM_Plugin")
+	req.Header.Set("User-Agent", "bbb-mm-" + PluginVersion)
 
 	response, err := client.Do(req)
 	if err != nil {
