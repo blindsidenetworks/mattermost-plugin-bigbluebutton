@@ -25,10 +25,19 @@ import (
 	"net/http"
 )
 
+var PluginVersion string
+
 //sends a get request to the url given, returns the result as a string
 func HttpGet(url string) (string, error) {
-	response, err := http.Get(url)
+	client := http.Client{}
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return "", err
+	}
 
+	req.Header.Set("User-Agent", "bbb-mm-" + PluginVersion)
+
+	response, err := client.Do(req)
 	if err != nil {
 		mattermost.API.LogError("HTTP GET ERROR: " + err.Error())
 		return "", err

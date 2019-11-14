@@ -1,11 +1,15 @@
 build: install-dependencies quickbuild
 
+define GetFromManifest
+$(shell node -p "require('./plugin.json').$(1)")
+endef
+
 quickbuild:
 	@echo Building plugin
 
 	rm -rf dist
 	cd server && go get github.com/mitchellh/gox
-	$(shell go env GOPATH)/bin/gox -osarch='darwin/amd64 linux/amd64 windows/amd64' -gcflags='all=-N -l' -output 'dist/intermediate/plugin_{{.OS}}_{{.Arch}}' ./server
+	$(shell go env GOPATH)/bin/gox -ldflags="-X main.PluginVersion=$(call GetFromManifest,version)" -osarch='darwin/amd64 linux/amd64 windows/amd64' -gcflags='all=-N -l' -output 'dist/intermediate/plugin_{{.OS}}_{{.Arch}}' ./server
 
 	mkdir -p dist/bigbluebutton/server
 
@@ -18,7 +22,7 @@ quickbuild:
 	cp webapp/dist/* dist/bigbluebutton/webapp/
 
 	# Copy plugin files
-	cp plugin.yaml dist/bigbluebutton/
+	cp plugin.json dist/bigbluebutton/
 
 	# Package darwin pakckage
 	mv dist/intermediate/plugin_darwin_amd64 dist/bigbluebutton/server/plugin.exe
