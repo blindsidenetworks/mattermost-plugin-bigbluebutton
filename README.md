@@ -67,6 +67,7 @@ Using the drop-down menu you can easily search a channel for all past recordings
 #### Directly meeting with any user
 
 You can click on any user's name and choose **Start BigBlueButton Meeting**.
+
 ![](docs_images/popover.png)
 
 When you invite a user to a meeting, they will get a pop-up notification to **Join Meeting**.
