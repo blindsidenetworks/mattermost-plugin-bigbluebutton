@@ -50,9 +50,9 @@ func (p *Plugin) handleCreateMeeting(w http.ResponseWriter, r *http.Request) {
 	meetingpointer := new(dataStructs.MeetingRoom)
 	var err error
 	if request.Topic == "" {
-		err = p.PopulateMeeting(meetingpointer, nil, request.Desc)
+		err = p.PopulateMeeting(meetingpointer, nil, request.Desc, request.ChannelId)
 	} else {
-		err = p.PopulateMeeting(meetingpointer, []string{"create", request.Topic}, request.Desc)
+		err = p.PopulateMeeting(meetingpointer, []string{"create", request.Topic}, request.Desc, request.ChannelId)
 	}
 
 	if err != nil {

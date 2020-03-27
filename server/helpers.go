@@ -28,7 +28,7 @@ import (
 	"strings"
 )
 
-func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, description string) error {
+func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, description string, channelId string) error {
 
 	if len(details) == 2 {
 		m.Name_ = details[1]
@@ -69,6 +69,8 @@ func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, d
 	Url.Path += "/plugins/bigbluebutton/recordingready"
 	recordingcallbackurl = Url.String()
 	m.Meta_bn_recording_ready_url = recordingcallbackurl
+
+	m.Meta_channelid = channelId
 
 	var UrlEnd *url.URL
 	UrlEnd, _ = url.Parse(callbackURL)
