@@ -114,10 +114,15 @@ export default class Root extends React.PureComponent {
       myvar = await myurl.data.joinurl.url;
       window.open(myvar);
     }else{ //for webapps to circumvent popup blockers
-      var newtab = await window.open('https://blindsidenetworks.com/', '_blank');
-      var myurl = await this.props.actions.getJoinURL(this.state.channelId, this.state.meetingId, "");
-      myvar = await myurl.data.joinurl.url;
-      newtab.location.href = myvar;
+      var newtab = await window.open('about:blank');
+      try {
+        var myurl = await this.props.actions.getJoinURL(this.state.channelId, this.state.meetingId, "");
+        myvar = await myurl.data.joinurl.url;
+        newtab.location = myvar;
+        newtab.focus();
+      } catch(e) {
+        newtab.close();
+      }
     }
   }
   getSiteUrl = () => {
