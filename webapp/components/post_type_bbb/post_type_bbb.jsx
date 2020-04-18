@@ -112,10 +112,15 @@ export default class PostTypebbb extends React.PureComponent {
       myvar = await myurl.data.joinurl.url;
       window.open(myvar);
     }else{ //for webapps to circumvent popup blockers
-      var newtab = await window.open('https://blindsidenetworks.com/', '_blank');
-      myurl = await this.props.actions.getJoinURL(this.props.channelId, this.props.post.props.meeting_id, this.props.creatorId);
-      myvar = await myurl.data.joinurl.url;
-      newtab.location.href = myvar;
+      var newtab = await window.open('about:blank');
+      try {
+        var myurl = await this.props.actions.getJoinURL(this.props.channelId, this.props.post.props.meeting_id, this.props.creatorId);
+        myvar = await myurl.data.joinurl.url;
+        newtab.location = myvar;
+        newtab.focus();
+      } catch(e) {
+        newtab.close();
+      }
     }
 
     await this.setState({
