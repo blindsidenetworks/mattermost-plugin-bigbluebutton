@@ -19,8 +19,8 @@ import request from 'superagent';
 
 //client.js is used to communicate with out backend server
 export default class Client {
-  constructor() {
-    this.url = '/plugins/bigbluebutton';
+  constructor(siteURL) {
+    this.url = `${siteURL}/plugins/bigbluebutton`;
   }
 
   startMeeting = async (userid, channelid, topic, description) => {

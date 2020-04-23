@@ -16,6 +16,12 @@ limitations under the License.
 
 import ClientClass from './client.js';
 
-const Client = new ClientClass();
+let Client;
 
-export default Client;
+export function GetClient() {
+    return Client;
+}
+
+export function initClient(siteURL) {
+    Client = new ClientClass(siteURL);
+}
