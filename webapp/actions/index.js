@@ -21,9 +21,9 @@ import {getCurrentTeamId} from 'mattermost-redux/selectors/entities/teams';
 import {searchPosts} from 'mattermost-redux/actions/search';
 
 import {ActionTypes, RHSStates} from '../utils/constants.jsx';
-import Client from '../client';
 import PluginId from '../plugin_id';
 import {STATUS_CHANGE, OPEN_ROOT_MODAL, CLOSE_ROOT_MODAL} from '../action_types';
+import {GetClient} from "../client";
 
 export const openRootModal = () => (dispatch) => {
     dispatch({
@@ -43,7 +43,7 @@ export const channelHeaderButtonAction = openRootModal;
 export function startMeeting(channelId, description = '', topic = '', meetingId = 0) {
   return async (dispatch, getState) => {
     try {
-      await Client.startMeeting(getState().entities.users.currentUserId, channelId, topic, description);
+      await GetClient.startMeeting(getState().entities.users.currentUserId, channelId, topic, description);
     } catch (error) {
       var message_text = 'BigBlueButton did not successfully start a meeting';
       if (error.status == 422 ) { // SiteURL is not set
@@ -96,7 +96,7 @@ export function getJoinURL(channelId, meetingid, creatorid) {
       ismod = "TRUE"
     }
     try {
-      url = await Client.getJoinURL(curUserId, meetingid, ismod);
+      url = await GetClient().getJoinURL(curUserId, meetingid, ismod);
       return {
         data: {
           joinurl: url
@@ -139,7 +139,7 @@ export function isMeetingRunning(meetingid) {
   return async (dispatch, getState) => {
     let response;
     try {
-      response = await Client.isMeetingRunning(meetingid);
+      response = await GetClient().isMeetingRunning(meetingid);
       return response
     } catch (error) {
       return {error};
@@ -151,7 +151,7 @@ export function endMeeting(channelId, meetingid) {
   return async (dispatch, getState) => {
     let url;
     try {
-      url = await Client.endMeeting(getState().entities.users.currentUserId, meetingid);
+      url = await GetClient().endMeeting(getState().entities.users.currentUserId, meetingid);
       return {
         data: {
           joinurl: url
@@ -166,7 +166,7 @@ export function getAttendees(channelId, meetingid) {
   return async (dispatch, getState) => {
 
     try {
-      var resp = await Client.getAttendees(meetingid);
+      var resp = await GetClient().getAttendees(meetingid);
       return resp;
     } catch (error) {
       const post = {
@@ -207,7 +207,7 @@ export function publishRecordings(channelId, recordid, publish, meetingId) {
   return async (dispatch, getState) => {
 
     try {
-      var resp = await Client.publishRecordings(recordid, publish, meetingId);
+      var resp = await GetClient().publishRecordings(recordid, publish, meetingId);
       return resp;
     } catch (error) {
       const post = {
@@ -247,7 +247,7 @@ export function deleteRecordings(channelId, recordid, meetingId) {
   return async (dispatch, getState) => {
 
     try {
-      var resp = await Client.deleteRecordings(recordid, meetingId);
+      var resp = await GetClient().deleteRecordings(recordid, meetingId);
       return resp;
     } catch (error) {
       const post = {

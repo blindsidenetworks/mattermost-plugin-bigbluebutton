@@ -22,16 +22,20 @@ import PluginId from './plugin_id';
 
 import {channelHeaderButtonAction} from './actions';
 import reducer from './reducer';
+import {initClient} from "./client";
 
 class PluginClass {
   initialize(registry, store) {
     window.store = store;
+
+    const siteURL = store.getState().entities.general.config.SiteURL;
+    initClient(siteURL);
+
     registry.registerPostTypeComponent('custom_bbb', PostTypebbb);
     registry.registerChannelHeaderButtonAction(
       <ChannelHeaderButton/>,() => store.dispatch(channelHeaderButtonAction()), 'BigBlueButton');
     registry.registerPopoverUserActionsComponent(ProfilePopover);
     registry.registerRootComponent(Root);
-
     registry.registerReducer(reducer);
 
   }
