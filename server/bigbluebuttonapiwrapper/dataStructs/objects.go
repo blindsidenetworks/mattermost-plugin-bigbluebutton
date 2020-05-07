@@ -89,6 +89,10 @@ type MeetingRoom struct {
 	Meta_channelid              string
 	Meta_endcallbackurl         string
 
+	Meta_bbb_origin             string
+	Meta_bbb_origin_version     string
+	Meta_bbb_origin_server_name string
+
 	CreateMeetingResponse CreateMeetingResponse
 	MeetingInfo           GetMeetingInfoResponse
 }
