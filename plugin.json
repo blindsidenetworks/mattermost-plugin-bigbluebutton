@@ -23,6 +23,13 @@
         "type": "text",
         "default": "8cd8ef52e8e101574e400365b55e11a6",
         "help_text": "The secret you generated to securely connect to your BigBlueButton. Default for test-install is: 8cd8ef52e8e101574e400365b55e11a6\n"
+      },
+      {
+        "key": "ADMINONLY",
+        "display_name": "Only Admins become Moderators",
+        "type": "bool",
+        "default": "false",
+        "help_text": "Only TeamAdmin accounts will become Moderators in BigBlueButton, everybody else will be attendee. The creator will always be Moderator of a Room.\n"
       }
     ],
     "footer": "All form fields must be filled or the plugin will fail to work. Deactivate and reactivate your plugin when changing to a configuration value. Don't worry, no data will be lost"
