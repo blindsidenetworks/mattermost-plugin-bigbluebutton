@@ -19,7 +19,8 @@
     "redux-batched-actions": "^0.3.0",
     "superagent": "^3.8.3",
     "xml2js": "^0.4.19",
-    "xml2json": "^0.11.2"
+    "xml2json": "^0.11.2",
+    "node-expat": "^2.3.18"
   },
   "devDependencies": {
     "babel-core": "6.25.0",
