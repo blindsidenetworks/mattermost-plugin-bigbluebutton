@@ -264,10 +264,10 @@ export default class PostTypebbb extends React.PureComponent {
 
         </div>
         <span >
-          <a className='btn btn-lg btn-primary' style={style.button} onClick={this.getJoinURL}>
+          <button className='btn btn-lg btn-primary' style={style.button} onClick={this.getJoinURL}>
 
             {'Join Meeting'}
-          </a>
+          </button>
           {
             this.props.currentUserId == this.props.creatorId && <a className='btn btn-lg btn-link' style={style.buttonEnd} onClick={this.endMeeting}>
                 <i style={style.buttonIcon}/> {'End meeting'}

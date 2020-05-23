@@ -26,7 +26,12 @@ export default class PopoverListMembersItem extends React.PureComponent {
     onItemClick: PropTypes.func.isRequired,
     text: PropTypes.element.isRequired,
     cam: PropTypes.number.isRequired,
-    theme: PropTypes.object.isRequired
+    theme: PropTypes.object.isRequired,
+    ariaLabel: PropTypes.string,
+    extraText: PropTypes.string,
+    buttonClass: PropTypes.string,
+    isDangerous: PropTypes.bool
+
   };
 
   constructor(props) {
@@ -50,8 +55,16 @@ export default class PopoverListMembersItem extends React.PureComponent {
 
   render() {
     const style = getStyle(this.props.theme);
+    const {ariaLabel, extraText, id, buttonClass, isDangerous} = this.props;
 
-    return (<div onMouseEnter={this.rowStartShowHover} onMouseLeave={this.rowStartHideHover} onClick={this.handleClick} style={this.state.rowStartHover
+    return (
+
+        <button
+            data-testid={id}
+            id={id}
+            aria-label={ariaLabel}
+            className={'style--none' + (extraText ? ' MenuItem__with-help' : '') + (buttonClass ? ' ' + buttonClass : '') + (isDangerous ? ' MenuItem__dangerous' : '')}
+            onMouseEnter={this.rowStartShowHover} onMouseLeave={this.rowStartHideHover} onClick={this.handleClick} style={this.state.rowStartHover
         ? style.popoverRowHover
         : style.popoverRowNoHover}>
       <span style={style.popoverIcon} className='pull-left' dangerouslySetInnerHTML={this.props.cam == 1
@@ -66,7 +79,7 @@ export default class PopoverListMembersItem extends React.PureComponent {
           {this.props.text}
         </div>
       </div>
-    </div>)
+    </button>)
   }
 
 }
