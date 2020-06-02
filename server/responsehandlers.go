@@ -552,6 +552,7 @@ func (p *Plugin) Loopthroughrecordings() {
 			i--
 			continue
 		}
+		Meeting.LoopCount++
 
 		recordingsresponse, _, _ := bbbAPI.GetRecordings(Meeting.MeetingID_, "", "")
 		if recordingsresponse.ReturnCode == "SUCCESS" {
