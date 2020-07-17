@@ -1,8 +1,50 @@
-build: install-dependencies quickbuild
+build: install-dependencies insertReleaseNotes quickbuild removeReleaseNotes
 
 define GetFromManifest
 $(shell node -p "require('./plugin.json').$(1)")
 endef
+
+define InsertReleaseNotes
+$(shell node -e
+	"
+	let fs = require('fs');
+	try {
+		let manifest = fs.readFileSync('plugin.json', 'utf8');
+		manifest = JSON.parse(manifest);
+		manifest.release_notes_url += manifest.version;
+		let json = JSON.stringify(manifest, null, 2);
+		fs.writeFileSync('plugin.json', json, 'utf8');
+	} catch (err) {
+		console.log(err);
+	};"
+)
+endef
+
+define RemoveReleaseNotes
+$(shell node -e
+	"
+	let fs = require('fs');
+	try {
+		let manifest = fs.readFileSync('plugin.json', 'utf8');
+		manifest = JSON.parse(manifest);
+		if (manifest.release_notes_url.indexOf(manifest.version) >= 0) {
+			manifest.release_notes_url = manifest.release_notes_url.substring(0, manifest.release_notes_url.indexOf(manifest.version));
+		}
+		let json = JSON.stringify(manifest, null, 2);
+		fs.writeFileSync('plugin.json', json, 'utf8');
+	} catch (err) {
+		console.log(err);
+	};"
+)
+endef
+
+.PHONY: insertReleaseNotes removeReleaseNotes
+
+insertReleaseNotes:
+	$(call InsertReleaseNotes)
+
+removeReleaseNotes:
+	$(call RemoveReleaseNotes)
 
 quickbuild:
 	@echo Building plugin

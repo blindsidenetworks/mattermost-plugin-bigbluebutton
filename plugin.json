@@ -2,9 +2,12 @@
   "id": "bigbluebutton",
   "name": "BigBlueButton",
   "version": "2.1.0",
+  "homepage_url": "https://bigbluebutton.org/",
+  "support_url": "https://github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/issues",
   "backend": {
     "executable": "server/plugin.exe"
   },
+  "release_notes_url": "https://github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/releases/tag/v",
   "webapp": {
     "bundle_path": "webapp/bigbluebutton_bundle.js"
   },
