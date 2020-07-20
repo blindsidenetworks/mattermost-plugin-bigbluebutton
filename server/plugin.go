@@ -47,7 +47,6 @@ type Plugin struct {
 
 	c                            *cron.Cron
 	configuration                atomic.Value
-	MeetingsWaitingforRecordings []dataStructs.MeetingRoom
 }
 
 //OnActivate runs as soon as plugin activates

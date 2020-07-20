@@ -177,7 +177,11 @@ func (p *Plugin) handleImmediateEndMeetingCallback(w http.ResponseWriter, r *htt
 	if meetingpointer.EndedAt == 0 {
 		meetingpointer.EndedAt = time.Now().Unix()
 	}
-	p.MeetingsWaitingforRecordings = append(p.MeetingsWaitingforRecordings, *meetingpointer)
+	if err := p.AddMeetingWaitingForRecording(meetingpointer); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	post.Props["meeting_status"] = "ENDED"
 	post.Props["attendents"] = strings.Join(meetingpointer.AttendeeNames, ",")
 	timediff := meetingpointer.EndedAt - meetingpointer.CreatedAt
@@ -221,7 +225,10 @@ func (p *Plugin) handleEndMeeting(w http.ResponseWriter, r *http.Request) {
 		if meetingpointer.EndedAt == 0 {
 			meetingpointer.EndedAt = time.Now().Unix()
 		}
-		p.MeetingsWaitingforRecordings = append(p.MeetingsWaitingforRecordings, *meetingpointer)
+		if err := p.AddMeetingWaitingForRecording(meetingpointer); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 
 		post, err := p.API.GetPost(meetingpointer.PostId)
 		if err != nil {
@@ -546,13 +553,21 @@ func (p *Plugin) handleDeleteRecordings(w http.ResponseWriter, r *http.Request) 
 
 func (p *Plugin) Loopthroughrecordings() {
 
-	for i := 0; i < len(p.MeetingsWaitingforRecordings); i++ {
-		Meeting := p.MeetingsWaitingforRecordings[i]
+	meetingsWaitingforRecordings, err := p.GetRecordingWaitingList()
+	if err != nil {
+		return
+	}
+
+	for _, meetingID := range meetingsWaitingforRecordings {
+		Meeting, err := p.GetMeetingWaitingForRecording(meetingID)
+		if err != nil {
+			continue
+		}
+
 		// TODO Harshil Sharma: explore better alternative of waiting for specific count of re-tries
 		// instead of duration of re-tries.
 		if Meeting.LoopCount > 144 {
-			p.MeetingsWaitingforRecordings = append(p.MeetingsWaitingforRecordings[:i], p.MeetingsWaitingforRecordings[i+1:]...)
-			i--
+			_ = p.RemoveMeetingWaitingForRecording(Meeting.MeetingID_)
 			continue
 		}
 
@@ -570,8 +585,7 @@ func (p *Plugin) Loopthroughrecordings() {
 					post.Props["images"] = strings.Join(recordingsresponse.Recordings.Recording[0].Playback.Format[0].Images, ",")
 
 					if _, err := p.API.UpdatePost(post); err == nil {
-						p.MeetingsWaitingforRecordings = append(p.MeetingsWaitingforRecordings[:i], p.MeetingsWaitingforRecordings[i+1:]...)
-						i--
+						_ = p.RemoveMeetingWaitingForRecording(Meeting.MeetingID_)
 					}
 				}
 			}

@@ -30,8 +30,8 @@ import (
 
 const (
 	// KV Store key prefixes
-	prefixMeeting = "meeting_"
-	prefixMeetingList = "meetings"
+	prefixMeeting = "m_"
+	prefixMeetingList = "m_list_"
 )
 
 func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, description string) error {
@@ -172,6 +172,8 @@ func (p *Plugin) GetMeetingList() ([]string, error) {
 		return nil, appErr
 	}
 
+	// This handles the case of no data present in KV store.
+	// Happens on fresh installation.
 	if len(data) == 0 {
 		data = []byte("[]")
 	}
