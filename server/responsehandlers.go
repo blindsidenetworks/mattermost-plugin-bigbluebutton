@@ -64,7 +64,10 @@ func (p *Plugin) handleCreateMeeting(w http.ResponseWriter, r *http.Request) {
 	p.createStartMeetingPost(request.UserId, request.ChannelId, meetingpointer)
 
 	// add our newly created meeting to our array of meetings
-	p.Meetings = append(p.Meetings, *meetingpointer)
+	if err := p.SaveMeeting(meetingpointer); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	w.WriteHeader(http.StatusOK)
 }

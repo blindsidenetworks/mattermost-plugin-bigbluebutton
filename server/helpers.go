@@ -28,6 +28,12 @@ import (
 	"strings"
 )
 
+const (
+	// KV Store key prefixes
+	prefixMeeting = "meeting_"
+	prefixMeetingList = "meetings"
+)
+
 func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, description string) error {
 
 	if len(details) == 2 {
@@ -78,41 +84,10 @@ func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, d
 	return nil
 }
 
-func (p *Plugin) LoadMeetingsFromStore() {
-	byted, _ := p.API.KVGet("all_meetings")
-	json.Unmarshal(byted, &p.Meetings)
-
-	recordingsBytes, _ := p.API.KVGet("recording_queue")
-	json.Unmarshal(recordingsBytes, &p.MeetingsWaitingforRecordings)
-
-}
-
-func (p *Plugin) SaveMeetingToStore() {
-	byted, _ := json.Marshal(p.Meetings)
-	p.API.KVSet("all_meetings", byted)
-
-	recordingBytes, _ := json.Marshal(p.MeetingsWaitingforRecordings)
-	p.API.KVSet("recording_queue", recordingBytes)
-
-}
-
 // Returns a meeting pointer so we'll be able to manipulate its content from outside the array.
 func (p *Plugin) FindMeeting(meetingId string) *dataStructs.MeetingRoom {
-	for i := range p.Meetings {
-		if p.Meetings[i].MeetingID_ == meetingId {
-			return &(p.Meetings[i])
-		}
-	}
-	return nil
-}
-
-func (p *Plugin) FindMeetingfromInternal(meetingId string) *dataStructs.MeetingRoom {
-	for i := range p.Meetings {
-		if p.Meetings[i].InternalMeetingId == meetingId {
-			return &(p.Meetings[i])
-		}
-	}
-	return nil
+	meeting, _ := p.GetMeeting(meetingId)
+	return meeting
 }
 
 func (p *Plugin) createStartMeetingPost(userId string, channelId string, m *dataStructs.MeetingRoom) {
@@ -143,14 +118,79 @@ func (p *Plugin) createStartMeetingPost(userId string, channelId string, m *data
 }
 
 func (p *Plugin) DeleteMeeting(meetingId string) {
-	var index int
-	for i := range p.Meetings {
-		if p.Meetings[i].MeetingID_ == meetingId {
-			index = i
-			break
-		}
+	if appErr := p.API.KVDelete(prefixMeeting + meetingId); appErr != nil {
+		p.API.LogError(fmt.Sprintf("Unable to delete meeting from KV store. Meeting ID: {%s}, error: {%s}", meetingId, appErr.Error()))
 	}
-	p.Meetings = append(p.Meetings[:index], p.Meetings[index+1:]...)
+}
+
+func (p *Plugin) SaveMeeting(meeting *dataStructs.MeetingRoom) error {
+	data, err := json.Marshal(meeting)
+	if err != nil {
+		p.API.LogError(fmt.Sprintf("Unable to marshal meeting for storing in KV store.Meeting ID: {%s}, error: {%s}", meeting.MeetingID_, err.Error()))
+		return err
+	}
+
+	appErr := p.API.KVSet(prefixMeeting + meeting.MeetingID_, data)
+	if appErr != nil {
+		p.API.LogError(fmt.Sprintf("Unable to save meeting in KV store. Meeting ID: {%s}, error: {%s}", meeting.MeetingID_, appErr.Error()))
+		return err
+	}
+
+	if err := p.addToMeetingList(meeting.MeetingID_); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p *Plugin) addToMeetingList(meetingID string) error {
+	meetings, err := p.GetMeetingList()
+	if err != nil {
+		return err
+	}
+
+	meetings = append(meetings, prefixMeeting + meetingID)
+	data, err := json.Marshal(meetings)
+	if err != nil {
+		p.API.LogError(fmt.Sprintf("Unable to marshal meeting list. Error: {%s}", err.Error()))
+		return err
+	}
+
+	if appErr := p.API.KVSet(prefixMeetingList, data); appErr != nil {
+		p.API.LogError(fmt.Sprintf("Unable to save updated meeting list in KV store. Error: {%s}", appErr.Error()))
+		return err
+	}
+
+	return nil
+}
+
+func (p *Plugin) GetMeetingList() ([]string, error) {
+	var meetings *[]string
+	data, appErr := p.API.KVGet(prefixMeetingList)
+	if appErr != nil {
+		p.API.LogError(fmt.Sprintf("Unable to fetch meeting list. Error: {%s}", appErr.Error()))
+		return nil, appErr
+	}
+
+	if len(data) == 0 {
+		data = []byte("[]")
+	}
+
+	_ = json.Unmarshal(data, &meetings)
+	return *meetings, nil
+}
+
+func (p *Plugin) GetMeeting(meetingId string) (*dataStructs.MeetingRoom, error) {
+	var meeting *dataStructs.MeetingRoom
+
+	data, appErr := p.API.KVGet(prefixMeeting + meetingId)
+	if appErr != nil {
+		p.API.LogError(fmt.Sprintf("Unable to fetch "))
+		return nil, appErr
+	}
+
+	_ = json.Unmarshal(data, &meeting)
+	return meeting, nil
 }
 
 func GetAttendees(meetingId string, modPw string) (int, []string) {

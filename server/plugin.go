@@ -47,7 +47,6 @@ type Plugin struct {
 
 	c                            *cron.Cron
 	configuration                atomic.Value
-	Meetings                     []dataStructs.MeetingRoom
 	MeetingsWaitingforRecordings []dataStructs.MeetingRoom
 }
 
@@ -57,7 +56,8 @@ func (p *Plugin) OnActivate() error {
 
 	// we save all the meetings infos that are stored on in our database upon deactivation
 	// loads the details back so everything works
-	p.LoadMeetingsFromStore()
+	// TODO Harshil Sharma - remove this
+	//p.LoadMeetingsFromStore()
 
 	if err := p.OnConfigurationChange(); err != nil {
 		p.API.LogError(err.Error())
@@ -96,7 +96,12 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 	}
 
 	p.createStartMeetingPost(args.UserId, args.ChannelId, meetingpointer)
-	p.Meetings = append(p.Meetings, *meetingpointer)
+	//p.Meetings = append(p.Meetings, *meetingpointer)
+
+	if err := p.SaveMeeting(meetingpointer); err != nil {
+		return nil, model.NewAppError("ExecuteCommand", "Unable so save meeting", nil, err.Error(), http.StatusInternalServerError)
+	}
+
 	return &model.CommandResponse{}, nil
 
 }
@@ -141,7 +146,6 @@ func (p *Plugin) ServeHTTP(c *plugin.Context, w http.ResponseWriter, r *http.Req
 
 func (p *Plugin) OnDeactivate() error {
 	//on deactivate, save meetings details, stop check recordings looper, destroy webhook
-	p.SaveMeetingToStore()
 	p.c.Stop()
 	return nil
 }
