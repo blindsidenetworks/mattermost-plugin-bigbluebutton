@@ -26,7 +26,7 @@ import (
 
 	bbbAPI "github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/api"
 	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/dataStructs"
-	"github.com/mattermost/mattermost-server/model"
+	"github.com/mattermost/mattermost-server/v5/model"
 )
 
 type RequestCreateMeetingJSON struct {
@@ -552,7 +552,6 @@ func (p *Plugin) handleDeleteRecordings(w http.ResponseWriter, r *http.Request) 
 }
 
 func (p *Plugin) Loopthroughrecordings() {
-
 	meetingsWaitingforRecordings, err := p.GetRecordingWaitingList()
 	if err != nil {
 		return

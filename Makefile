@@ -1,4 +1,4 @@
-build: install-dependencies insertReleaseNotes quickbuild removeReleaseNotes
+build: insertReleaseNotes quickbuild removeReleaseNotes
 
 define GetFromManifest
 $(shell node -p "require('./plugin.json').$(1)")
@@ -83,13 +83,6 @@ quickbuild:
 	rm -rf dist/intermediate
 
 	@echo Plugin built at: dist/bigbluebutton.tar.gz
-
-install-dependencies:
-	cd server && go get github.com/Masterminds/glide
-	cd server && $(shell go env GOPATH)/bin/glide install
-
-	#installs node modules
-	cd webapp && npm install
 
 clean:
 	@echo Cleaning plugin

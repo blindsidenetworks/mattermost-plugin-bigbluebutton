@@ -19,16 +19,18 @@ package main
 import (
 	"fmt"
 	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/helpers"
+	"github.com/mattermost/mattermost-plugin-api/cluster"
 	"net/http"
 	"strings"
 	"sync/atomic"
+	"time"
 
 	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/mattermost"
 
 	bbbAPI "github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/api"
 	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/dataStructs"
-	"github.com/mattermost/mattermost-server/model"
-	"github.com/mattermost/mattermost-server/plugin"
+	"github.com/mattermost/mattermost-server/v5/model"
+	"github.com/mattermost/mattermost-server/v5/plugin"
 	"github.com/robfig/cron"
 )
 
@@ -42,22 +44,21 @@ const closeWindowScript = `<!doctype html>
 					<body></body>
 				</html>`
 
+const (
+	jobInterval = 2 * time.Minute
+)
+
 type Plugin struct {
 	plugin.MattermostPlugin
 
-	c                            *cron.Cron
-	configuration                atomic.Value
+	c             *cron.Cron
+	configuration atomic.Value
+	job           *cluster.Job
 }
 
 //OnActivate runs as soon as plugin activates
 func (p *Plugin) OnActivate() error {
 	mattermost.API = p.API
-
-	// we save all the meetings infos that are stored on in our database upon deactivation
-	// loads the details back so everything works
-	// TODO Harshil Sharma - remove this
-	//p.LoadMeetingsFromStore()
-
 	if err := p.OnConfigurationChange(); err != nil {
 		p.API.LogError(err.Error())
 		return err
@@ -71,12 +72,11 @@ func (p *Plugin) OnActivate() error {
 
 	bbbAPI.SetAPI(config.BaseURL+"/", config.Secret)
 
-	//every 2 minutes, look through active meetings and check if recordings are done
-	p.c = cron.New()
-	p.c.AddFunc("@every 2m", p.Loopthroughrecordings)
-	p.c.Start()
-
 	helpers.PluginVersion = PluginVersion
+
+	if err := p.schedule(); err != nil {
+		return err
+	}
 
 	// register slash command '/bbb' to create a meeting
 	return p.API.RegisterCommand(&model.Command{
@@ -84,6 +84,29 @@ func (p *Plugin) OnActivate() error {
 		AutoComplete:     true,
 		AutoCompleteDesc: "Create a BigBlueButton meeting",
 	})
+}
+
+func (p *Plugin) schedule() error {
+	if p.job != nil {
+		if err := p.job.Close(); err != nil {
+			return err
+		}
+	}
+
+	job, err := cluster.Schedule(
+		p.API,
+		"BigBlueButtonRecordingProcessor",
+		cluster.MakeWaitForRoundedInterval(jobInterval),
+		p.Loopthroughrecordings,
+	)
+
+	if err != nil {
+		p.API.LogError(fmt.Sprintf("Unable to schedule job for processing recordings. Error: {%s}", err.Error()))
+		return err
+	}
+
+	p.job = job
+	return nil
 }
 
 //following method is to create a meeting from '/bbb' slash command
