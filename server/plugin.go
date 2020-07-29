@@ -118,8 +118,6 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 	}
 
 	p.createStartMeetingPost(args.UserId, args.ChannelId, meetingpointer)
-	//p.Meetings = append(p.Meetings, *meetingpointer)
-
 	if err := p.SaveMeeting(meetingpointer); err != nil {
 		return nil, model.NewAppError("ExecuteCommand", "Unable so save meeting", nil, err.Error(), http.StatusInternalServerError)
 	}

@@ -35,7 +35,7 @@ func HttpGet(url string) (string, error) {
 		return "", err
 	}
 
-	req.Header.Set("User-Agent", "bbb-mm-" + PluginVersion)
+	req.Header.Set("User-Agent", "bbb-mm-"+PluginVersion)
 
 	response, err := client.Do(req)
 	if err != nil {

@@ -20,17 +20,18 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
+	"strings"
+
 	bbbAPI "github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/api"
 	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/dataStructs"
 	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/segmentio/ksuid"
-	"net/url"
-	"strings"
 )
 
 const (
 	// KV Store key prefixes
-	prefixMeeting = "m_"
+	prefixMeeting     = "m_"
 	prefixMeetingList = "m_list_"
 )
 
@@ -130,7 +131,7 @@ func (p *Plugin) SaveMeeting(meeting *dataStructs.MeetingRoom) error {
 		return err
 	}
 
-	appErr := p.API.KVSet(prefixMeeting + meeting.MeetingID_, data)
+	appErr := p.API.KVSet(prefixMeeting+meeting.MeetingID_, data)
 	if appErr != nil {
 		p.API.LogError(fmt.Sprintf("Unable to save meeting in KV store. Meeting ID: {%s}, error: {%s}", meeting.MeetingID_, appErr.Error()))
 		return err
@@ -149,7 +150,7 @@ func (p *Plugin) addToMeetingList(meetingID string) error {
 		return err
 	}
 
-	meetings = append(meetings, prefixMeeting + meetingID)
+	meetings = append(meetings, prefixMeeting+meetingID)
 	data, err := json.Marshal(meetings)
 	if err != nil {
 		p.API.LogError(fmt.Sprintf("Unable to marshal meeting list. Error: {%s}", err.Error()))
