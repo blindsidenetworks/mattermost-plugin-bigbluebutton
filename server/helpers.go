@@ -36,21 +36,20 @@ const (
 )
 
 func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, description string) error {
-
 	if len(details) == 2 {
 		m.Name_ = details[1]
 	} else {
 		m.Name_ = "Big Blue Button Meeting"
 	}
 
-	siteconfig := p.API.GetConfig()
+	siteConfig := p.API.GetConfig()
 
 	var callbackURL string
-	if siteconfig.ServiceSettings.SiteURL != nil {
-		callbackURL = *siteconfig.ServiceSettings.SiteURL
-	} else {
+	if siteConfig.ServiceSettings.SiteURL == nil {
 		return errors.New("SiteURL not set")
 	}
+
+	callbackURL = *siteConfig.ServiceSettings.SiteURL
 	if !strings.HasPrefix(callbackURL, "http") {
 		callbackURL = "http://" + callbackURL
 	}
