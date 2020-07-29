@@ -157,11 +157,11 @@ func (p *Plugin) ServeHTTP(c *plugin.Context, w http.ResponseWriter, r *http.Req
 		p.handleIsMeetingRunning(w, r)
 	} else if path == "/redirect" {
 		// html file to automatically close a window
+		// nolint:staticcheck
 		_, _ = fmt.Fprintf(w, closeWindowScript)
 	} else {
 		http.NotFound(w, r)
 	}
-	return
 }
 
 func (p *Plugin) OnDeactivate() error {

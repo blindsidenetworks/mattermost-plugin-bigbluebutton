@@ -18,6 +18,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/mattermost"
 	"io/ioutil"
 	"net/http"
@@ -158,15 +159,25 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 			Url: "error",
 		}
 		userJson, _ := json.Marshal(myresp)
-		w.Write(userJson)
+		_, _ = w.Write(userJson)
 		return
 	} else {
 		//check if meeting has actually been created and can be joined
 		if !meetingpointer.Created {
-			bbbAPI.CreateMeeting(meetingpointer)
+			if _, err := bbbAPI.CreateMeeting(meetingpointer); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
 			meetingpointer.Created = true
 			var fullMeetingInfo dataStructs.GetMeetingInfoResponse
-			bbbAPI.GetMeetingInfo(meetingID, meetingpointer.ModeratorPW_, &fullMeetingInfo) // this is used to get the InternalMeetingID
+
+			// this is used to get the InternalMeetingID
+			if _, err := bbbAPI.GetMeetingInfo(meetingID, meetingpointer.ModeratorPW_, &fullMeetingInfo); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
 			meetingpointer.InternalMeetingId = fullMeetingInfo.InternalMeetingID
 			meetingpointer.CreatedAt = time.Now().Unix()
 		}
@@ -213,7 +224,7 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		w.Write(userJson)
+		_, _ = w.Write(userJson)
 	}
 }
 
@@ -249,7 +260,11 @@ func (p *Plugin) handleImmediateEndMeetingCallback(w http.ResponseWriter, r *htt
 	durationstring := FormatSeconds(timediff)
 	post.Props["duration"] = durationstring
 
-	p.API.UpdatePost(post)
+	if _, err := p.API.UpdatePost(post); err != nil {
+		p.API.LogError(fmt.Sprintf("Unable to update post. Error: {%s}", err.Error()))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	w.WriteHeader(http.StatusOK)
 }
@@ -276,10 +291,14 @@ func (p *Plugin) handleEndMeeting(w http.ResponseWriter, r *http.Request) {
 			EphemeralText: "meeting has already ended",
 		}
 		userJson, _ := json.Marshal(myresp)
-		w.Write(userJson)
+		_, _ = w.Write(userJson)
 		return
 	} else {
-		bbbAPI.EndMeeting(meetingpointer.MeetingID_, meetingpointer.ModeratorPW_)
+		if _, err := bbbAPI.EndMeeting(meetingpointer.MeetingID_, meetingpointer.ModeratorPW_); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
 		//for debugging
 		mattermost.API.LogInfo("Meeting Ended")
 
@@ -331,7 +350,7 @@ func (p *Plugin) handleIsMeetingRunning(w http.ResponseWriter, r *http.Request) 
 	userJson, _ := json.Marshal(myresp)
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(userJson)
+	_, _ = w.Write(userJson)
 
 }
 
@@ -382,7 +401,6 @@ func (p *Plugin) handleRecordingReady(w http.ResponseWriter, r *http.Request) {
 	// }
 
 	w.WriteHeader(http.StatusOK)
-	return
 }
 
 func (p *Plugin) handleGetAttendeesInfo(w http.ResponseWriter, r *http.Request) {
@@ -424,7 +442,7 @@ func (p *Plugin) handleGetAttendeesInfo(w http.ResponseWriter, r *http.Request) 
 	userJson, _ := json.Marshal(myresp)
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(userJson)
+	_, _ = w.Write(userJson)
 }
 
 func (p *Plugin) handlePublishRecordings(w http.ResponseWriter, r *http.Request) {

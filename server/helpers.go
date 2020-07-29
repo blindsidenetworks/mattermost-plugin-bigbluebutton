@@ -191,7 +191,7 @@ func (p *Plugin) GetMeeting(meetingId string) (*dataStructs.MeetingRoom, error) 
 
 	data, appErr := p.API.KVGet(prefixMeeting + meetingId)
 	if appErr != nil {
-		p.API.LogError(fmt.Sprintf("Unable to fetch "))
+		p.API.LogError(fmt.Sprintf("Unable to fetch meeting from KV store. Error: {%s}", appErr.Error()))
 		return nil, appErr
 	}
 
@@ -216,12 +216,10 @@ func GetAttendees(meetingId string, modPw string) (int, []string) {
 }
 
 func FormatSeconds(seconds int64) string {
-	var hours int64
-	hours = seconds / 3600
+	hours := seconds / 3600
 	seconds = seconds - 3600*hours
 
-	var minutes int64
-	minutes = seconds / 60
+	minutes := seconds / 60
 	seconds = seconds - 60*minutes
 
 	if hours != 0 {
