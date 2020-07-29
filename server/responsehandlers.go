@@ -36,6 +36,77 @@ type RequestCreateMeetingJSON struct {
 	Desc      string `json:"description"`
 }
 
+type ButtonRequestJSON struct {
+	UserId    string `json:"user_id"`
+	MeetingId string `json:"meeting_id"`
+	IsMod     string `json:"is_mod"`
+}
+
+type ButtonResponseJSON struct {
+	Url string `json:"url"`
+}
+
+type AttendeesRequestJSON struct {
+	MeetingId string `json:"meeting_id"`
+}
+
+type AttendeesResponseJSON struct {
+	Num       int      `json:"num"`
+	Attendees []string `json:"attendees"`
+}
+
+type PublishRecordingsRequestJSON struct {
+	RecordId  string `json:"record_id"`
+	Publish   string `json:"publish"` //string  true or false
+	MeetingId string `json:"meeting_id"`
+}
+
+func (p *Plugin) Loopthroughrecordings() {
+	meetingsWaitingforRecordings, err := p.GetRecordingWaitingList()
+	if err != nil {
+		return
+	}
+
+	for _, meetingID := range meetingsWaitingforRecordings {
+		Meeting, err := p.GetMeetingWaitingForRecording(meetingID)
+		if err != nil {
+			continue
+		}
+
+		// TODO Harshil Sharma: explore better alternative of waiting for specific count of re-tries
+		// instead of duration of re-tries.
+		if Meeting.LoopCount > 144 {
+			_ = p.RemoveMeetingWaitingForRecording(Meeting.MeetingID_)
+			continue
+		}
+
+		recordingsresponse, _, _ := bbbAPI.GetRecordings(Meeting.MeetingID_, "", "")
+		if recordingsresponse.ReturnCode == "SUCCESS" {
+			if len(recordingsresponse.Recordings.Recording) > 0 {
+				postid := Meeting.PostId
+				if postid != "" {
+					post, _ := p.API.GetPost(postid)
+					post.Message = "#BigBlueButton #" + Meeting.Name_ + " #" + Meeting.MeetingID_ + " #recording" + " recordings"
+					post.Props["recording_status"] = "COMPLETE"
+					post.Props["is_published"] = "true"
+					post.Props["record_id"] = recordingsresponse.Recordings.Recording[0].RecordID
+					post.Props["recording_url"] = recordingsresponse.Recordings.Recording[0].Playback.Format[0].Url
+					post.Props["images"] = strings.Join(recordingsresponse.Recordings.Recording[0].Playback.Format[0].Images, ",")
+
+					if _, err := p.API.UpdatePost(post); err == nil {
+						_ = p.RemoveMeetingWaitingForRecording(Meeting.MeetingID_)
+					}
+				}
+			}
+		}
+	}
+}
+
+type DeleteRecordingsRequestJSON struct {
+	RecordId  string `json:"record_id"`
+	MeetingId string `json:"meeting_id"`
+}
+
 //Create meeting doesn't call the BBB api to start a meeting
 //Only populates the meeting with details. Meeting is started when first person joins
 func (p *Plugin) handleCreateMeeting(w http.ResponseWriter, r *http.Request) {
@@ -70,16 +141,6 @@ func (p *Plugin) handleCreateMeeting(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-}
-
-type ButtonRequestJSON struct {
-	UserId    string `json:"user_id"`
-	MeetingId string `json:"meeting_id"`
-	IsMod     string `json:"is_mod"`
-}
-
-type ButtonResponseJSON struct {
-	Url string `json:"url"`
 }
 
 func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
@@ -254,14 +315,6 @@ func (p *Plugin) handleEndMeeting(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-type isRunningRequestJSON struct {
-	MeetingId string `json:"meeting_id"`
-}
-
-type isRunningResponseJSON struct {
-	IsRunning bool `json:"running"`
-}
-
 func (p *Plugin) handleIsMeetingRunning(w http.ResponseWriter, r *http.Request) {
 	body, _ := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
@@ -281,78 +334,6 @@ func (p *Plugin) handleIsMeetingRunning(w http.ResponseWriter, r *http.Request) 
 	w.Write(userJson)
 
 }
-
-// type WebHookRequestJSON struct {
-// 	Header struct {
-// 		Timestamp   string `json:"timestamp"`
-// 		Name        string `json:"name"`
-// 		CurrentTime string `json:"current_time"`
-// 		Version     string `json:"version"`
-// 	} `json:"header"`
-// 	Payload struct {
-// 		MeetingId string `json:"meeting_id"`
-// 	} `json:"payload"`
-// }
-//
-// type WebHookResponseEncoded struct {
-// 	Payload map[string]interface{} `form:"payload"`
-// }
-
-//webhook to send additional information about meeting that had ended
-//has a 4-5 minute delay which is why handleImmediateEndMeetingCallback() is
-//used instead for updating end meeting post on Mattermost. Keeping it here in
-//case bbbserver is not up to date with the immediate meeting ended callback feature
-// func (p *Plugin) handleWebhookMeetingEnded(w http.ResponseWriter, r *http.Request) {
-//
-// 	out := ""
-// 	r.ParseForm()
-// 	for key, value := range r.Form {
-// 		out += fmt.Sprintf("%s = %s\n", key, value)
-// 	}
-// 	events := (r.FormValue("event"))
-//
-// 	internal_meetingid := events[strings.Index(events, "\""+"meeting_id"+"\"")+14:]
-// 	internal_meetingid = internal_meetingid[:strings.IndexByte(internal_meetingid, '"')]
-//
-// 	meetingpointer := p.FindMeetingfromInternal(internal_meetingid)
-//
-// 	if meetingpointer == nil {
-// 		w.WriteHeader(http.StatusOK)
-// 		return
-// 	}
-//
-// 	postid := meetingpointer.PostId
-// 	if postid == "" {
-// 		panic("no post id found")
-// 	}
-// 	post, err := p.API.GetPost(postid)
-// 	if err != nil {
-// 		http.Error(w, err.Error(), err.StatusCode)
-// 		return
-// 	}
-// 	if meetingpointer.EndedAt == 0 {
-// 		meetingpointer.EndedAt = time.Now().Unix()
-// 	}
-// 	p.MeetingsWaitingforRecordings = append(p.MeetingsWaitingforRecordings, *meetingpointer)
-// 	post.Props["meeting_status"] = "ENDED"
-// 	post.Props["attendents"] = strings.Join(meetingpointer.AttendeeNames, ",")
-// 	timediff := meetingpointer.EndedAt - meetingpointer.CreatedAt
-// 	durationstring := FormatSeconds(timediff)
-// 	post.Props["duration"] = durationstring
-//
-// 	if _, err := p.API.UpdatePost(post); err != nil {
-// 		http.Error(w, err.Error(), err.StatusCode)
-// 		return
-// 	}
-//
-// 	w.WriteHeader(http.StatusOK)
-// }
-
-// type MyCustomClaims struct {
-// 	MeetingID string `json:"meeting_id"`
-// 	RecordID  string `json:"record_id"`
-// 	jwt.StandardClaims
-// }
 
 func (p *Plugin) handleRecordingReady(w http.ResponseWriter, r *http.Request) {
 	// p.API.LogDebug("handleRecordingReady reached")
@@ -404,15 +385,6 @@ func (p *Plugin) handleRecordingReady(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-type AttendeesRequestJSON struct {
-	MeetingId string `json:"meeting_id"`
-}
-
-type AttendeesResponseJSON struct {
-	Num       int      `json:"num"`
-	Attendees []string `json:"attendees"`
-}
-
 func (p *Plugin) handleGetAttendeesInfo(w http.ResponseWriter, r *http.Request) {
 
 	body, _ := ioutil.ReadAll(r.Body)
@@ -455,25 +427,6 @@ func (p *Plugin) handleGetAttendeesInfo(w http.ResponseWriter, r *http.Request) 
 	w.Write(userJson)
 }
 
-type RecordingsRequestJSON struct {
-	ChannelId string `json:"channel_id"`
-}
-
-type RecordingsResponseJSON struct {
-	Recordings []SingleRecording `json:"recordings"`
-}
-
-type SingleRecording struct {
-	RecordingUrl string `json:"recordingurl"`
-	Title        string `json:"title"`
-}
-
-type PublishRecordingsRequestJSON struct {
-	RecordId  string `json:"record_id"`
-	Publish   string `json:"publish"` //string  true or false
-	MeetingId string `json:"meeting_id"`
-}
-
 func (p *Plugin) handlePublishRecordings(w http.ResponseWriter, r *http.Request) {
 	body, _ := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
@@ -508,11 +461,6 @@ func (p *Plugin) handlePublishRecordings(w http.ResponseWriter, r *http.Request)
 	}
 	//update post props with new recording  status
 	w.WriteHeader(http.StatusOK)
-}
-
-type DeleteRecordingsRequestJSON struct {
-	RecordId  string `json:"record_id"`
-	MeetingId string `json:"meeting_id"`
 }
 
 func (p *Plugin) handleDeleteRecordings(w http.ResponseWriter, r *http.Request) {
@@ -551,43 +499,6 @@ func (p *Plugin) handleDeleteRecordings(w http.ResponseWriter, r *http.Request) 
 	w.WriteHeader(http.StatusOK)
 }
 
-func (p *Plugin) Loopthroughrecordings() {
-	meetingsWaitingforRecordings, err := p.GetRecordingWaitingList()
-	if err != nil {
-		return
-	}
-
-	for _, meetingID := range meetingsWaitingforRecordings {
-		Meeting, err := p.GetMeetingWaitingForRecording(meetingID)
-		if err != nil {
-			continue
-		}
-
-		// TODO Harshil Sharma: explore better alternative of waiting for specific count of re-tries
-		// instead of duration of re-tries.
-		if Meeting.LoopCount > 144 {
-			_ = p.RemoveMeetingWaitingForRecording(Meeting.MeetingID_)
-			continue
-		}
-
-		recordingsresponse, _, _ := bbbAPI.GetRecordings(Meeting.MeetingID_, "", "")
-		if recordingsresponse.ReturnCode == "SUCCESS" {
-			if len(recordingsresponse.Recordings.Recording) > 0 {
-				postid := Meeting.PostId
-				if postid != "" {
-					post, _ := p.API.GetPost(postid)
-					post.Message = "#BigBlueButton #" + Meeting.Name_ + " #" + Meeting.MeetingID_ + " #recording" + " recordings"
-					post.Props["recording_status"] = "COMPLETE"
-					post.Props["is_published"] = "true"
-					post.Props["record_id"] = recordingsresponse.Recordings.Recording[0].RecordID
-					post.Props["recording_url"] = recordingsresponse.Recordings.Recording[0].Playback.Format[0].Url
-					post.Props["images"] = strings.Join(recordingsresponse.Recordings.Recording[0].Playback.Format[0].Images, ",")
-
-					if _, err := p.API.UpdatePost(post); err == nil {
-						_ = p.RemoveMeetingWaitingForRecording(Meeting.MeetingID_)
-					}
-				}
-			}
-		}
-	}
+type isRunningResponseJSON struct {
+	IsRunning bool `json:"running"`
 }
