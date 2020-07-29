@@ -300,7 +300,11 @@ func PublishRecordings(recordid string, publish string) (dataStructs.PublishReco
 	}
 
 	var XMLResp dataStructs.PublishRecordingsResponse
-	helpers.ReadXML(response, &XMLResp)
+	err = helpers.ReadXML(response, &XMLResp)
+	if err != nil {
+		return dataStructs.PublishRecordingsResponse{}, err
+	}
+
 	return XMLResp, nil
 }
 
@@ -317,6 +321,10 @@ func DeleteRecordings(recordid string) (dataStructs.DeleteRecordingsResponse, er
 	}
 
 	var XMLResp dataStructs.DeleteRecordingsResponse
-	helpers.ReadXML(response, &XMLResp)
+	err = helpers.ReadXML(response, &XMLResp)
+	if err != nil {
+		return dataStructs.DeleteRecordingsResponse{}, err
+	}
+
 	return XMLResp, nil
 }

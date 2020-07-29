@@ -116,7 +116,7 @@ func (p *Plugin) handleCreateMeeting(w http.ResponseWriter, r *http.Request) {
 	body, _ := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
 	var request RequestCreateMeetingJSON
-	json.Unmarshal(body, &request)
+	_ = json.Unmarshal(body, &request)
 
 	meetingpointer := new(dataStructs.MeetingRoom)
 	var err error
@@ -149,7 +149,7 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	var request ButtonRequestJSON
-	json.Unmarshal(body, &request)
+	_ = json.Unmarshal(body, &request)
 	meetingID := request.MeetingId
 	meetingpointer := p.FindMeeting(meetingID)
 
@@ -264,7 +264,7 @@ func (p *Plugin) handleEndMeeting(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	var request ButtonRequestJSON
-	json.Unmarshal(body, &request)
+	_ = json.Unmarshal(body, &request)
 	meetingID := request.MeetingId
 	meetingpointer := p.FindMeeting(meetingID)
 
@@ -320,7 +320,7 @@ func (p *Plugin) handleIsMeetingRunning(w http.ResponseWriter, r *http.Request) 
 	defer r.Body.Close()
 
 	var request ButtonRequestJSON
-	json.Unmarshal(body, &request)
+	_ = json.Unmarshal(body, &request)
 	meetingID := request.MeetingId
 
 	resp, _ := bbbAPI.IsMeetingRunning(meetingID)
@@ -391,7 +391,7 @@ func (p *Plugin) handleGetAttendeesInfo(w http.ResponseWriter, r *http.Request) 
 	defer r.Body.Close()
 
 	var request AttendeesRequestJSON
-	json.Unmarshal(body, &request)
+	_ = json.Unmarshal(body, &request)
 	meetingID := request.MeetingId
 	meetingpointer := p.FindMeeting(meetingID)
 	if meetingpointer == nil {
@@ -432,7 +432,7 @@ func (p *Plugin) handlePublishRecordings(w http.ResponseWriter, r *http.Request)
 	defer r.Body.Close()
 
 	var request PublishRecordingsRequestJSON
-	json.Unmarshal(body, &request)
+	_ = json.Unmarshal(body, &request)
 	recordid := request.RecordId
 	publish := request.Publish
 
@@ -468,7 +468,7 @@ func (p *Plugin) handleDeleteRecordings(w http.ResponseWriter, r *http.Request) 
 	defer r.Body.Close()
 
 	var request DeleteRecordingsRequestJSON
-	json.Unmarshal(body, &request)
+	_ = json.Unmarshal(body, &request)
 	recordid := request.RecordId
 
 	if _, err := bbbAPI.DeleteRecordings(recordid); err != nil {

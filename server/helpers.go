@@ -178,7 +178,11 @@ func (p *Plugin) GetMeetingList() ([]string, error) {
 		data = []byte("[]")
 	}
 
-	_ = json.Unmarshal(data, &meetings)
+	if err := json.Unmarshal(data, &meetings); err != nil {
+		p.API.LogError(fmt.Sprintf("Unable to deserialize meetings data. Error: {%s}", err.Error()))
+		return nil, errors.New(err.Error())
+	}
+
 	return *meetings, nil
 }
 
