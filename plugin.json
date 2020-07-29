@@ -2,6 +2,7 @@
   "id": "bigbluebutton",
   "name": "BigBlueButton",
   "version": "2.1.0",
+  "min_server_version": "5.20.0",
   "homepage_url": "https://bigbluebutton.org/",
   "support_url": "https://github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/issues",
   "backend": {
