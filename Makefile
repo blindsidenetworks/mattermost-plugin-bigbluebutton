@@ -1,4 +1,4 @@
-build: insertReleaseNotes quickbuild removeReleaseNotes
+dist: insertReleaseNotes quickdist removeReleaseNotes
 
 define GetFromManifest
 $(shell node -p "require('./plugin.json').$(1)")
@@ -109,3 +109,11 @@ check-style-server:
 		fi; \
 	done
 	@echo "gofmt success"; \
+
+check-style: webapp/node_modules
+	@echo Checking for style guide compliance
+
+	@# TODO: configure lint for webapp
+	@# cd webapp && npm run lint
+	@# cd webapp && npm run check-types
+	golangci-lint run ./...
