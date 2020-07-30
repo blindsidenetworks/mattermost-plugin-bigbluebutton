@@ -1,4 +1,4 @@
-dist: insertReleaseNotes quickdist removeReleaseNotes
+dist: insertReleaseNotes quickdist removeReleaseNotes install-dependencies
 
 define GetFromManifest
 $(shell node -p "require('./plugin.json').$(1)")
@@ -93,6 +93,7 @@ clean:
 
 install-dependencies:
 	cd server && go mod download
+	cd webapp && npm install
 
 check-style: install-dependencies
 	@echo Checking for style guide compliance
