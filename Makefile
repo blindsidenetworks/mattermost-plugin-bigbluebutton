@@ -91,7 +91,10 @@ clean:
 	cd webapp && rm -rf node_modules
 	cd webapp && rm -f .npminstall
 
-check-style:
+install-dependencies:
+	cd server && go mod download
+
+check-style: install-dependencies
 	@echo Checking for style guide compliance
 
 	@# TODO: configure lint for webapp
