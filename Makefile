@@ -46,7 +46,7 @@ insertReleaseNotes:
 removeReleaseNotes:
 	$(call RemoveReleaseNotes)
 
-quickbuild:
+quickdist:
 	@echo Building plugin
 
 	rm -rf dist
