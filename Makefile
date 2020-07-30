@@ -1,4 +1,4 @@
-dist: insertReleaseNotes quickdist removeReleaseNotes install-dependencies
+dist: insertReleaseNotes quickdist removeReleaseNotes install-dependencies install-dependencies
 
 define GetFromManifest
 $(shell node -p "require('./plugin.json').$(1)")
