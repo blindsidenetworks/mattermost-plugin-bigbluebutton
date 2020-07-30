@@ -6,7 +6,6 @@ orbs:
 workflows:
   version: 2
   ci:
-    command:
     jobs:
       - plugin-ci/lint
       - plugin-ci/build
