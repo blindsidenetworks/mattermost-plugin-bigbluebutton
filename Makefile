@@ -91,26 +91,7 @@ clean:
 	cd webapp && rm -rf node_modules
 	cd webapp && rm -f .npminstall
 
-check-style: check-style-server
-
-check-style-server:
-	@echo Running GOFMT
-
-	@for package in $$(go list ./server/...); do \
-		echo "Checking "$$package; \
-		files=$$(go list -f '{{range .GoFiles}}{{$$.Dir}}/{{.}} {{end}}' $$package); \
-		if [ "$$files" ]; then \
-			gofmt_output=$$(gofmt -w -s $$files 2>&1); \
-			if [ "$$gofmt_output" ]; then \
-				echo "$$gofmt_output"; \
-				echo "gofmt failure"; \
-				exit 1; \
-			fi; \
-		fi; \
-	done
-	@echo "gofmt success"; \
-
-check-style: webapp/node_modules
+check-style:
 	@echo Checking for style guide compliance
 
 	@# TODO: configure lint for webapp
