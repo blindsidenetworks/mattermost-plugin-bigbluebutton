@@ -1,3 +1,10 @@
+
+define GetPluginVersion
+$(shell node -p "'v' + require('./plugin.json').version")
+endef
+
+PLUGINVERSION=$(call GetPluginVersion)
+
 dist: install-dependencies insertReleaseNotes quickdist removeReleaseNotes install-dependencies install-dependencies
 
 define GetFromManifest
@@ -102,3 +109,11 @@ check-style: install-dependencies
 	@# cd webapp && npm run lint
 	@# cd webapp && npm run check-types
 	golangci-lint run ./...
+
+release: dist
+	@echo "Installing ghr"
+	@go get -u github.com/tcnksm/ghr
+	@echo "Create new tag"
+	$(shell git tag $(PLUGINVERSION))
+	@echo "Uploading artifacts"
+	@ghr -t $(GITHUB_TOKEN) -u $(ORG_NAME) -r $(REPO_NAME) $(PLUGINVERSION) dist/

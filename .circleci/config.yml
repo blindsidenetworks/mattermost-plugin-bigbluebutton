@@ -1,11 +1,54 @@
+# Use the latest 2.1 version of CircleCI pipeline processing engine, see https://circleci.com/docs/2.0/configuration-reference/
 version: 2.1
 
-orbs:
-  plugin-ci: mattermost/plugin-ci@0.1.0
+jobs:
+  build:
+    docker:
+      - image: circleci/golang:1.14-node
+    working_directory: /go/src/github.com/blindsidenetworks/mattermost-plugin-bigbluebutton
+    steps:
+      - checkout
+      - run: make check-style
+      - run: make dist
+      - store_artifacts:
+          path: ./dist
+          destination: build
+      - persist_to_workspace:
+          root: .
+          paths:
+            - dist
+  release:
+    docker:
+      - image: circleci/golang:1.14-node
+    working_directory: /go/src/github.com/blindsidenetworks/mattermost-plugin-bigbluebutton
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run: make release
 
 workflows:
-  version: 2
-  ci:
+  build:
     jobs:
-      - plugin-ci/lint
-      - plugin-ci/build
+      - build:
+          filters:
+            branches:
+              only: /.*/
+            tags:
+              ignore: /.*/
+  build-and-release:
+    jobs:
+      - build:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v.*/
+      - release:
+          requires:
+            - build
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v.*/
