@@ -125,19 +125,22 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		config := p.config()
-		if (config.AdminOnly) {
+		if config.AdminOnly {
 			participant.Password_ = meetingpointer.AttendeePW_
-			if(post.UserId == request.UserId ) {
+			if request.UserId == post.UserId {
+				mattermost.API.LogInfo("userID same as post userID")
 				participant.Password_ = meetingpointer.ModeratorPW_ // the creator of a room is always moderator
 			} else {
 				for _, role := range user.GetRoles() {
 					if role == "SYSTEM_ADMIN" || role == "TEAM_ADMIN" {
+						mattermost.API.LogInfo("user is system or team administrator")
 						participant.Password_ = meetingpointer.ModeratorPW_
 						break
 					}
 				}
 			}
 		} else {
+			mattermost.API.LogInfo("everyone should be a moderator")
 			participant.Password_ = meetingpointer.ModeratorPW_ //make everyone in channel a mod
 		}
 		joinURL, err := bbbAPI.GetJoinURL(&participant)

@@ -1,7 +1,7 @@
 {
   "id": "bigbluebutton",
   "name": "BigBlueButton",
-  "version": "2.1.0",
+  "version": "2.2.4",
   "backend": {
     "executable": "server/plugin.exe"
   },
@@ -26,7 +26,7 @@
       },
       {
         "key": "ADMINONLY",
-        "display_name": "Only Admins become Moderators",
+        "display_name": "Only Admins and creator become Moderators",
         "type": "bool",
         "default": "false",
         "help_text": "Only TeamAdmin accounts will become Moderators in BigBlueButton, everybody else will be attendee. The creator will always be Moderator of a Room.\n"
