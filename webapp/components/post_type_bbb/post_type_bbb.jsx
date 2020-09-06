@@ -75,7 +75,10 @@ export default class PostTypebbb extends React.PureComponent {
       show: false,
       showWarning: true,
       showFullAttendees: false,
-      showThumbnails: false
+      showThumbnails: false,
+      joinUrl: null,
+      generatingJoinUrl: false,
+      reloadTimeout: null
     };
   }
 
@@ -102,6 +105,7 @@ export default class PostTypebbb extends React.PureComponent {
   }
 
   getJoinURL = async () => {
+    this.setState({generatingJoinUrl: true, reloadTimeout: setTimeout(() => {window.location.reload()}, 2000)});
 
     var userAgent = navigator.userAgent.toLowerCase();
     var myurl;
@@ -116,6 +120,10 @@ export default class PostTypebbb extends React.PureComponent {
       try {
         var myurl = await this.props.actions.getJoinURL(this.props.channelId, this.props.post.props.meeting_id, this.props.creatorId);
         myvar = await myurl.data.joinurl.url;
+        if(this.state.reloadTimeout) {
+          clearTimeout(this.state.reloadTimeout)
+        }
+        this.setState({joinUrl: myvar, generatingJoinUrl: false, reloadTimeout: null});
         newtab.location = myvar;
         newtab.focus();
       } catch(e) {
@@ -184,6 +192,15 @@ export default class PostTypebbb extends React.PureComponent {
     const style = getStyle(this.props.theme);
     const post = this.props.post;
     const props = post.props || {};
+
+    let spinner;
+    if(this.state.generatingJoinUrl === true) {
+      spinner = (
+          <span className='LoadingSpinner'>
+              <i className="fa fa-spinner fa-fw fa-pulse spinner"></i>
+            </span>
+      )
+    }
 
     var attendees = "";
     var attendeesFull = "";
@@ -269,14 +286,22 @@ export default class PostTypebbb extends React.PureComponent {
 
         </div>
         <span >
-          <button className='btn btn-lg btn-primary' style={style.button} onClick={this.getJoinURL}>
-
-            {'Join Meeting'}
-          </button>
+          {spinner}
           {
-            this.props.currentUserId == this.props.creatorId && <a className='btn btn-lg btn-link' style={style.buttonEnd} onClick={this.endMeeting}>
+            typeof this.state.joinUrl !== 'string' ?
+
+                <button className='btn btn-lg btn-primary' style={style.button} onClick={this.getJoinURL}>
+                  {'Join Meeting'}
+                </button>
+                 :
+                <a className='btn btn-lg btn-primary' style={style.button} href={this.state.joinUrl} target="_blank">
+                  {'Join Meeting'}
+                </a>
+          }
+          {
+            this.props.currentUserId == this.props.creatorId && <button className='btn btn-lg btn-link' style={style.buttonEnd} onClick={this.endMeeting}>
                 <i style={style.buttonIcon}/> {'End meeting'}
-              </a>
+              </button>
           }
 
         </span>
