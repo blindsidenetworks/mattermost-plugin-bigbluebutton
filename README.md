@@ -82,6 +82,14 @@ You can type `/bbb` in any channel to create a meeting.  When
 
 Using the [bbb-install.sh](https://github.com/bigbluebutton/bbb-install) script you can setup your own BigBlueButton server in about 15 minutes.  If your interested in going through the steps in detail, see [BigBlueButton install guide](http://docs.bigbluebutton.org/install/install.html).
 
+## Compiling using docker for an alternative glibc (distribution)
+
+    docker run -it --rm -v $(pwd)/:/go/src/github.com/blindsidenetworks/mattermost-plugin-bigbluebutton -w /go/src/github.com/blindsidenetworks/mattermost-plugin-bigbluebutton bastilion/mattermost-build-base:latest  /bin/bash
+    make
+    
+Will pull all necessary dependencies once, continues calls of make will be faster.
+ 
+
 ## Contributing
 
 Plugin is written in Golang for server side and Javascript and React for client side. Use `make build` to build the plugin. You can also use `make quickbuild` following first build for faster builds.
