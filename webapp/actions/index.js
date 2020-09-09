@@ -18,7 +18,10 @@ import {PostTypes} from 'mattermost-redux/action_types';
 import {batchActions} from 'redux-batched-actions';
 import {getCurrentChannel} from 'mattermost-redux/selectors/entities/channels';
 import {getCurrentTeamId} from 'mattermost-redux/selectors/entities/teams';
+import {getCurrentUserId} from 'mattermost-redux/selectors/entities/users';
+import {Client4} from 'mattermost-redux/client';
 import {searchPosts} from 'mattermost-redux/actions/search';
+import * as ChannelActions from 'mattermost-redux/actions/channels';
 
 import {ActionTypes, RHSStates} from '../utils/constants.jsx';
 import PluginId from '../plugin_id';
@@ -39,6 +42,39 @@ export const closeRootModal = () => (dispatch) => {
 
 export const mainMenuAction = openRootModal;
 export const channelHeaderButtonAction = openRootModal;
+
+function getDirectChannelName(id, otherId) {
+  let handle;
+
+  if (otherId > id) {
+    handle = id + '__' + otherId;
+  } else {
+    handle = otherId + '__' + id;
+  }
+
+  return handle;
+}
+
+export function openDirectChannelToUserId(userId) {
+  return async (dispatch, getState) => {
+    const state = getState();
+    const currentUserId = getCurrentUserId(state);
+    const channelName = getDirectChannelName(currentUserId, userId);
+    const teamId = getCurrentTeamId(state);
+
+    let channel;
+    try {
+      channel = await Client4.getChannelByName(teamId, channelName, true);
+    } catch (e) {
+    }
+
+    if (!channel) {
+      return dispatch(ChannelActions.createDirectChannel(currentUserId, userId));
+    }
+
+    return {data: channel};
+  };
+}
 
 export function startMeeting(channelId, description = '', topic = '', meetingId = 0) {
   return async (dispatch, getState) => {

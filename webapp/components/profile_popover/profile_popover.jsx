@@ -19,7 +19,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import {makeStyleFromTheme, changeOpacity} from 'mattermost-redux/utils/theme_utils';
 import {Link} from 'react-router-dom'
-import * as ChannelActions from 'mattermost-redux/actions/channels';
+
 
 export default class ProfilePopover extends React.PureComponent {
   static propTypes = {
@@ -52,10 +52,12 @@ export default class ProfilePopover extends React.PureComponent {
 
   handleDirectMessage = async (e, href) => {
     e.preventDefault();
-    const dispatch = window.store.dispatch;
-    const result = await ChannelActions.createDirectChannel(this.props.user.id, this.props.cur_user.id)(dispatch, this.props.state);
-    await this.props.actions.startMeeting(result.data.id, "", this.props.cur_user.username + " " + this.props.user.username);
-    window.location = href;
+    const result = await this.props.actions.openDirectChannelToUserId(this.props.user.id);
+    if (!result.error) {
+      await this.props.actions.startMeeting(result.data.id, "", this.props.cur_user.username + " " + this.props.user.username);
+      window.location = href;
+      //window.history.pushState({}, '',`${this.props.teamUrl}/messages/@${user.username}`);
+    }
   };
 
   render() {
