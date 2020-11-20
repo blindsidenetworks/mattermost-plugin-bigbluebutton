@@ -22,7 +22,9 @@ import (
 	"fmt"
 	bbbAPI "github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/api"
 	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/dataStructs"
+	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/helpers"
 	"github.com/mattermost/mattermost-server/model"
+	"github.com/mattermost/mattermost-server/utils"
 	"github.com/segmentio/ksuid"
 	"net/url"
 	"strings"
@@ -77,6 +79,15 @@ func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, d
 	UrlEnd.Path += "/plugins/bigbluebutton/meetingendedcallback?" + m.MeetingID_ + "&" + m.ValidToken
 	Endmeetingcallback := UrlEnd.String()
 	m.Meta_endcallbackurl = Endmeetingcallback
+
+	m.Meta_bbb_origin = "Mattermost"
+	m.Meta_bbb_origin_version = helpers.PluginVersion
+	if siteconfig.ServiceSettings.SiteURL != nil {
+		m.Meta_bbb_origin_server_name = utils.GetHostnameFromSiteURL(*siteconfig.ServiceSettings.SiteURL)
+	} else {
+		return errors.New("SiteURL not set")
+	}
+
 	return nil
 }
 
