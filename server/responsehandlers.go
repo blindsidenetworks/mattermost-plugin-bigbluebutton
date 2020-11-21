@@ -119,7 +119,27 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 		participant.FullName_ = username
 		participant.MeetingID_ = meetingID
 
-		participant.Password_ = meetingpointer.ModeratorPW_ //make everyone in channel a mod
+		post, appErr := p.API.GetPost(meetingpointer.PostId)
+		if appErr != nil {
+			http.Error(w, appErr.Error(), appErr.StatusCode)
+			return
+		}
+		config := p.config()
+		if (config.AdminOnly) {
+			participant.Password_ = meetingpointer.AttendeePW_
+			if(post.UserId == request.UserId ) {
+				participant.Password_ = meetingpointer.ModeratorPW_ // the creator of a room is always moderator
+			} else {
+				for _, role := range user.GetRoles() {
+					if role == "SYSTEM_ADMIN" || role == "TEAM_ADMIN" {
+						participant.Password_ = meetingpointer.ModeratorPW_
+						break
+					}
+				}
+			}
+		} else {
+			participant.Password_ = meetingpointer.ModeratorPW_ //make everyone in channel a mod
+		}
 		joinURL, err := bbbAPI.GetJoinURL(&participant)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -131,11 +151,6 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 		}
 		userJson, _ := json.Marshal(myresp)
 
-		post, appErr := p.API.GetPost(meetingpointer.PostId)
-		if appErr != nil {
-			http.Error(w, appErr.Error(), appErr.StatusCode)
-			return
-		}
 		Length, attendantsarray := GetAttendees(meetingID, meetingpointer.ModeratorPW_)
 		// we immediately add our current attendee thats trying to join the meeting
 		// to avoid the delay
