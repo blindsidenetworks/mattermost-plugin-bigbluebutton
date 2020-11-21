@@ -43,7 +43,7 @@ export const channelHeaderButtonAction = openRootModal;
 export function startMeeting(channelId, description = '', topic = '', meetingId = 0) {
   return async (dispatch, getState) => {
     try {
-      await GetClient.startMeeting(getState().entities.users.currentUserId, channelId, topic, description);
+      await GetClient().startMeeting(getState().entities.users.currentUserId, channelId, topic, description);
     } catch (error) {
       var message_text = 'BigBlueButton did not successfully start a meeting';
       if (error.status == 422 ) { // SiteURL is not set
