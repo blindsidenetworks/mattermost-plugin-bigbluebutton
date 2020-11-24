@@ -204,12 +204,12 @@ export default class Root extends React.PureComponent {
               : style.popoverBody}>
             {
               this.props.channel.type === "D"
-                ? <PopoverListMembersItem onItemClick={this.startMeeting} cam={1} text={<span> {
+                ? <PopoverListMembersItem ariaLabel={'Call ' + channelName} onItemClick={this.startMeeting} cam={1} text={<span> {
                       'Call '
                     }
                     <strong>{channelName}</strong>
                   </span>} theme={this.props.theme}/>
-                : <PopoverListMembersItem onItemClick={this.startMeeting} cam={1} text={<span> {
+                : <PopoverListMembersItem ariaLabel={'Create a BigBlueButton Meeting'} onItemClick={this.startMeeting} cam={1} text={<span> {
                       'Create a BigBlueButton Meeting'
                     }
                     </span>} theme={this.props.theme}/>
@@ -339,6 +339,6 @@ var getStyle = makeStyleFromTheme((theme) => {
       left: '-14px',
       top: '-9px',
       borderBottom: '1px solid #D8D8D9'
-    }
+    },
   };
 });
