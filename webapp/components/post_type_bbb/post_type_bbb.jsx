@@ -402,7 +402,7 @@ export default class PostTypebbb extends React.PureComponent {
                         props.is_published === "true"
                           ? <a onClick={this.unpublishRecordings}>
                               <span>
-                                Make recording invisble
+                                Make recording invisible
                               </span>
                             </a>
                           : <a onClick={this.publishRecordings}>
