@@ -26,13 +26,14 @@ export default class PopoverListMembersItem extends React.PureComponent {
     onItemClick: PropTypes.func.isRequired,
     text: PropTypes.element.isRequired,
     cam: PropTypes.number.isRequired,
-    theme: PropTypes.object.isRequired
+    theme: PropTypes.object.isRequired,
+    ariaLabel: PropTypes.string,
   };
 
   constructor(props) {
     super(props);
     this.state = {
-      rowStartHover: false
+      rowStartHover: false,
     };
   }
 
@@ -42,33 +43,37 @@ export default class PopoverListMembersItem extends React.PureComponent {
 
   rowStartShowHover = () => {
     this.setState({rowStartHover: true});
-  }
+  };
 
   rowStartHideHover = () => {
     this.setState({rowStartHover: false});
-  }
+  };
 
   render() {
     const style = getStyle(this.props.theme);
 
-    return (<div onMouseEnter={this.rowStartShowHover} onMouseLeave={this.rowStartHideHover} onClick={this.handleClick} style={this.state.rowStartHover
-        ? style.popoverRowHover
-        : style.popoverRowNoHover}>
-      <span style={style.popoverIcon} className='pull-left' dangerouslySetInnerHTML={this.props.cam == 1
-          ? {
-            __html: Svgs.BBBCAM
-          }
-          : {
-            __html: Svgs.VID_CAM_PLAY
-          }} aria-hidden='true'/>
-      <div style={style.popoverRow}>
-        <div style={style.popoverText}>
-          {this.props.text}
+    return (
+      <button
+        aria-label={this.props.ariaLabel}
+        className={'style--none'}
+        onMouseEnter={this.rowStartShowHover}
+        onMouseLeave={this.rowStartHideHover}
+        onClick={this.handleClick}
+        style={this.state.rowStartHover ? style.popoverRowHover : style.popoverRowNoHover}
+      >
+        <span
+          style={style.popoverIcon}
+          className='pull-left'
+          dangerouslySetInnerHTML={this.props.cam == 1 ? {__html: Svgs.BBBCAM} : {__html: Svgs.VID_CAM_PLAY}}
+          aria-hidden='true'
+        />
+        <div style={style.popoverRow}>
+          <div style={style.popoverText}>
+            {this.props.text}
+          </div>
         </div>
-      </div>
-    </div>)
+      </button>);
   }
-
 }
 
 const getStyle = makeStyleFromTheme((theme) => {
@@ -80,24 +85,27 @@ const getStyle = makeStyleFromTheme((theme) => {
       height: '50px',
       margin: '1px 0',
       overflow: 'auto',
-      padding: '6px 19px 0 10px'
+      padding: '6px 19px 0 10px',
     },
     popoverRowNoHover: {
       borderLeft: '3px solid',
       borderColor: theme.centerChannelBg,
-      fontWeight: 'normal'
+      fontWeight: 'normal',
+      width: '100%',
     },
     popoverRowHover: {
       borderLeft: '3px solid transparent',
       borderColor: theme.linkColor,
-      background: changeOpacity(theme.linkColor, 0.08)
+      background: changeOpacity(theme.linkColor, 0.08),
+      width: '100%',
     },
     popoverText: {
       fontWeight: 'inherit',
       fontSize: '14px',
       position: 'relative',
       top: '10px',
-      left: '4px'
+      left: '4px',
+      textAlign: 'left',
     },
     popoverIcon: {
       margin: '0',
@@ -105,7 +113,7 @@ const getStyle = makeStyleFromTheme((theme) => {
       position: 'relative',
       top: '12px',
       fontSize: '20px',
-      fill: theme.buttonBg
-    }
+      fill: theme.buttonBg,
+    },
   };
 });
