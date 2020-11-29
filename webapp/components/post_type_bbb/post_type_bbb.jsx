@@ -69,7 +69,7 @@ export default class PostTypebbb extends React.PureComponent {
     super(props);
 
     this.state = {
-      url: "",
+      url: "#",
       users: {},
       userCount: 0,
       show: false,
@@ -87,6 +87,10 @@ export default class PostTypebbb extends React.PureComponent {
   //   this.endMeetingForUnmount()
   // }
 
+  componentDidMount() {
+	  this.loadJoinUrl();
+  }
+
   handleClose = () => {
     this.setState({show: false});
   };
@@ -101,30 +105,33 @@ export default class PostTypebbb extends React.PureComponent {
     });
   }
 
-  getJoinURL = async () => {
+  openJoinUrl = async () => {
 
     var userAgent = navigator.userAgent.toLowerCase();
-    var myurl;
-    var myvar;
+    var url = this.state.url;
     //for electron apps
     if (userAgent.indexOf(' electron/') > -1) {
-      myurl = await this.props.actions.getJoinURL(this.props.channelId, this.props.post.props.meeting_id, this.props.creatorId);
-      myvar = await myurl.data.joinurl.url;
-      window.open(myvar);
-    }else{ //for webapps to circumvent popup blockers
+      window.open(url);
+    } else { //for webapps to circumvent popup blockers
       var newtab = await window.open('about:blank');
-      var joinURL = await this.props.actions.getJoinURL(this.props.channelId, this.props.post.props.meeting_id, this.props.creatorId);
-      myvar = await joinURL.data.joinurl.url;
-      newtab.location = myvar;
+      newtab.location = url;
       newtab.focus();
     }
 
     await this.setState({
-      url: myvar,
       users: [
         ...this.state.users,
         this.props.username
       ]
+    });
+  }
+
+  async loadJoinUrl() {
+    const getJoinUrlResp = await this.props.actions.getJoinURL(this.props.channelId, this.props.post.props.meeting_id, this.props.creatorId);
+    const joinUrl = await getJoinUrlResp.data.joinurl.url;
+
+    await this.setState({
+      url: joinUrl,
     });
   }
 
@@ -265,7 +272,7 @@ export default class PostTypebbb extends React.PureComponent {
 
         </div>
         <span >
-          <a className='btn btn-lg btn-primary' style={style.button} onClick={this.getJoinURL} href='#'>
+          <a className='btn btn-lg btn-primary' style={style.button} onClick={this.openJoinUrl} href={this.state.url}>
 
             {'Join Meeting'}
           </a>
