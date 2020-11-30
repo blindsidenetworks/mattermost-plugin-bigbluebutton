@@ -1,3 +1,9 @@
+define GetPluginId
+$(shell node -p "require('./plugin.json').id")
+endef
+
+PLUGINNAME=$(call GetPluginId)
+
 build: install-dependencies quickbuild
 
 define GetFromManifest
@@ -74,3 +80,21 @@ check-style-server:
 		fi; \
 	done
 	@echo "gofmt success"; \
+
+.PHONY: deploy
+.SILENT:
+deploy:
+	echo "Installing plugin via API"
+
+	echo "Authenticating admin user..." && \
+	TOKEN=`http --print h POST $(MM_SERVICESETTINGS_SITEURL)/api/v4/users/login login_id=$(MM_ADMIN_USERNAME) password=$(MM_ADMIN_PASSWORD) X-Requested-With:"XMLHttpRequest" | grep Token | cut -f2 -d' '` && \
+	http GET $(MM_SERVICESETTINGS_SITEURL)/api/v4/users/me Authorization:"Bearer $$TOKEN" > /dev/null && \
+	echo "Deleting existing plugin..." && \
+	http DELETE $(MM_SERVICESETTINGS_SITEURL)/api/v4/plugins/$(PLUGINNAME) Authorization:"Bearer $$TOKEN" > /dev/null && \
+	echo "Uploading plugin..." && \
+	http --check-status --form POST $(MM_SERVICESETTINGS_SITEURL)/api/v4/plugins plugin@dist/$(PLUGINNAME)_$(PLATFORM)_amd64.tar.gz Authorization:"Bearer $$TOKEN" > /dev/null && \
+	echo "Enabling uploaded plugin..." && \
+	http POST $(MM_SERVICESETTINGS_SITEURL)/api/v4/plugins/$(PLUGINNAME)/enable Authorization:"Bearer $$TOKEN" > /dev/null && \
+	echo "Logging out admin user..." && \
+	http POST $(MM_SERVICESETTINGS_SITEURL)/api/v4/users/logout Authorization:"Bearer $$TOKEN" > /dev/null && \
+	echo "Plugin uploaded successfully"
