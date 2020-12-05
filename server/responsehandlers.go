@@ -116,7 +116,11 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 		}
 
 		var participant = dataStructs.Participants{} //set participant as an empty struct of type Participants
-		participant.FullName_ = username
+		participant.FullName_ = user.GetFullName()
+		if len(participant.FullName_) == 0 {
+			participant.FullName_ = user.Username
+		}
+
 		participant.MeetingID_ = meetingID
 
 		post, appErr := p.API.GetPost(meetingpointer.PostId)
