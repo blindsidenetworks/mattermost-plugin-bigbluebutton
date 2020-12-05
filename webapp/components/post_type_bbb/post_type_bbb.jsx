@@ -101,7 +101,8 @@ export default class PostTypebbb extends React.PureComponent {
     });
   }
 
-  getJoinURL = async () => {
+  getJoinURL = async (e) => {
+    e.preventDefault();
 
     var userAgent = navigator.userAgent.toLowerCase();
     var myurl;
