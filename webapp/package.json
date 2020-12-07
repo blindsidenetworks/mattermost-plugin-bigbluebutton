@@ -6,7 +6,7 @@
     "bootstrap": "^4.3.1",
     "history": "^4.9.0",
     "key-mirror": "^1.0.1",
-    "mattermost-redux": "^1.2.0",
+    "mattermost-redux": "5.23.0",
     "prop-types": "15.5.10",
     "react": "^16.9.0",
     "react-bootstrap": "^0.32.4",
