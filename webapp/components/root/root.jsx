@@ -18,7 +18,6 @@ import React from 'react';
 import PopoverListMembersItem from './popover_list_members_item.jsx';
 import PropTypes from 'prop-types';
 import {makeStyleFromTheme, changeOpacity} from 'mattermost-redux/utils/theme_utils';
-import {Link} from 'react-router-dom'
 import {viewChannel, getChannelStats} from 'mattermost-redux/actions/channels';
 import {isDirectChannel} from 'mattermost-redux/utils/channel_utils';
 const {Tooltip,Popover, OverlayTrigger, Modal,Overlay} = window.ReactBootstrap
@@ -76,6 +75,7 @@ export default class Root extends React.PureComponent {
     await this.props.actions.startMeeting(this.props.channelId, "", this.props.channel.display_name);
     this.close_the_popover()
   }
+
   close_the_popover = () =>{
     this.props.actions.closePopover();
     this.setState({showPopover: false});
@@ -125,6 +125,7 @@ export default class Root extends React.PureComponent {
       }
     }
   }
+
   getSiteUrl = () => {
     if (window.location.origin) {
       return window.location.origin;
@@ -233,9 +234,9 @@ export default class Root extends React.PureComponent {
               {"BigBlueButton meeting request from "}
               <strong>
                 <OverlayTrigger placement="top" overlay={tooltip}>
-                  <Link to={"/" + this.props.teamname + this.state.channelURL}>
+                  <a href={"/" + this.props.teamname + this.state.channelURL}>
                     {this.state.channelName}
-                  </Link>
+                  </a>
                 </OverlayTrigger>
               </strong>
             </span>
