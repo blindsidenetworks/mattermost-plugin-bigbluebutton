@@ -74,7 +74,10 @@ export default class Client {
   }
 
   doPost = async (url, body, headers = {}) => {
-    const options = Client4.getOptions({headers});
+    const options = Client4.getOptions({
+        method: 'post',
+        headers,
+    });
 
     try {
       const response = await request.post(url).send(body).set(options.headers).type('application/json').accept('application/json');
