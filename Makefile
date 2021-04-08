@@ -48,7 +48,7 @@ quickbuild:
 
 	@echo Plugin built at: dist/bigbluebutton.tar.gz
 
-install-dependencies:
+install-dependencies: clean
 	go mod tidy
 	go mod vendor
 
@@ -59,6 +59,7 @@ clean:
 	@echo Cleaning plugin
 
 	rm -rf dist
+	rm -rf vendor
 	cd webapp && rm -rf node_modules
 	cd webapp && rm -f .npminstall
 
