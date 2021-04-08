@@ -16,7 +16,7 @@
 # Build
 /plugin.exe
 /dist
-server/vendor
+vendor
 node_modules
 .npminstall
 webapp/dist
