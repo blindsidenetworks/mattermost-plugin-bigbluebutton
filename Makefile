@@ -14,7 +14,7 @@ quickbuild:
 	@echo Building plugin
 
 	rm -rf dist
-	cd server && go get github.com/mitchellh/gox
+	cd server && GO111MODULE=off go get github.com/mitchellh/gox
 	$(shell go env GOPATH)/bin/gox -ldflags="-X main.PluginVersion=$(call GetFromManifest,version)" -osarch='darwin/amd64 linux/amd64 windows/amd64' -gcflags='all=-N -l' -output 'dist/intermediate/plugin_{{.OS}}_{{.Arch}}' ./server
 
 	mkdir -p dist/bigbluebutton/server
