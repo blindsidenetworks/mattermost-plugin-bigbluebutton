@@ -48,9 +48,9 @@ quickbuild:
 
 	@echo Plugin built at: dist/bigbluebutton.tar.gz
 
-install-dependencies:
-	cd server && go get github.com/Masterminds/glide
-	cd server && $(shell go env GOPATH)/bin/glide install
+install-dependencies: clean
+	go mod tidy
+	go mod vendor
 
 	#installs node modules
 	cd webapp && npm install
@@ -59,6 +59,7 @@ clean:
 	@echo Cleaning plugin
 
 	rm -rf dist
+	rm -rf vendor
 	cd webapp && rm -rf node_modules
 	cd webapp && rm -f .npminstall
 

@@ -6,7 +6,7 @@ jobs:
   build:
     docker:
       # specify the version
-      - image: circleci/golang:1.12
+      - image: circleci/golang:1.16.0-node
 
       # Specify service dependencies here if necessary
       # CircleCI maintains a library of pre-built images
@@ -17,10 +17,16 @@ jobs:
     #### expecting it in the form of
     ####   /go/src/github.com/circleci/go-tool
     ####   /go/src/bitbucket.org/circleci/go-tool
-    working_directory: /go/src/github.com/blindsidenetworks/mattermost-plugin-bigbluebutton
+    working_directory: ~/mattermost-plugin-bigbluebutton
     steps:
       - checkout
 
+      - run:
+          name: "Update Node.js and npm"
+          command: |
+            curl -sSL "https://nodejs.org/dist/v10.24.1/node-v10.24.1-linux-x64.tar.xz" | sudo tar --strip-components=2 -xJ -C /usr/local/bin/ node-v10.24.1-linux-x64/bin/node
+            curl https://www.npmjs.com/install.sh | sudo bash
+
       # specify any bash command here prefixed with `run: `
-      - run: go get -v -t -d ./...
+      - run: make install-dependencies
       - run: go test -v ./...
