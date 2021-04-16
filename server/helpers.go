@@ -142,7 +142,7 @@ func (p *Plugin) createStartMeetingPost(userId string, channelId string, m *data
 	textPost.Props = model.StringInterface{
 		"from_webhook":      "true",
 		"override_username": "BigBlueButton",
-		"override_icon_url": "https://pbs.twimg.com/profile_images/467451035837923328/JxPpOTL6_400x400.jpeg",
+		"override_icon_url": strings.TrimSuffix(*p.API.GetConfig().ServiceSettings.SiteURL, "/") + "/plugins/bigbluebutton/bbb.png",
 		"meeting_id":        m.MeetingID_,
 		"meeting_status":    "STARTED",
 		"meeting_personal":  false,
