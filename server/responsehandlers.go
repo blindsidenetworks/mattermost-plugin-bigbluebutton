@@ -129,9 +129,9 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		config := p.config()
-		if (config.AdminOnly) {
+		if config.AdminOnly {
 			participant.Password_ = meetingpointer.AttendeePW_
-			if(post.UserId == request.UserId ) {
+			if post.UserId == request.UserId {
 				participant.Password_ = meetingpointer.ModeratorPW_ // the creator of a room is always moderator
 			} else {
 				for _, role := range user.GetRoles() {
