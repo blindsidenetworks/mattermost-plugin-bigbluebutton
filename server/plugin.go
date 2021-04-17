@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/helpers"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync/atomic"
 
@@ -49,6 +51,7 @@ type Plugin struct {
 	configuration                atomic.Value
 	Meetings                     []dataStructs.MeetingRoom
 	MeetingsWaitingforRecordings []dataStructs.MeetingRoom
+	handler                      http.Handler
 }
 
 //OnActivate runs as soon as plugin activates
@@ -78,6 +81,10 @@ func (p *Plugin) OnActivate() error {
 	p.c.Start()
 
 	helpers.PluginVersion = PluginVersion
+
+	if err := p.setupStaticFileServer(); err != nil {
+		return err
+	}
 
 	// register slash command '/bbb' to create a meeting
 	return p.API.RegisterCommand(&model.Command{
@@ -134,9 +141,20 @@ func (p *Plugin) ServeHTTP(c *plugin.Context, w http.ResponseWriter, r *http.Req
 		// html file to automatically close a window
 		_, _ = fmt.Fprintf(w, closeWindowScript)
 	} else {
-		http.NotFound(w, r)
+		p.handler.ServeHTTP(w, r)
 	}
 	return
+}
+
+func (p *Plugin) setupStaticFileServer() error {
+	exe, err := os.Executable()
+	if err != nil {
+		p.API.LogError("Couldn't find plugin executable path", err, nil)
+		return err
+	}
+
+	p.handler = http.FileServer(http.Dir(filepath.Dir(exe) + "/../assets"))
+	return nil
 }
 
 func (p *Plugin) OnDeactivate() error {
