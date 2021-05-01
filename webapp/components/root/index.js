@@ -53,7 +53,6 @@ function mapStateToProps(state, ownProps) {
     channelName: channel.name,
     directChannels: getDirectChannels(state),
     teamId,
-
     cur_user,
     teamname,
     state,

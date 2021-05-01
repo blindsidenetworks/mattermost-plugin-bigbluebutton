@@ -18,7 +18,6 @@ import React from 'react';
 import PopoverListMembersItem from './popover_list_members_item.jsx';
 import PropTypes from 'prop-types';
 import {makeStyleFromTheme, changeOpacity} from 'mattermost-redux/utils/theme_utils';
-import {Link} from 'react-router-dom'
 import {viewChannel, getChannelStats} from 'mattermost-redux/actions/channels';
 import {isDirectChannel} from 'mattermost-redux/utils/channel_utils';
 const {Tooltip,Popover, OverlayTrigger, Modal,Overlay} = window.ReactBootstrap
@@ -76,6 +75,7 @@ export default class Root extends React.PureComponent {
     await this.props.actions.startMeeting(this.props.channelId, "", this.props.channel.display_name);
     this.close_the_popover()
   }
+
   close_the_popover = () =>{
     this.props.actions.closePopover();
     this.setState({showPopover: false});
@@ -114,12 +114,18 @@ export default class Root extends React.PureComponent {
       myvar = await myurl.data.joinurl.url;
       window.open(myvar);
     }else{ //for webapps to circumvent popup blockers
-      var newtab = await window.open('https://blindsidenetworks.com/', '_blank');
-      var myurl = await this.props.actions.getJoinURL(this.state.channelId, this.state.meetingId, "");
-      myvar = await myurl.data.joinurl.url;
-      newtab.location.href = myvar;
+      var newtab = await window.open('about:blank');
+      try {
+        var myurl = await this.props.actions.getJoinURL(this.state.channelId, this.state.meetingId, "");
+        myvar = await myurl.data.joinurl.url;
+        newtab.location = myvar;
+        newtab.focus();
+      } catch(e) {
+        newtab.close();
+      }
     }
   }
+
   getSiteUrl = () => {
     if (window.location.origin) {
       return window.location.origin;
@@ -199,12 +205,12 @@ export default class Root extends React.PureComponent {
               : style.popoverBody}>
             {
               this.props.channel.type === "D"
-                ? <PopoverListMembersItem onItemClick={this.startMeeting} cam={1} text={<span> {
+                ? <PopoverListMembersItem ariaLabel={'Call ' + channelName} onItemClick={this.startMeeting} cam={1} text={<span> {
                       'Call '
                     }
                     <strong>{channelName}</strong>
                   </span>} theme={this.props.theme}/>
-                : <PopoverListMembersItem onItemClick={this.startMeeting} cam={1} text={<span> {
+                : <PopoverListMembersItem ariaLabel={'Create a BigBlueButton Meeting'} onItemClick={this.startMeeting} cam={1} text={<span> {
                       'Create a BigBlueButton Meeting'
                     }
                     </span>} theme={this.props.theme}/>
@@ -228,9 +234,9 @@ export default class Root extends React.PureComponent {
               {"BigBlueButton meeting request from "}
               <strong>
                 <OverlayTrigger placement="top" overlay={tooltip}>
-                  <Link to={"/" + this.props.teamname + this.state.channelURL}>
+                  <a href={"/" + this.props.teamname + this.state.channelURL}>
                     {this.state.channelName}
-                  </Link>
+                  </a>
                 </OverlayTrigger>
               </strong>
             </span>
@@ -334,6 +340,6 @@ var getStyle = makeStyleFromTheme((theme) => {
       left: '-14px',
       top: '-9px',
       borderBottom: '1px solid #D8D8D9'
-    }
+    },
   };
 });

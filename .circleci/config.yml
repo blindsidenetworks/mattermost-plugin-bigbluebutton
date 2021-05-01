@@ -4,7 +4,7 @@ version: 2.1
 jobs:
   build:
     docker:
-      - image: circleci/golang:1.14-node
+      - image: circleci/golang:1.16-node
     working_directory: /go/src/github.com/blindsidenetworks/mattermost-plugin-bigbluebutton
     steps:
       - checkout
@@ -19,7 +19,7 @@ jobs:
             - dist
   release:
     docker:
-      - image: circleci/golang:1.14-node
+      - image: circleci/golang:1.16-node
     working_directory: /go/src/github.com/blindsidenetworks/mattermost-plugin-bigbluebutton
     steps:
       - checkout

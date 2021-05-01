@@ -22,8 +22,9 @@ import (
 )
 
 type Configuration struct {
-	BaseURL string `json:"BASE_URL"`
-	Secret  string `json:"SALT"`
+	BaseURL   string `json:"BASE_URL"`
+	Secret    string `json:"SALT"`
+	AdminOnly bool   `json:"ADMINONLY"`
 }
 
 func (p *Plugin) OnConfigurationChange() error {

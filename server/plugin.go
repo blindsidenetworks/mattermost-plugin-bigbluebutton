@@ -21,6 +21,8 @@ import (
 	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/helpers"
 	"github.com/mattermost/mattermost-plugin-api/cluster"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -54,6 +56,7 @@ type Plugin struct {
 	c             *cron.Cron
 	configuration atomic.Value
 	job           *cluster.Job
+	handler                      http.Handler
 }
 
 //OnActivate runs as soon as plugin activates
@@ -75,6 +78,10 @@ func (p *Plugin) OnActivate() error {
 	helpers.PluginVersion = PluginVersion
 
 	if err := p.schedule(); err != nil {
+		return err
+	}
+
+	if err := p.setupStaticFileServer(); err != nil {
 		return err
 	}
 
@@ -113,7 +120,7 @@ func (p *Plugin) schedule() error {
 func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*model.CommandResponse, *model.AppError) {
 	meetingpointer := new(dataStructs.MeetingRoom)
 
-	if err := p.PopulateMeeting(meetingpointer, nil, ""); err != nil {
+	if err := p.PopulateMeeting(meetingpointer, nil, "", args.ChannelId); err != nil {
 		return nil, model.NewAppError("ExecuteCommand", "Please provide a 'Site URL' in Settings > General > Configuration", nil, err.Error(), http.StatusInternalServerError)
 	}
 
@@ -160,8 +167,19 @@ func (p *Plugin) ServeHTTP(c *plugin.Context, w http.ResponseWriter, r *http.Req
 		// nolint:staticcheck
 		_, _ = fmt.Fprintf(w, closeWindowScript)
 	} else {
-		http.NotFound(w, r)
+		p.handler.ServeHTTP(w, r)
 	}
+}
+
+func (p *Plugin) setupStaticFileServer() error {
+	exe, err := os.Executable()
+	if err != nil {
+		p.API.LogError("Couldn't find plugin executable path", err, nil)
+		return err
+	}
+
+	p.handler = http.FileServer(http.Dir(filepath.Dir(exe) + "/../assets"))
+	return nil
 }
 
 func (p *Plugin) OnDeactivate() error {

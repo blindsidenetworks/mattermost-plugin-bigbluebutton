@@ -101,7 +101,8 @@ export default class PostTypebbb extends React.PureComponent {
     });
   }
 
-  getJoinURL = async () => {
+  getJoinURL = async (e) => {
+    e.preventDefault();
 
     var userAgent = navigator.userAgent.toLowerCase();
     var myurl;
@@ -112,10 +113,11 @@ export default class PostTypebbb extends React.PureComponent {
       myvar = await myurl.data.joinurl.url;
       window.open(myvar);
     }else{ //for webapps to circumvent popup blockers
-      var newtab = await window.open('https://blindsidenetworks.com/', '_blank');
-      myurl = await this.props.actions.getJoinURL(this.props.channelId, this.props.post.props.meeting_id, this.props.creatorId);
-      myvar = await myurl.data.joinurl.url;
-      newtab.location.href = myvar;
+      var newtab = await window.open('about:blank');
+      var joinURL = await this.props.actions.getJoinURL(this.props.channelId, this.props.post.props.meeting_id, this.props.creatorId);
+      myvar = await joinURL.data.joinurl.url;
+      newtab.location = myvar;
+      newtab.focus();
     }
 
     await this.setState({
@@ -264,12 +266,12 @@ export default class PostTypebbb extends React.PureComponent {
 
         </div>
         <span >
-          <a className='btn btn-lg btn-primary' style={style.button} onClick={this.getJoinURL}>
+          <a className='btn btn-lg btn-primary' style={style.button} onClick={this.getJoinURL} href='#'>
 
             {'Join Meeting'}
           </a>
           {
-            this.props.currentUserId == this.props.creatorId && <a className='btn btn-lg btn-link' style={style.buttonEnd} onClick={this.endMeeting}>
+            this.props.currentUserId == this.props.creatorId && <a className='btn btn-lg btn-link' style={style.buttonEnd} onClick={this.endMeeting} href='#'>
                 <i style={style.buttonIcon}/> {'End meeting'}
               </a>
           }
@@ -401,7 +403,7 @@ export default class PostTypebbb extends React.PureComponent {
                         props.is_published === "true"
                           ? <a onClick={this.unpublishRecordings}>
                               <span>
-                                Make recording invisble
+                                Make recording invisible
                               </span>
                             </a>
                           : <a onClick={this.publishRecordings}>

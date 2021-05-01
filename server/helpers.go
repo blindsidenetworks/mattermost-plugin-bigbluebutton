@@ -20,11 +20,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/helpers"
 	"net/url"
 	"strings"
 
 	bbbAPI "github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/api"
 	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/dataStructs"
+
 	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/segmentio/ksuid"
 )
@@ -35,7 +37,7 @@ const (
 	prefixMeetingList = "m_list_"
 )
 
-func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, description string) error {
+func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, description string, channelId string) error {
 	if len(details) == 2 {
 		m.Name_ = details[1]
 	} else {
@@ -76,11 +78,22 @@ func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, d
 	recordingcallbackurl = Url.String()
 	m.Meta_bn_recording_ready_url = recordingcallbackurl
 
+	m.Meta_channelid = channelId
+
 	var UrlEnd *url.URL
 	UrlEnd, _ = url.Parse(callbackURL)
 	UrlEnd.Path += "/plugins/bigbluebutton/meetingendedcallback?" + m.MeetingID_ + "&" + m.ValidToken
 	Endmeetingcallback := UrlEnd.String()
 	m.Meta_endcallbackurl = Endmeetingcallback
+
+	m.Meta_bbb_origin = "Mattermost"
+	m.Meta_bbb_origin_version = helpers.PluginVersion
+	if siteconfig.ServiceSettings.SiteURL != nil {
+		m.Meta_bbb_origin_server_name = utils.GetHostnameFromSiteURL(*siteconfig.ServiceSettings.SiteURL)
+	} else {
+		return errors.New("SiteURL not set")
+	}
+
 	return nil
 }
 
@@ -104,7 +117,7 @@ func (p *Plugin) createStartMeetingPost(userId string, channelId string, m *data
 	textPost.Props = model.StringInterface{
 		"from_webhook":      "true",
 		"override_username": "BigBlueButton",
-		"override_icon_url": "https://pbs.twimg.com/profile_images/467451035837923328/JxPpOTL6_400x400.jpeg",
+		"override_icon_url": strings.TrimSuffix(*p.API.GetConfig().ServiceSettings.SiteURL, "/") + "/plugins/bigbluebutton/bbb.png",
 		"meeting_id":        m.MeetingID_,
 		"meeting_status":    "STARTED",
 		"meeting_personal":  false,

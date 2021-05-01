@@ -122,9 +122,9 @@ func (p *Plugin) handleCreateMeeting(w http.ResponseWriter, r *http.Request) {
 	meetingpointer := new(dataStructs.MeetingRoom)
 	var err error
 	if request.Topic == "" {
-		err = p.PopulateMeeting(meetingpointer, nil, request.Desc)
+		err = p.PopulateMeeting(meetingpointer, nil, request.Desc, request.ChannelId)
 	} else {
-		err = p.PopulateMeeting(meetingpointer, []string{"create", request.Topic}, request.Desc)
+		err = p.PopulateMeeting(meetingpointer, []string{"create", request.Topic}, request.Desc, request.ChannelId)
 	}
 
 	if err != nil {
@@ -191,10 +191,34 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 		}
 
 		var participant = dataStructs.Participants{} //set participant as an empty struct of type Participants
-		participant.FullName_ = username
+		participant.FullName_ = user.GetFullName()
+		if len(participant.FullName_) == 0 {
+			participant.FullName_ = user.Username
+		}
+
 		participant.MeetingID_ = meetingID
 
-		participant.Password_ = meetingpointer.ModeratorPW_ //make everyone in channel a mod
+		post, appErr := p.API.GetPost(meetingpointer.PostId)
+		if appErr != nil {
+			http.Error(w, appErr.Error(), appErr.StatusCode)
+			return
+		}
+		config := p.config()
+		if config.AdminOnly {
+			participant.Password_ = meetingpointer.AttendeePW_
+			if post.UserId == request.UserId {
+				participant.Password_ = meetingpointer.ModeratorPW_ // the creator of a room is always moderator
+			} else {
+				for _, role := range user.GetRoles() {
+					if role == "SYSTEM_ADMIN" || role == "TEAM_ADMIN" {
+						participant.Password_ = meetingpointer.ModeratorPW_
+						break
+					}
+				}
+			}
+		} else {
+			participant.Password_ = meetingpointer.ModeratorPW_ //make everyone in channel a mod
+		}
 		joinURL, err := bbbAPI.GetJoinURL(&participant)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -206,11 +230,6 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 		}
 		userJson, _ := json.Marshal(myresp)
 
-		post, appErr := p.API.GetPost(meetingpointer.PostId)
-		if appErr != nil {
-			http.Error(w, appErr.Error(), appErr.StatusCode)
-			return
-		}
 		Length, attendantsarray := GetAttendees(meetingID, meetingpointer.ModeratorPW_)
 		// we immediately add our current attendee thats trying to join the meeting
 		// to avoid the delay

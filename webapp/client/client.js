@@ -14,13 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+import {Client4} from 'mattermost-redux/client';
+
 import request from 'superagent';
 //superagent helps make post request
 
 //client.js is used to communicate with out backend server
 export default class Client {
-  constructor() {
-    this.url = '/plugins/bigbluebutton';
+  constructor(siteURL) {
+    this.url = `${siteURL}/plugins/bigbluebutton`;
   }
 
   startMeeting = async (userid, channelid, topic, description) => {
@@ -72,10 +74,13 @@ export default class Client {
   }
 
   doPost = async (url, body, headers = {}) => {
-    headers['X-Requested-With'] = 'XMLHttpRequest';
+    const options = Client4.getOptions({
+        method: 'post',
+        headers,
+    });
 
     try {
-      const response = await request.post(url).send(body).set(headers).type('application/json').accept('application/json');
+      const response = await request.post(url).send(body).set(options.headers).type('application/json').accept('application/json');
 
       return response.body;
     } catch (err) {
