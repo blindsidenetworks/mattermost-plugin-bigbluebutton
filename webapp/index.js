@@ -27,9 +27,7 @@ import {initClient} from "./client";
 class PluginClass {
   initialize(registry, store) {
     window.store = store;
-
-    const siteURL = store.getState().entities.general.config.SiteURL;
-    initClient(siteURL);
+    initClient(() => store.getState().entities.general.config.SiteURL);
 
     registry.registerPostTypeComponent('custom_bbb', PostTypebbb);
     registry.registerChannelHeaderButtonAction(
