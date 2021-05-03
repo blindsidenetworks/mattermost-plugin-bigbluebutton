@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/helpers"
+	"github.com/mattermost/mattermost-server/v5/utils"
 	"net/url"
 	"strings"
 
@@ -88,8 +89,8 @@ func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, d
 
 	m.Meta_bbb_origin = "Mattermost"
 	m.Meta_bbb_origin_version = helpers.PluginVersion
-	if siteconfig.ServiceSettings.SiteURL != nil {
-		m.Meta_bbb_origin_server_name = utils.GetHostnameFromSiteURL(*siteconfig.ServiceSettings.SiteURL)
+	if siteConfig.ServiceSettings.SiteURL != nil {
+		m.Meta_bbb_origin_server_name = utils.GetHostnameFromSiteURL(*siteConfig.ServiceSettings.SiteURL)
 	} else {
 		return errors.New("SiteURL not set")
 	}
