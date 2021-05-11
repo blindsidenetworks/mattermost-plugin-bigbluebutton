@@ -100,7 +100,7 @@ install-dependencies: clean
 	go mod vendor
 
 	#installs node modules
-	cd webapp && npm install
+	cd webapp && node --version && npm install
 
 clean:
 	@echo Cleaning plugin
