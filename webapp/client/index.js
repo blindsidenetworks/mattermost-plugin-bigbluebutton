@@ -22,6 +22,6 @@ export function GetClient() {
     return Client;
 }
 
-export function initClient(siteURL) {
-    Client = new ClientClass(siteURL);
+export function initClient(siteUrlFunc) {
+    Client = new ClientClass(siteUrlFunc);
 }

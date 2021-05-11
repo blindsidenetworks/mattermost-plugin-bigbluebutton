@@ -21,12 +21,16 @@ import request from 'superagent';
 
 //client.js is used to communicate with out backend server
 export default class Client {
-  constructor(siteURL) {
-    this.url = `${siteURL}/plugins/bigbluebutton`;
+  constructor(siteUrlFunc) {
+    this.siteUrlFunc = siteUrlFunc;
+  }
+
+  get baseUrl() {
+    return `${this.siteUrlFunc()}/plugins/bigbluebutton`
   }
 
   startMeeting = async (userid, channelid, topic, description) => {
-    return this.doPost(`${this.url}/create`, {
+    return this.doPost(`${this.baseUrl}/create`, {
       user_id: userid,
       channel_id: channelid,
       title: topic,
@@ -35,7 +39,7 @@ export default class Client {
   }
 
   getJoinURL = async (userid, meetingid, ismod) => {
-    var body = await this.doPost(`${this.url}/joinmeeting`, {
+    var body = await this.doPost(`${this.baseUrl}/joinmeeting`, {
       user_id: userid,
       meeting_id: meetingid,
       is_mod: ismod
@@ -43,23 +47,23 @@ export default class Client {
     return body;
   }
   endMeeting = async (userid, meetingid) => {
-    var body = await this.doPost(`${this.url}/endmeeting`, {
+    var body = await this.doPost(`${this.baseUrl}/endmeeting`, {
       user_id: userid,
       meeting_id: meetingid
     });
     return body;
   }
   isMeetingRunning = async (meetingid) => {
-    var body = await this.doPost(`${this.url}/ismeetingrunning`, {meeting_id: meetingid});
+    var body = await this.doPost(`${this.baseUrl}/ismeetingrunning`, {meeting_id: meetingid});
     return body;
   }
   getAttendees = async (meetingid) => {
-    var body = await this.doPost(`${this.url}/getattendees`, {meeting_id: meetingid});
+    var body = await this.doPost(`${this.baseUrl}/getattendees`, {meeting_id: meetingid});
     return body;
   }
 
   publishRecordings = async (recordid, publish, meetingId) => {
-    return await this.doPost(`${this.url}/publishrecordings`, {
+    return await this.doPost(`${this.baseUrl}/publishrecordings`, {
       record_id: recordid,
       publish: publish,
       meeting_id: meetingId
@@ -67,7 +71,7 @@ export default class Client {
   }
 
   deleteRecordings = async (recordid, meetingId) => {
-    return await this.doPost(`${this.url}/deleterecordings`, {
+    return await this.doPost(`${this.baseUrl}/deleterecordings`, {
       record_id: recordid,
       meeting_id: meetingId
     });
