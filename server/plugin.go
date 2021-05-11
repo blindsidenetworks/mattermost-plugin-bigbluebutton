@@ -56,7 +56,7 @@ type Plugin struct {
 	c             *cron.Cron
 	configuration atomic.Value
 	job           *cluster.Job
-	handler                      http.Handler
+	handler       http.Handler
 }
 
 //OnActivate runs as soon as plugin activates
