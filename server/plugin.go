@@ -19,18 +19,20 @@ package main
 import (
 	"fmt"
 	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/helpers"
+	"github.com/mattermost/mattermost-plugin-api/cluster"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync/atomic"
+	"time"
 
 	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/mattermost"
 
 	bbbAPI "github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/api"
 	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/dataStructs"
-	"github.com/mattermost/mattermost-server/model"
-	"github.com/mattermost/mattermost-server/plugin"
+	"github.com/mattermost/mattermost-server/v5/model"
+	"github.com/mattermost/mattermost-server/v5/plugin"
 	"github.com/robfig/cron"
 )
 
@@ -44,24 +46,22 @@ const closeWindowScript = `<!doctype html>
 					<body></body>
 				</html>`
 
+const (
+	jobInterval = 2 * time.Minute
+)
+
 type Plugin struct {
 	plugin.MattermostPlugin
 
-	c                            *cron.Cron
-	configuration                atomic.Value
-	Meetings                     []dataStructs.MeetingRoom
-	MeetingsWaitingforRecordings []dataStructs.MeetingRoom
-	handler                      http.Handler
+	c             *cron.Cron
+	configuration atomic.Value
+	job           *cluster.Job
+	handler       http.Handler
 }
 
 //OnActivate runs as soon as plugin activates
 func (p *Plugin) OnActivate() error {
 	mattermost.API = p.API
-
-	// we save all the meetings infos that are stored on in our database upon deactivation
-	// loads the details back so everything works
-	p.LoadMeetingsFromStore()
-
 	if err := p.OnConfigurationChange(); err != nil {
 		p.API.LogError(err.Error())
 		return err
@@ -75,12 +75,11 @@ func (p *Plugin) OnActivate() error {
 
 	bbbAPI.SetAPI(config.BaseURL+"/", config.Secret)
 
-	//every 2 minutes, look through active meetings and check if recordings are done
-	p.c = cron.New()
-	p.c.AddFunc("@every 2m", p.Loopthroughrecordings)
-	p.c.Start()
-
 	helpers.PluginVersion = PluginVersion
+
+	if err := p.schedule(); err != nil {
+		return err
+	}
 
 	if err := p.setupStaticFileServer(); err != nil {
 		return err
@@ -94,6 +93,29 @@ func (p *Plugin) OnActivate() error {
 	})
 }
 
+func (p *Plugin) schedule() error {
+	if p.job != nil {
+		if err := p.job.Close(); err != nil {
+			return err
+		}
+	}
+
+	job, err := cluster.Schedule(
+		p.API,
+		"BigBlueButtonRecordingProcessor",
+		cluster.MakeWaitForRoundedInterval(jobInterval),
+		p.Loopthroughrecordings,
+	)
+
+	if err != nil {
+		p.API.LogError(fmt.Sprintf("Unable to schedule job for processing recordings. Error: {%s}", err.Error()))
+		return err
+	}
+
+	p.job = job
+	return nil
+}
+
 //following method is to create a meeting from '/bbb' slash command
 func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*model.CommandResponse, *model.AppError) {
 	meetingpointer := new(dataStructs.MeetingRoom)
@@ -103,7 +125,10 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 	}
 
 	p.createStartMeetingPost(args.UserId, args.ChannelId, meetingpointer)
-	p.Meetings = append(p.Meetings, *meetingpointer)
+	if err := p.SaveMeeting(meetingpointer); err != nil {
+		return nil, model.NewAppError("ExecuteCommand", "Unable so save meeting", nil, err.Error(), http.StatusInternalServerError)
+	}
+
 	return &model.CommandResponse{}, nil
 
 }
@@ -139,11 +164,11 @@ func (p *Plugin) ServeHTTP(c *plugin.Context, w http.ResponseWriter, r *http.Req
 		p.handleIsMeetingRunning(w, r)
 	} else if path == "/redirect" {
 		// html file to automatically close a window
+		// nolint:staticcheck
 		_, _ = fmt.Fprintf(w, closeWindowScript)
 	} else {
 		p.handler.ServeHTTP(w, r)
 	}
-	return
 }
 
 func (p *Plugin) setupStaticFileServer() error {
@@ -159,7 +184,6 @@ func (p *Plugin) setupStaticFileServer() error {
 
 func (p *Plugin) OnDeactivate() error {
 	//on deactivate, save meetings details, stop check recordings looper, destroy webhook
-	p.SaveMeetingToStore()
 	p.c.Stop()
 	return nil
 }

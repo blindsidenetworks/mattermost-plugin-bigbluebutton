@@ -20,32 +20,39 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	bbbAPI "github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/api"
-	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/dataStructs"
 	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/helpers"
-	"github.com/mattermost/mattermost-server/model"
-	"github.com/mattermost/mattermost-server/utils"
-	"github.com/segmentio/ksuid"
+	"github.com/mattermost/mattermost-server/v5/utils"
 	"net/url"
 	"strings"
+
+	bbbAPI "github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/api"
+	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/dataStructs"
+
+	"github.com/mattermost/mattermost-server/v5/model"
+	"github.com/segmentio/ksuid"
+)
+
+const (
+	// KV Store key prefixes
+	prefixMeeting     = "m_"
+	prefixMeetingList = "m_list_"
 )
 
 func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, description string, channelId string) error {
-
 	if len(details) == 2 {
 		m.Name_ = details[1]
 	} else {
 		m.Name_ = "Big Blue Button Meeting"
 	}
 
-	siteconfig := p.API.GetConfig()
+	siteConfig := p.API.GetConfig()
 
 	var callbackURL string
-	if siteconfig.ServiceSettings.SiteURL != nil {
-		callbackURL = *siteconfig.ServiceSettings.SiteURL
-	} else {
+	if siteConfig.ServiceSettings.SiteURL == nil {
 		return errors.New("SiteURL not set")
 	}
+
+	callbackURL = *siteConfig.ServiceSettings.SiteURL
 	if !strings.HasPrefix(callbackURL, "http") {
 		callbackURL = "http://" + callbackURL
 	}
@@ -82,8 +89,8 @@ func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, d
 
 	m.Meta_bbb_origin = "Mattermost"
 	m.Meta_bbb_origin_version = helpers.PluginVersion
-	if siteconfig.ServiceSettings.SiteURL != nil {
-		m.Meta_bbb_origin_server_name = utils.GetHostnameFromSiteURL(*siteconfig.ServiceSettings.SiteURL)
+	if siteConfig.ServiceSettings.SiteURL != nil {
+		m.Meta_bbb_origin_server_name = utils.GetHostnameFromSiteURL(*siteConfig.ServiceSettings.SiteURL)
 	} else {
 		return errors.New("SiteURL not set")
 	}
@@ -91,41 +98,10 @@ func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, d
 	return nil
 }
 
-func (p *Plugin) LoadMeetingsFromStore() {
-	byted, _ := p.API.KVGet("all_meetings")
-	json.Unmarshal(byted, &p.Meetings)
-
-	recordingsBytes, _ := p.API.KVGet("recording_queue")
-	json.Unmarshal(recordingsBytes, &p.MeetingsWaitingforRecordings)
-
-}
-
-func (p *Plugin) SaveMeetingToStore() {
-	byted, _ := json.Marshal(p.Meetings)
-	p.API.KVSet("all_meetings", byted)
-
-	recordingBytes, _ := json.Marshal(p.MeetingsWaitingforRecordings)
-	p.API.KVSet("recording_queue", recordingBytes)
-
-}
-
 // Returns a meeting pointer so we'll be able to manipulate its content from outside the array.
 func (p *Plugin) FindMeeting(meetingId string) *dataStructs.MeetingRoom {
-	for i := range p.Meetings {
-		if p.Meetings[i].MeetingID_ == meetingId {
-			return &(p.Meetings[i])
-		}
-	}
-	return nil
-}
-
-func (p *Plugin) FindMeetingfromInternal(meetingId string) *dataStructs.MeetingRoom {
-	for i := range p.Meetings {
-		if p.Meetings[i].InternalMeetingId == meetingId {
-			return &(p.Meetings[i])
-		}
-	}
-	return nil
+	meeting, _ := p.GetMeeting(meetingId)
+	return meeting
 }
 
 func (p *Plugin) createStartMeetingPost(userId string, channelId string, m *dataStructs.MeetingRoom) {
@@ -156,14 +132,85 @@ func (p *Plugin) createStartMeetingPost(userId string, channelId string, m *data
 }
 
 func (p *Plugin) DeleteMeeting(meetingId string) {
-	var index int
-	for i := range p.Meetings {
-		if p.Meetings[i].MeetingID_ == meetingId {
-			index = i
-			break
-		}
+	if appErr := p.API.KVDelete(prefixMeeting + meetingId); appErr != nil {
+		p.API.LogError(fmt.Sprintf("Unable to delete meeting from KV store. Meeting ID: {%s}, error: {%s}", meetingId, appErr.Error()))
 	}
-	p.Meetings = append(p.Meetings[:index], p.Meetings[index+1:]...)
+}
+
+func (p *Plugin) SaveMeeting(meeting *dataStructs.MeetingRoom) error {
+	data, err := json.Marshal(meeting)
+	if err != nil {
+		p.API.LogError(fmt.Sprintf("Unable to marshal meeting for storing in KV store.Meeting ID: {%s}, error: {%s}", meeting.MeetingID_, err.Error()))
+		return err
+	}
+
+	appErr := p.API.KVSet(prefixMeeting+meeting.MeetingID_, data)
+	if appErr != nil {
+		p.API.LogError(fmt.Sprintf("Unable to save meeting in KV store. Meeting ID: {%s}, error: {%s}", meeting.MeetingID_, appErr.Error()))
+		return err
+	}
+
+	if err := p.addToMeetingList(meeting.MeetingID_); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p *Plugin) addToMeetingList(meetingID string) error {
+	meetings, err := p.GetMeetingList()
+	if err != nil {
+		return err
+	}
+
+	meetings = append(meetings, prefixMeeting+meetingID)
+	data, err := json.Marshal(meetings)
+	if err != nil {
+		p.API.LogError(fmt.Sprintf("Unable to marshal meeting list. Error: {%s}", err.Error()))
+		return err
+	}
+
+	if appErr := p.API.KVSet(prefixMeetingList, data); appErr != nil {
+		p.API.LogError(fmt.Sprintf("Unable to save updated meeting list in KV store. Error: {%s}", appErr.Error()))
+		return err
+	}
+
+	return nil
+}
+
+func (p *Plugin) GetMeetingList() ([]string, error) {
+	var meetings *[]string
+	data, appErr := p.API.KVGet(prefixMeetingList)
+	if appErr != nil {
+		p.API.LogError(fmt.Sprintf("Unable to fetch meeting list. Error: {%s}", appErr.Error()))
+		return nil, appErr
+	}
+
+	// This handles the case of no data present in KV store.
+	// Happens on fresh installation.
+	if len(data) == 0 {
+		data = []byte("[]")
+	}
+
+	if err := json.Unmarshal(data, &meetings); err != nil {
+		p.API.LogError(fmt.Sprintf("Unable to deserialize meetings data. Error: {%s}", err.Error()))
+		return nil, errors.New(err.Error())
+	}
+
+	return *meetings, nil
+}
+
+func (p *Plugin) GetMeeting(meetingId string) (*dataStructs.MeetingRoom, error) {
+	var meeting *dataStructs.MeetingRoom
+
+	data, appErr := p.API.KVGet(prefixMeeting + meetingId)
+	if appErr != nil {
+		p.API.LogError(fmt.Sprintf("Unable to fetch meeting from KV store. Error: {%s}", appErr.Error()))
+		return nil, appErr
+	}
+
+	_ = json.Unmarshal(data, &meeting)
+	return meeting, nil
 }
 
 func GetAttendees(meetingId string, modPw string) (int, []string) {
@@ -183,12 +230,10 @@ func GetAttendees(meetingId string, modPw string) (int, []string) {
 }
 
 func FormatSeconds(seconds int64) string {
-	var hours int64
-	hours = seconds / 3600
+	hours := seconds / 3600
 	seconds = seconds - 3600*hours
 
-	var minutes int64
-	minutes = seconds / 60
+	minutes := seconds / 60
 	seconds = seconds - 60*minutes
 
 	if hours != 0 {

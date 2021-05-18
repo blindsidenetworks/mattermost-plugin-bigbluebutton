@@ -1,32 +1,72 @@
-# Golang CircleCI 2.0 configuration file
-#
-# Check https://circleci.com/docs/2.0/language-go/ for more details
-version: 2
+# Use the latest 2.1 version of CircleCI pipeline processing engine, see https://circleci.com/docs/2.0/configuration-reference/
+version: 2.1
+
 jobs:
   build:
     docker:
-      # specify the version
-      - image: circleci/golang:1.16.0-node
-
-      # Specify service dependencies here if necessary
-      # CircleCI maintains a library of pre-built images
-      # documented at https://circleci.com/docs/2.0/circleci-images/
-      # - image: circleci/postgres:9.4
-
-    #### TEMPLATE_NOTE: go expects specific checkout path representing url
-    #### expecting it in the form of
-    ####   /go/src/github.com/circleci/go-tool
-    ####   /go/src/bitbucket.org/circleci/go-tool
-    working_directory: ~/mattermost-plugin-bigbluebutton
+      - image: circleci/golang:1.16-node
+    working_directory: /go/src/github.com/blindsidenetworks/mattermost-plugin-bigbluebutton
     steps:
       - checkout
-
       - run:
-          name: "Update Node.js and npm"
+          name: Swap node versions
           command: |
-            curl -sSL "https://nodejs.org/dist/v10.24.1/node-v10.24.1-linux-x64.tar.xz" | sudo tar --strip-components=2 -xJ -C /usr/local/bin/ node-v10.24.1-linux-x64/bin/node
-            curl https://www.npmjs.com/install.sh | sudo bash
+            set +e
+            wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.1/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+            nvm install v10
+            nvm alias default 10
 
-      # specify any bash command here prefixed with `run: `
-      - run: make install-dependencies
-      - run: go test -v ./...
+            echo 'export NVM_DIR="$HOME/.nvm"' >> $BASH_ENV
+            echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
+      - run:
+          name: Install golangci-lint
+          command: |
+            curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.39.0
+            golangci-lint --version
+      - run: make check-style
+      - run: make dist
+      - store_artifacts:
+          path: ./dist
+          destination: build
+      - persist_to_workspace:
+          root: .
+          paths:
+            - dist
+  release:
+    docker:
+      - image: circleci/golang:1.16-node
+    working_directory: /go/src/github.com/blindsidenetworks/mattermost-plugin-bigbluebutton
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run: make release
+
+workflows:
+  build:
+    jobs:
+      - build:
+          filters:
+            branches:
+              only: /.*/
+            tags:
+              ignore: /.*/
+  build-and-release:
+    jobs:
+      - build:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v.*/
+      - release:
+          requires:
+            - build
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v.*/
