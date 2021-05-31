@@ -227,6 +227,7 @@ export default class PostTypebbb extends React.PureComponent {
     let subtitle;
     let activeUsers;
     let recordingstuff;
+    let notesStuff;
     var userlist = [];
     if (arrayAttendants != null || arrayAttendants != []) {
       for (var i = 0; i < arrayAttendants.length; i++) {
@@ -469,6 +470,26 @@ export default class PostTypebbb extends React.PureComponent {
 
         </div>);
 
+        if (props.notes) {
+          notesStuff = (
+              <div>
+                <div style={style.summaryRecording}>Notes</div>
+                <div style={style.recordingBody}>
+                <div>
+                {
+                  props.is_published === "true"
+                      ? <a href={props.notes_url} target="_blank">
+                        {'Click to view notes'}
+                      </a>
+                      : <span style={style.summaryItemGreyItalics}>
+                        Notes currently not viewable
+                      </span>
+                }
+              </div>
+              </div>
+            </div>
+          );
+        }
       }
     }
 
@@ -479,6 +500,7 @@ export default class PostTypebbb extends React.PureComponent {
           <div style={style.body}>
             {content}
             {recordingstuff}
+            {notesStuff}
           </div>
         </div>
       </div>
