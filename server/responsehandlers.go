@@ -190,6 +190,10 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 			meetingpointer.AttendeeNames = append(meetingpointer.AttendeeNames, username)
 		}
 
+		if err := p.SaveMeeting(meetingpointer); err != nil {
+			p.API.LogError("Error occurred updating meeting info in handleJoinMeeting. Error: " + err.Error())
+		}
+
 		var participant = dataStructs.Participants{} //set participant as an empty struct of type Participants
 		participant.FullName_ = user.GetFullName()
 		if len(participant.FullName_) == 0 {
