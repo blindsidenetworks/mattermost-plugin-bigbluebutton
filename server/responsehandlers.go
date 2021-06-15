@@ -84,15 +84,31 @@ func (p *Plugin) Loopthroughrecordings() {
 		recordingsresponse, _, _ := bbbAPI.GetRecordings(Meeting.MeetingID_, "", "")
 		if recordingsresponse.ReturnCode == "SUCCESS" {
 			if len(recordingsresponse.Recordings.Recording) > 0 {
+				recordings, err := json.Marshal(recordingsresponse.Recordings.Recording)
+				if err != nil {
+					p.API.LogError(err.Error())
+				} else {
+					p.API.LogInfo(string(recordings))
+				}
+
 				postid := Meeting.PostId
 				if postid != "" {
 					post, _ := p.API.GetPost(postid)
 					post.Message = "#BigBlueButton #" + Meeting.Name_ + " #" + Meeting.MeetingID_ + " #recording" + " recordings"
-					post.Props["recording_status"] = "COMPLETE"
-					post.Props["is_published"] = "true"
-					post.Props["record_id"] = recordingsresponse.Recordings.Recording[0].RecordID
-					post.Props["recording_url"] = recordingsresponse.Recordings.Recording[0].Playback.Format[0].Url
-					post.Props["images"] = strings.Join(recordingsresponse.Recordings.Recording[0].Playback.Format[0].Images, ",")
+					post.AddProp("recording_status", "COMPLETE")
+					post.AddProp("is_published", "true")
+
+					for _, playback := range recordingsresponse.Recordings.Recording[0].Playback.Format {
+						switch playback.Type {
+						case "presentation":
+							post.AddProp("record_id", recordingsresponse.Recordings.Recording[0].RecordID)
+							post.AddProp("recording_url", playback.Url)
+							post.AddProp("images", strings.Join(playback.Images, ", "))
+						case "notes":
+							post.AddProp("notes", true)
+							post.AddProp("notes_url", playback.Url)
+						}
+					}
 
 					if _, err := p.API.UpdatePost(post); err == nil {
 						_ = p.RemoveMeetingWaitingForRecording(Meeting.MeetingID_)
