@@ -91,7 +91,7 @@ export default class ChannelHeaderButton extends React.PureComponent {
                style={style.foo}
           >
             <span style={style.iconStyle} aria-hidden='true' dangerouslySetInnerHTML={{
-                __html: Svgs.SHARE
+                __html: Svgs.BBB_LOGO_SIMPLIFIED
               }}/>
           </div>
         </OverlayTrigger>
@@ -105,7 +105,7 @@ const getStyle = makeStyleFromTheme((theme) => {
   return {
     iconStyle: {
       position: 'relative',
-      top: '-1px'
+      top: '2px'
     },
     popover: {
       marginLeft: '-100px',
