@@ -35,9 +35,9 @@ import PostTypebbb from './post_type_bbb.jsx';
 function mapStateToProps(state, ownProps) {
   const post = ownProps.post || {};
   const user = state.entities.users.profiles[post.user_id] || {};
-  let channelId = state.entities.channels.currentChannelId;
+  let channelId = post.channel_id;
   const channel = state.entities.channels.channels[channelId]
-  const userid = getCurrentUserId(state) || {}; 
+  const userid = getCurrentUserId(state) || {};
   return {
     channelId,
     channel,
