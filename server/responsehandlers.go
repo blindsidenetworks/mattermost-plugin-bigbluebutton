@@ -165,9 +165,26 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 	body, _ := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
 
-	var request ButtonRequestJSON
-	_ = json.Unmarshal(body, &request)
-	meetingID := request.MeetingId
+	p.API.LogInfo("##################################################################")
+	p.API.LogInfo(string(body))
+	p.API.LogInfo("##################################################################")
+
+	var request *model.PostActionIntegrationRequest
+	if err := json.Unmarshal(body, &request); err != nil {
+		p.API.LogError("Error occured unmarshaling join meeting request body. Error: " + err.Error())
+		return
+	}
+
+	p.API.LogInfo("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+	p.API.LogInfo(fmt.Sprintf("%v", request))
+	p.API.LogInfo("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+
+
+	//var request ButtonRequestJSON
+	//_ = json.Unmarshal(body, &request)
+	//meetingID := request.MeetingId
+
+	meetingID := request.Context["meetingId"].(string)
 	meetingpointer := p.FindMeeting(meetingID)
 
 	if meetingpointer == nil {
@@ -254,13 +271,26 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 		// we immediately add our current attendee thats trying to join the meeting
 		// to avoid the delay
 		attendantsarray = append(attendantsarray, username)
-		post.Props["user_count"] = Length + 1
-		post.Props["attendees"] = strings.Join(attendantsarray, ",")
+		post.AddProp("user_count", Length + 1)
+		post.AddProp("attendees", strings.Join(attendantsarray, ","))
+
+		slackAttachments := post.Attachments()
+		slackAttachments[0].Fields[0].Title = fmt.Sprintf("%s (%d)", slackAttachments[0].Fields[0].Title, Length + 1)
+		slackAttachments[0].Fields[0].Value = strings.Join(attendantsarray, ",")
+
+		model.ParseSlackAttachment(post, slackAttachments)
 
 		if _, err := p.API.UpdatePost(post); err != nil {
+			p.API.LogError("Error occurred updating meeting post during user joining it. Error: " + err.Error())
 			http.Error(w, err.Error(), err.StatusCode)
 			return
 		}
+
+		p.API.SendEphemeralPost(request.UserId, &model.Post{
+			ChannelId: request.ChannelId,
+			Type: model.POST_EPHEMERAL,
+			Message: fmt.Sprintf("Join the BBB meeting [here](%s)", joinURL),
+		})
 
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write(userJson)
