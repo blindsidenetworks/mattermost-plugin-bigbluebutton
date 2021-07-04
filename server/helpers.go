@@ -142,7 +142,7 @@ func (p *Plugin) createStartMeetingPost(userId string, channelId string, m *data
 			},
 			Actions: []*model.PostAction{
 				{
-					Id:    "bibBlueButtonJoinMeeting",
+					Id:    "bigBlueButtonJoinMeeting",
 					Type:  "button",
 					Name:  "Join Meeting",
 					Style: "primary",

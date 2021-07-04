@@ -156,6 +156,8 @@ func (p *Plugin) ServeHTTP(c *plugin.Context, w http.ResponseWriter, r *http.Req
 		p.handleGetAttendeesInfo(w, r)
 	} else if path == "/publishrecordings" {
 		p.handlePublishRecordings(w, r)
+	} else if path == "/deleterecordingsconfirmation" {
+		p.handleDeleteRecordingsConfirmation(w, r)
 	} else if path == "/deleterecordings" {
 		p.handleDeleteRecordings(w, r)
 	} else if strings.HasPrefix(path, "/meetingendedcallback") {
