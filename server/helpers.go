@@ -115,8 +115,6 @@ func (p *Plugin) createStartMeetingPost(userId string, channelId string, m *data
 	post := &model.Post{
 		UserId:    userId,
 		ChannelId: channelId,
-		//Message: "#BigBlueButton #" + m.Name_ + " #ID" + m.MeetingID_,
-		//Type: "custom_bbb",
 	}
 
 	user, appErr := p.API.GetUser(userId)
@@ -180,20 +178,6 @@ func (p *Plugin) createStartMeetingPost(userId string, channelId string, m *data
 	post.AddProp("meeting_topic", m.Name_)
 	post.AddProp("meeting_desc", m.Meta)
 	post.AddProp("user_count", 0)
-
-
-
-	//post.Props = model.StringInterface{
-	//	"from_webhook":      "true",
-	//	"override_username": "BigBlueButton",
-	//	"override_icon_url": strings.TrimSuffix(*p.API.GetConfig().ServiceSettings.SiteURL, "/") + "/plugins/bigbluebutton/bbb.png",
-	//	"meeting_id":        m.MeetingID_,
-	//	"meeting_status":    "STARTED",
-	//	"meeting_personal":  false,
-	//	"meeting_topic":     m.Name_, // Fill in this meeting topic.
-	//	"meeting_desc":      m.Meta,
-	//	"user_count":        0,
-	//}
 
 	postpointer, _ := p.API.CreatePost(post)
 	m.PostId = postpointer.Id
