@@ -826,14 +826,24 @@ func (p *Plugin) handleDeleteRecordings(w http.ResponseWriter, r *http.Request) 
 	//var request DeleteRecordingsRequestJSON
 	var request *model.SubmitDialogRequest
 	_ = json.Unmarshal(body, &request)
-	recordID := request.Context["record_id"].(string)
 
+	if request.Submission["sure"] != "yes" {
+		return
+	}
+
+	var state map[string]string
+	if err := json.Unmarshal([]byte(request.State), &state); err != nil {
+		p.API.LogError("Error occurred unmarshalling delete recording confirmation state. Error: " + err.Error())
+		return
+	}
+
+	recordID := state["record_id"]
 	if _, err := bbbAPI.DeleteRecordings(recordID); err != nil {
 		http.Error(w, "Error: Recording not found", http.StatusForbidden)
 		return
 	}
 
-	meetingID := request.Context["meeting_id"].(string)
+	meetingID := state["meeting_id"]
 	meetingpointer := p.FindMeeting(meetingID)
 	if meetingpointer == nil {
 		http.Error(w, "Error: Cannot find the meeting_id for the recording", http.StatusForbidden)
@@ -848,6 +858,19 @@ func (p *Plugin) handleDeleteRecordings(w http.ResponseWriter, r *http.Request) 
 
 	post.AddProp("is_deleted", "true")
 	post.AddProp("record_status", "Recording Deleted")
+
+	post.Message = strings.Replace(post.Message, "#recording", "", -1)
+	attachments := make([]*model.SlackAttachment, 1)
+	attachments[0] = &model.SlackAttachment{}
+
+	for _, field := range post.Attachments()[0].Fields {
+		if field.Title != "Notes" && field.Title != "Recordings" {
+			attachments[0].Fields = append(attachments[0].Fields, field)
+		}
+	}
+
+	model.ParseSlackAttachment(post, attachments)
+
 	if _, err := p.API.UpdatePost(post); err != nil {
 		http.Error(w, "Error: could not update post \n"+err.Error(), err.StatusCode)
 		return
