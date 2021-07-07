@@ -22,27 +22,39 @@ import (
 )
 
 type Configuration struct {
-	BaseURL   string `json:"BASE_URL"`
-	Secret    string `json:"SALT"`
-	AdminOnly bool   `json:"ADMINONLY"`
+	BaseURL           string `json:"BASE_URL"`
+	Secret            string `json:"SALT"`
+	AdminOnly         bool   `json:"ADMINONLY"`
+	ProcessRecordings bool   `json:"PROCESS_RECORDINGS"`
 }
 
 func (p *Plugin) OnConfigurationChange() error {
-	var configuration Configuration
+	var newConfig Configuration
 	// loads configuration from our config ui page
-	err := p.API.LoadPluginConfiguration(&configuration)
+	err := p.API.LoadPluginConfiguration(&newConfig)
 
-	configuration.BaseURL = strings.Trim(configuration.BaseURL, "/")
-	configuration.BaseURL = strings.Trim(configuration.BaseURL, " ")
+	newConfig.BaseURL = strings.Trim(newConfig.BaseURL, "/")
+	newConfig.BaseURL = strings.Trim(newConfig.BaseURL, " ")
+
+	oldConfig := p.config()
+
+	// close running job if process recording is turned off
+	if oldConfig != nil && (oldConfig.ProcessRecordings && !newConfig.ProcessRecordings) && p.job != nil {
+		p.job.Close()
+	}
 
 	// stores the config in an Atomic.Value place
-	p.configuration.Store(&configuration)
+	p.configuration.Store(&newConfig)
 	return err
 }
 
 func (p *Plugin) config() *Configuration {
 	// returns the config file we had stored in Atomic.Value
-	return p.configuration.Load().(*Configuration)
+	config := p.configuration.Load()
+	if config == nil {
+		return nil
+	}
+	return config.(*Configuration)
 }
 
 func (c *Configuration) IsValid() error {
