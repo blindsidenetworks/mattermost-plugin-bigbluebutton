@@ -70,7 +70,7 @@ func (p *Plugin) Loopthroughrecordings() {
 
 	for _, meetingID := range meetingsWaitingforRecordings {
 		Meeting, err := p.GetMeetingWaitingForRecording(meetingID)
-		if err != nil {
+		if err != nil || Meeting == nil {
 			continue
 		}
 
