@@ -1,7 +1,7 @@
 {
   "id": "bigbluebutton",
   "name": "BigBlueButton",
-  "version": "3.1.1",
+  "version": "3.2.0",
   "min_server_version": "5.20.0",
   "description": "BigBlueButton is an open source web conferencing system for online learning. Teams can create, join and manage their BigBlueButton meetings from inside Mattermost",
   "homepage_url": "https://github.com/blindsidenetworks/",
@@ -35,6 +35,13 @@
         "type": "bool",
         "default": "false",
         "help_text": "Only TeamAdmin accounts will become Moderators in BigBlueButton, everybody else will be attendee. The creator will always be Moderator of a Room.\n"
+      },
+      {
+        "key": "PROCESS_RECORDINGS",
+        "display_name": "Process Recordings",
+        "type": "bool",
+        "default": true,
+        "help_text": "Enable or disable processing BigBlueButton recordings. If set to false, the BigBlueButton meeting recordings will not be fetched into Mattermost. You can continue using all other features of the plugin as usual."
       }
     ],
     "footer": "All form fields must be filled or the plugin will fail to work. Deactivate and reactivate your plugin when changing to a configuration value. Don't worry, no data will be lost"

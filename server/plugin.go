@@ -77,8 +77,10 @@ func (p *Plugin) OnActivate() error {
 
 	helpers.PluginVersion = PluginVersion
 
-	if err := p.schedule(); err != nil {
-		return err
+	if config.ProcessRecordings {
+		if err := p.schedule(); err != nil {
+			return err
+		}
 	}
 
 	if err := p.setupStaticFileServer(); err != nil {

@@ -48,6 +48,10 @@ func (p *Plugin) GetMeetingWaitingForRecording(meetingID string) (*dataStructs.M
 }
 
 func (p *Plugin) AddMeetingWaitingForRecording(meeting *dataStructs.MeetingRoom) error {
+	if !p.config().ProcessRecordings {
+		return nil
+	}
+
 	if err := p.saveMeetingForRecording(meeting); err != nil {
 		return err
 	}
