@@ -105,7 +105,6 @@ func (p *Plugin) FindMeeting(meetingId string) *dataStructs.MeetingRoom {
 }
 
 func (p *Plugin) createStartMeetingPost(userId string, channelId string, m *dataStructs.MeetingRoom) {
-
 	config := p.config()
 	// If config page is not set uh oh.
 	if err := config.IsValid(); err != nil {
@@ -122,6 +121,8 @@ func (p *Plugin) createStartMeetingPost(userId string, channelId string, m *data
 		p.API.LogError("Failed to fetch user id: " + userId)
 		return
 	}
+
+	post.AddProp("created_by", user.Id)
 
 	attachments := []*model.SlackAttachment{
 		{
@@ -155,7 +156,7 @@ func (p *Plugin) createStartMeetingPost(userId string, channelId string, m *data
 					Id:    "bigBlueButtonEndMeeting",
 					Type:  "button",
 					Name:  "End Meeting",
-					Style: "default",
+					Style: "danger",
 					Integration: &model.PostActionIntegration{
 						URL: "/plugins/bigbluebutton/endmeeting",
 						Context: map[string]interface{}{
