@@ -1,7 +1,7 @@
 {
   "id": "bigbluebutton",
   "name": "BigBlueButton",
-  "version": "3.2.0",
+  "version": "3.2.1",
   "min_server_version": "5.20.0",
   "description": "BigBlueButton is an open source web conferencing system for online learning. Teams can create, join and manage their BigBlueButton meetings from inside Mattermost",
   "homepage_url": "https://github.com/blindsidenetworks/",

@@ -27,13 +27,25 @@ export default {
         ,
 
 
-    BBB_LOGO_SIMPLIFIED: '<?xml version="1.0" encoding="utf-8"?>\n' +
-        '<svg ver viewBox="0 0 24 24" style="enable-background:new 0 0 24 24;" xml:space="preserve">w3.org/1999/xlink" x="0px" y="0px"\n' +
-        '<style type="text/css">\n' +
-        '        .st0{fill:none;stroke:#5D6AA4;stroke-width:9.3191;}\n' +
-        '        .st1{opacity:0.46;}\n' +
-        '        .st2{fill:#FFFFFF;}\n' +
-        '</style><symbol  id="New_Symbol" viewBox="-107.4 -107.4 214.8 214.8"><g><path class="st0" d="M102.8,0c0-56.8-46-102.8-102.8-102.8c-56.8,0-102.8,46-102.8,102.8S-56.8,102.8,0,102.8 C56.8,102.8,102.8,56.8,102.8,0z"/></g><g><g><path d="M55.6-25.6c0-8.7-3.1-16.1-9.2-22.2c-6.1-6.1-13.5-9.2-22.2-9.2h-37.4c-8.7,0-16.1,3.1-22.2,9.2 c-6.1,6.1-9.2,13.5-9.2,22.2v93.8c6.7,0,12.3-3.3,17-9.8c4.7-6.5,7.1-14.3,7.1-23.5v-60.5c0-4.8,2.4-7.2,7.2-7.2h37.4 c4.8,0,7.2,2.4,7.2,7.2V3.1c0,4.7-2.4,7.1-7.2,7.2H17c-9.3,0.3-17.2,2.8-23.6,7.3c-6.4,4.5-9.6,10.1-9.6,16.8h40.5 c8.7,0,16.1-3.1,22.2-9.2c6.1-6.1,9.2-13.5,9.2-22.2L55.6-25.6L55.6-25.6z"/></g></g><g class="st1"><g><path class="st2" d="M55.6-25.6c0-8.7-3.1-16.1-9.2-22.2c-6.1-6.1-13.5-9.2-22.2-9.2h-37.4c-8.7,0-16.1,3.1-22.2,9.2 c-6.1,6.1-9.2,13.5-9.2,22.2v93.8c6.7,0,12.3-3.3,17-9.8c4.7-6.5,7.1-14.3,7.1-23.5v-60.5c0-4.8,2.4-7.2,7.2-7.2h37.4 c4.8,0,7.2,2.4,7.2,7.2V3.1c0,4.7-2.4,7.1-7.2,7.2H17c-9.3,0.3-17.2,2.8-23.6,7.3c-6.4,4.5-9.6,10.1-9.6,16.8h40.5 c8.7,0,16.1-3.1,22.2-9.2c6.1-6.1,9.2-13.5,9.2-22.2L55.6-25.6L55.6-25.6z"/></g></g><g><path class="st2" d="M53.8-26.8c0-8.7-3.1-16.1-9.2-22.2c-6.1-6.1-13.5-9.2-22.2-9.2h-37.4c-8.7,0-16.1,3.1-22.2,9.2 c-6.1,6.1-9.2,13.5-9.2,22.2V67c6.7,0,12.3-3.3,17-9.8c4.7-6.5,7.1-14.3,7.1-23.5v-60.5c0-4.8,2.4-7.2,7.2-7.2h37.4 c4.8,0,7.2,2.4,7.2,7.2V1.9c0,4.7-2.4,7.1-7.2,7.2h-7.2C5.9,9.5-1.9,11.9-8.4,16.4C-14.8,21-18,26.6-18,33.2h40.5 c8.7,0,16.1-3.1,22.2-9.2c6.1-6.1,9.2-13.5,9.2-22.2V-26.8z"/></g></symbol><g><defs><rect id="SVGID_1_" x="0.2" y="0.2" width="23.7" height="23.7"/></defs><clipPath id="SVGID_2_"><use xlink:href="#SVGID_1_"  style="overflow:visible;"/></clipPath><g style="clip-path:url(#SVGID_2_);"><use xlink:href="#New_Symbol"  width="214.8" height="214.8" id="XMLID_1_" x="-107.4" y="-107.4" transform="matrix(0.1101 0 0 -0.1101 11.4594 12)" style="overflow:visible;"/></g></g></svg>',
+    BBB_LOGO_SIMPLIFIED: '<?xml version="1.0" encoding="utf-8"?>' +
+        '<!-- Generator: Adobe Illustrator 25.3.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->' +
+        '<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"' +
+        ' viewBox="0 0 500 500" style="enable-background:new 0 0 500 500;" xml:space="preserve">' +
+        '<style type="text/css">' +
+        '.st0{fill:var(--center-channel-color-rgb);}' +
+        '.st1{fill:var(--center-channel-bg);}' +
+        '.st2{fill:"red";}' +
+        '</style>' +
+        '<circle class="st0" cx="250" cy="250" r="245"/>' +
+        '<circle class="st1" cx="250" cy="250" r="220"/>' +
+        '<g>' +
+        '<path class="st2" d="M373.94,328.64c0,21.37-7.61,39.55-22.6,54.53c-14.98,14.98-33.16,22.6-54.53,22.6l-91.86,0' +
+        'c-21.37,0-39.55-7.61-54.53-22.6c-14.98-14.98-22.6-33.16-22.6-54.53l0-230.4c16.46,0,30.21,8.11,41.76,24.07' +
+        's17.44,35.12,17.44,57.72l0,148.6c0,11.79,5.9,17.69,17.69,17.69h91.86c11.79,0,17.69-5.9,17.69-17.69v-70.49' +
+        'c0-11.54-5.9-17.44-17.69-17.69h-17.69c-22.6-0.98-41.76-6.88-57.72-17.93c-15.72-11.3-23.58-25.05-23.58-41.27l99.48,0' +
+        'c21.37,0,39.55,7.61,54.53,22.6c14.98,14.98,22.6,33.16,22.6,54.53v70.25H373.94z"/>' +
+        '</g>' +
+        '</svg>',
 
     BBBCAM: '<svg width="28px" height="28px" viewBox="0 0 33 33" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"> <!-- Generator: Sketch 50.2 (55047) - http://www.bohemiancoding.com/sketch --> <desc>Created with Sketch.</desc> <defs></defs> <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"> <g id="mattermost-start-dropdown" transform="translate(-880.000000, -156.000000)"> <g id="camera" transform="translate(881.000000, 157.000000)"> <path d="M23.105,11.447 L20,13 L20,11 C20,10.447 19.553,10 19,10 L9,10 C8.447,10 8,10.447 8,11 L8,21 C8,21.553 8.447,22 9,22 L19,22 C19.553,22 20,21.553 20,21 L20,19 L23.105,20.553 C23.6,20.8 24,20.553 24,20 L24,12 C24,11.447 23.6,11.2 23.105,11.447 Z M20.895,17.211 C20.612,17.07 20.306,17 20,17 L18.5,17 C18.224,17 18,17.224 18,17.5 L18,20 L10,20 L10,12 L18,12 L18,14.5 C18,14.776 18.224,15 18.5,15 L20,15 C20.306,15 20.612,14.93 20.895,14.789 L22,14.236 L22,17.763 L20.895,17.211 Z" id="Shape" fill="#166DE0" fill-rule="nonzero"></path> <circle id="Oval" stroke="#166DE0" stroke-width="2" cx="15.5" cy="15.5" r="15.5"></circle> </g> </g> </g> </svg>'
 ,
