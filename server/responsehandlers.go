@@ -18,6 +18,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/mattermost"
 	"io/ioutil"
@@ -56,12 +57,6 @@ type AttendeesResponseJSON struct {
 	Attendees []string `json:"attendees"`
 }
 
-type PublishRecordingsRequestJSON struct {
-	RecordId  string `json:"record_id"`
-	Publish   string `json:"publish"` //string  true or false
-	MeetingId string `json:"meeting_id"`
-}
-
 func (p *Plugin) Loopthroughrecordings() {
 	meetingsWaitingforRecordings, err := p.GetRecordingWaitingList()
 	if err != nil {
@@ -94,9 +89,12 @@ func (p *Plugin) Loopthroughrecordings() {
 				postid := Meeting.PostId
 				if postid != "" {
 					post, _ := p.API.GetPost(postid)
-					post.Message = "#BigBlueButton #" + Meeting.Name_ + " #" + Meeting.MeetingID_ + " #recording" + " recordings"
+					post.Message = "#BigBlueButton #recording"
 					post.AddProp("recording_status", "COMPLETE")
 					post.AddProp("is_published", "true")
+
+					attachments := post.Attachments()
+					recordingsAdded := false
 
 					for _, playback := range recordingsresponse.Recordings.Recording[0].Playback.Format {
 						switch playback.Type {
@@ -104,11 +102,66 @@ func (p *Plugin) Loopthroughrecordings() {
 							post.AddProp("record_id", recordingsresponse.Recordings.Recording[0].RecordID)
 							post.AddProp("recording_url", playback.Url)
 							post.AddProp("images", strings.Join(playback.Images, ", "))
+
+							attachments[0].Fields = append(attachments[0].Fields, &model.SlackAttachmentField{
+								Title: "Recordings",
+								Value: fmt.Sprintf("[Click to view recordings](%s)", playback.Url),
+								Short: true,
+							})
+
+							recordingsAdded = true
 						case "notes":
 							post.AddProp("notes", true)
 							post.AddProp("notes_url", playback.Url)
+
+							attachments[0].Fields = append(attachments[0].Fields, &model.SlackAttachmentField{
+								Title: "Notes",
+								Value: fmt.Sprintf("[Click to view notes](%s)", playback.Url),
+							})
+
+							recordingsAdded = true
 						}
 					}
+
+					if recordingsAdded {
+						meetingAttachment := attachments[0]
+						attachments = []*model.SlackAttachment{
+							meetingAttachment,
+							{
+								Actions: []*model.PostAction{
+									{
+										Id:    "toggleRecordingVisibility",
+										Type:  "button",
+										Name:  "Make Recording Invisible",
+										Style: "secondary",
+										Integration: &model.PostActionIntegration{
+											URL: "/plugins/bigbluebutton/publishrecordings",
+											Context: map[string]interface{}{
+												"publish":    "false",
+												"meeting_id": meetingID,
+												"record_id":  recordingsresponse.Recordings.Recording[0].RecordID,
+											},
+										},
+									},
+									{
+										Id:    "deleteRecordings",
+										Type:  "button",
+										Name:  "Delete Recordings",
+										Style: "danger",
+										Integration: &model.PostActionIntegration{
+											URL: "/plugins/bigbluebutton/deleterecordingsconfirmation",
+											Context: map[string]interface{}{
+												"meeting_id": meetingID,
+												"record_id":  recordingsresponse.Recordings.Recording[0].RecordID,
+											},
+										},
+									},
+								},
+							},
+						}
+					}
+
+					model.ParseSlackAttachment(post, attachments)
 
 					if _, err := p.API.UpdatePost(post); err == nil {
 						_ = p.RemoveMeetingWaitingForRecording(Meeting.MeetingID_)
@@ -117,11 +170,6 @@ func (p *Plugin) Loopthroughrecordings() {
 			}
 		}
 	}
-}
-
-type DeleteRecordingsRequestJSON struct {
-	RecordId  string `json:"record_id"`
-	MeetingId string `json:"meeting_id"`
 }
 
 //Create meeting doesn't call the BBB api to start a meeting
@@ -165,9 +213,13 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 	body, _ := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
 
-	var request ButtonRequestJSON
-	_ = json.Unmarshal(body, &request)
-	meetingID := request.MeetingId
+	var request *model.PostActionIntegrationRequest
+	if err := json.Unmarshal(body, &request); err != nil {
+		p.API.LogError("Error occured unmarshaling join meeting request body. Error: " + err.Error())
+		return
+	}
+
+	meetingID := request.Context["meetingId"].(string)
 	meetingpointer := p.FindMeeting(meetingID)
 
 	if meetingpointer == nil {
@@ -254,13 +306,43 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 		// we immediately add our current attendee thats trying to join the meeting
 		// to avoid the delay
 		attendantsarray = append(attendantsarray, username)
-		post.Props["user_count"] = Length + 1
-		post.Props["attendees"] = strings.Join(attendantsarray, ",")
+		post.AddProp("user_count", Length+1)
+
+		slackAttachments := post.Attachments()
+
+		uniqueAttendees := map[string]bool{}
+		for _, user := range attendantsarray {
+			uniqueAttendees[user] = true
+		}
+
+		if slackAttachments[0].Fields[0].Value != "*There are no attendees in this session*" {
+			for _, user := range strings.Split(slackAttachments[0].Fields[0].Value.(string), ", ") {
+				username := strings.TrimLeft(user, "@")
+				uniqueAttendees[username] = true
+			}
+		}
+
+		uniqueAttendeesList := []string{}
+		for user := range uniqueAttendees {
+			uniqueAttendeesList = append(uniqueAttendeesList, user)
+		}
+
+		post.AddProp("attendees", strings.Join(uniqueAttendeesList, ","))
+		slackAttachments[0].Fields[0].Title = fmt.Sprintf("Attendees (%d)", len(uniqueAttendeesList))
+		slackAttachments[0].Fields[0].Value = "@" + strings.Join(uniqueAttendeesList, ", @")
+		model.ParseSlackAttachment(post, slackAttachments)
 
 		if _, err := p.API.UpdatePost(post); err != nil {
+			p.API.LogError("Error occurred updating meeting post during user joining it. Error: " + err.Error())
 			http.Error(w, err.Error(), err.StatusCode)
 			return
 		}
+
+		p.API.SendEphemeralPost(request.UserId, &model.Post{
+			ChannelId: request.ChannelId,
+			Type:      model.POST_EPHEMERAL,
+			Message:   fmt.Sprintf("[Join the BBB meeting here](%s)", joinURL),
+		})
 
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write(userJson)
@@ -270,18 +352,20 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 //this method is responsible for updating meeting has ended inside mattermost when
 // we end our meeting from inside BigBlueButton
 func (p *Plugin) handleImmediateEndMeetingCallback(w http.ResponseWriter, r *http.Request, path string) {
-
 	startpoint := len("/meetingendedcallback?")
 	endpoint := strings.Index(path, "&")
 	meetingid := path[startpoint:endpoint]
 	validation := path[endpoint+1:]
 	meetingpointer := p.FindMeeting(meetingid)
 	if meetingpointer == nil || meetingpointer.ValidToken != validation {
-		w.WriteHeader(http.StatusOK)
+		http.Error(w, "Validation token mismatch", http.StatusForbidden)
+		w.WriteHeader(http.StatusForbidden)
 		return
 	}
+
 	post, err := p.API.GetPost(meetingpointer.PostId)
 	if err != nil {
+		p.API.LogError(err.Error())
 		http.Error(w, err.Error(), err.StatusCode)
 		return
 	}
@@ -289,88 +373,184 @@ func (p *Plugin) handleImmediateEndMeetingCallback(w http.ResponseWriter, r *htt
 		meetingpointer.EndedAt = time.Now().Unix()
 	}
 	if err := p.AddMeetingWaitingForRecording(meetingpointer); err != nil {
+		p.API.LogError(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	post.Props["meeting_status"] = "ENDED"
-	post.Props["attendents"] = strings.Join(meetingpointer.AttendeeNames, ",")
+	post.AddProp("meeting_status", "ENDED")
+	post.AddProp("attendents", strings.Join(meetingpointer.AttendeeNames, ","))
 	timediff := meetingpointer.EndedAt - meetingpointer.CreatedAt
 	durationstring := FormatSeconds(timediff)
-	post.Props["duration"] = durationstring
+	post.AddProp("duration", durationstring)
 
+	attachments := []*model.SlackAttachment{
+		{
+			Title: "**Meeting Ended**",
+			Fields: []*model.SlackAttachmentField{
+				{
+					Title: "Date Started At",
+					Value: time.Unix(meetingpointer.CreatedAt, 0).Format("Jan _2 at 3:04 PM"),
+					Short: true,
+				},
+				{
+					Title: "Duration",
+					Value: FormatSeconds(timediff),
+					Short: false,
+				},
+				{
+					Title: "Attendees",
+					Value: "@" + strings.Join(meetingpointer.AttendeeNames, ", @"),
+					Short: false,
+				},
+			},
+		},
+	}
+
+	endedByUserId := post.GetProp("ended_by")
+	if endedByUserId != nil {
+		user, err := p.API.GetUser(endedByUserId.(string))
+		if err != nil {
+			msg := "Error occurred fetching user. UserID: " + endedByUserId.(string) + ", error: " + err.Error()
+			p.API.LogError(msg)
+			http.Error(w, msg, err.StatusCode)
+			return
+		}
+
+		attachments[0].Fields = append(
+			[]*model.SlackAttachmentField{
+				{
+					Title: "Ended By",
+					Value: "@" + user.Username,
+					Short: false,
+				},
+			}, attachments[0].Fields...,
+		)
+	}
+
+	model.ParseSlackAttachment(post, attachments)
 	if _, err := p.API.UpdatePost(post); err != nil {
 		p.API.LogError(fmt.Sprintf("Unable to update post. Error: {%s}", err.Error()))
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
+	p.API.LogInfo("MM")
 	w.WriteHeader(http.StatusOK)
 }
 
 //when user clicks endmeeting button inside Mattermost
 func (p *Plugin) handleEndMeeting(w http.ResponseWriter, r *http.Request) {
-
-	//for debugging
 	mattermost.API.LogInfo("Processing End Meeting Request")
 
 	body, _ := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
-
-	var request ButtonRequestJSON
+	var request *model.PostActionIntegrationRequest
 	_ = json.Unmarshal(body, &request)
-	meetingID := request.MeetingId
+
+	meetingID := request.Context["meetingId"].(string)
 	meetingpointer := p.FindMeeting(meetingID)
 
-	user, _ := p.API.GetUser(request.UserId)
-	username := user.Username
+	user, err := p.API.GetUser(request.UserId)
+	if err != nil {
+		http.Error(w, err.Error(), err.StatusCode)
+		p.API.LogError(err.Error())
+		return
+	}
+
+	post, err := p.API.GetPost(meetingpointer.PostId)
+	if err != nil {
+		http.Error(w, err.Error(), err.StatusCode)
+		p.API.LogError(err.Error())
+		return
+	}
+	post.AddProp("ended_by", user.Id)
 
 	if meetingpointer == nil {
+		if err := p.cleanupForEndMeeting(post); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
 		myresp := model.PostActionIntegrationResponse{
 			EphemeralText: "meeting has already ended",
 		}
+
 		userJson, _ := json.Marshal(myresp)
 		_, _ = w.Write(userJson)
 		return
-	} else {
-		if _, err := bbbAPI.EndMeeting(meetingpointer.MeetingID_, meetingpointer.ModeratorPW_); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		//for debugging
-		mattermost.API.LogInfo("Meeting Ended")
-
-		if meetingpointer.EndedAt == 0 {
-			meetingpointer.EndedAt = time.Now().Unix()
-		}
-		if err := p.AddMeetingWaitingForRecording(meetingpointer); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		post, err := p.API.GetPost(meetingpointer.PostId)
-		if err != nil {
-			http.Error(w, err.Error(), err.StatusCode)
-			return
-		}
-
-		post.Props["meeting_status"] = "ENDED"
-		post.Props["attendents"] = strings.Join(meetingpointer.AttendeeNames, ",")
-		post.Props["ended_by"] = username
-		timediff := meetingpointer.EndedAt - meetingpointer.CreatedAt
-		if meetingpointer.CreatedAt == 0 {
-			timediff = 0
-		}
-		durationstring := FormatSeconds(timediff)
-		post.Props["duration"] = durationstring
-
-		if _, err := p.API.UpdatePost(post); err != nil {
-			http.Error(w, err.Error(), err.StatusCode)
-			return
-		}
-		w.WriteHeader(http.StatusOK)
 	}
+
+	if _, err := bbbAPI.EndMeeting(meetingpointer.MeetingID_, meetingpointer.ModeratorPW_); err != nil {
+		var myresp model.PostActionIntegrationResponse
+		running, err := bbbAPI.IsMeetingRunning(meetingID)
+		if err != nil {
+			p.API.LogError("Error occurred checking meeting running status.", "error", err.Error())
+			myresp = model.PostActionIntegrationResponse{
+				EphemeralText: "error occurred checking meeting running status.",
+			}
+		}
+
+		if !running {
+			if err := p.cleanupForEndMeeting(post); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			myresp = model.PostActionIntegrationResponse{
+				EphemeralText: "meeting has already ended",
+			}
+		} else {
+			myresp = model.PostActionIntegrationResponse{
+				EphemeralText: "could not end meeting.",
+			}
+		}
+
+		response, _ := json.Marshal(myresp)
+		_, _ = w.Write(response)
+		return
+	}
+
+	mattermost.API.LogInfo("Meeting Ended")
+	if meetingpointer.EndedAt == 0 {
+		meetingpointer.EndedAt = time.Now().Unix()
+	}
+
+	if err := p.AddMeetingWaitingForRecording(meetingpointer); err != nil {
+		p.API.LogError("Error occurred adding meeting for recording after manually endining it. Error: " + err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	response := model.PostActionIntegrationResponse{
+		Update:           nil,
+		EphemeralText:    "",
+		SkipSlackParsing: false,
+	}
+
+	rawResponse, _ := json.Marshal(response)
+	w.Write(rawResponse)
+	w.WriteHeader(http.StatusOK)
+}
+
+func (p *Plugin) cleanupForEndMeeting(post *model.Post) error {
+	attachments := post.Attachments()
+	attachments[0].Fields = append(
+		[]*model.SlackAttachmentField{{
+			Title: "Meeting Ended",
+			Value: "",
+			Short: false,
+		}},
+		attachments[0].Fields...,
+	)
+	attachments[0].Actions = nil
+	model.ParseSlackAttachment(post, attachments)
+	if _, err := p.API.UpdatePost(post); err != nil {
+		msg := "Error occurred updating post for cleaning up actions on manual end. PostID: " + post.Id + " error: " + err.Error()
+		p.API.LogError(msg)
+		return errors.New(msg)
+	}
+
+	return nil
 }
 
 func (p *Plugin) handleIsMeetingRunning(w http.ResponseWriter, r *http.Request) {
@@ -443,35 +623,149 @@ func (p *Plugin) handlePublishRecordings(w http.ResponseWriter, r *http.Request)
 	body, _ := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
 
-	var request PublishRecordingsRequestJSON
-	_ = json.Unmarshal(body, &request)
-	recordid := request.RecordId
-	publish := request.Publish
+	var request *model.PostActionIntegrationRequest
+	if err := json.Unmarshal(body, &request); err != nil {
+		p.API.LogError("Error occurred unmarshalling publish recording API request payload. Error: " + err.Error())
+		http.Error(w, "Error: couldn't unmarshal request payload", http.StatusInternalServerError)
+		return
+	}
 
-	meetingpointer := p.FindMeeting(request.MeetingId)
+	recordid := request.Context["record_id"].(string)
+	publish := request.Context["publish"].(string)
+	meetingID := request.Context["meeting_id"].(string)
+
+	meetingpointer := p.FindMeeting(meetingID)
 	if meetingpointer == nil {
-		http.Error(w, "Error: Cannot find the meeting_id for the recording, MeetingID#"+request.MeetingId, http.StatusForbidden)
+		p.API.LogError("Error: Cannot find the meeting_id for the recording, MeetingID#" + meetingID)
+		http.Error(w, "Error: Cannot find the meeting_id for the recording, MeetingID#"+meetingID, http.StatusForbidden)
 		return
 	}
 
 	if _, err := bbbAPI.PublishRecordings(recordid, publish); err != nil {
+		p.API.LogError(fmt.Sprintf("Error occurred toggling publish recording. Pubish: %s, meeting ID: %s, error: %s", publish, meetingpointer.MeetingID_, err.Error()))
 		http.Error(w, "Error: Recording not found", http.StatusForbidden)
 		return
 	}
 
 	post, appErr := p.API.GetPost(meetingpointer.PostId)
 	if appErr != nil {
+		p.API.LogError("Error: cannot find the post message for this recording. Error: " + appErr.Error())
 		http.Error(w, "Error: cannot find the post message for this recording \n"+appErr.Error(), appErr.StatusCode)
 		return
 	}
 
-	post.Props["is_published"] = publish
+	post.AddProp("is_published", publish)
+
+	originalAttachments := post.Attachments()
+	newAttachments := []*model.SlackAttachment{
+		{},
+	}
+
+	newAttachments = append(newAttachments, originalAttachments[1])
+
+	for i := range originalAttachments[0].Fields {
+		field := originalAttachments[0].Fields[i]
+
+		if field.Title != "Notes" && field.Title != "Recordings" {
+			newAttachments[0].Fields = append(newAttachments[0].Fields, field)
+		}
+	}
+
+	if publish == "true" {
+		post.Message += " #recording"
+		newAttachments[1].Actions[0].Name = "Make Recording Invisible"
+		newAttachments[1].Actions[0].Integration.Context["publish"] = "false"
+
+		if recordingURL := post.GetProp("recording_url"); recordingURL != nil {
+			newAttachments[0].Fields = append(newAttachments[0].Fields, &model.SlackAttachmentField{
+				Title: "Recordings",
+				Value: fmt.Sprintf("[Click to view recordings](%s)", recordingURL),
+				Short: false,
+			})
+		}
+
+		if notesURL := post.GetProp("notes_url"); notesURL != nil {
+			newAttachments[0].Fields = append(newAttachments[0].Fields, &model.SlackAttachmentField{
+				Title: "Notes",
+				Value: fmt.Sprintf("[Click to view notes](%s)", notesURL),
+				Short: false,
+			})
+		}
+	} else {
+		post.Message = strings.Replace(post.Message, "#recording", "", -1)
+		newAttachments[1].Actions[0].Name = "Make Recording Visible"
+		newAttachments[1].Actions[0].Integration.Context["publish"] = "true"
+	}
+
+	model.ParseSlackAttachment(post, newAttachments)
 
 	if _, err := p.API.UpdatePost(post); err != nil {
+		p.API.LogError("Failed to update post after updating recording publish status. Meeting ID: %s, post ID: %s, error: %s", meetingpointer.MeetingID_, post.Id, err.Error())
 		http.Error(w, err.Error(), err.StatusCode)
 		return
 	}
+
 	//update post props with new recording  status
+	w.WriteHeader(http.StatusOK)
+}
+
+func (p *Plugin) handleDeleteRecordingsConfirmation(w http.ResponseWriter, r *http.Request) {
+	body, _ := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+
+	var request *model.PostActionIntegrationRequest
+	if err := json.Unmarshal(body, &request); err != nil {
+		p.API.LogError("Error occurred unmarshalling handleDeleteRecordingsConfirmation request body. Error: " + err.Error())
+		w.Write([]byte("Error occurred unmarshalling handleDeleteRecordingsConfirmation request body"))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	rawContext, _ := json.Marshal(request.Context)
+
+	dialog := model.OpenDialogRequest{
+		TriggerId: request.TriggerId,
+		URL:       fmt.Sprintf("%s/plugins/bigbluebutton/deleterecordings", *p.API.GetConfig().ServiceSettings.SiteURL),
+		Dialog: model.Dialog{
+			CallbackId:       "bbbDeleteRecordingConfirmation",
+			Title:            "Confirm recording deletion.",
+			IntroductionText: "Once deleted, the recording will be gone forever.\nThis action is irreversible.",
+			State:            string(rawContext),
+			Elements: []model.DialogElement{
+				{
+					DisplayName: "Are you sure?",
+					Name:        "sure",
+					Type:        "radio",
+					Options: []*model.PostActionOptions{
+						{
+							Text:  "Yes",
+							Value: "yes",
+						},
+						{
+							Text:  "No",
+							Value: "no",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	if err := p.API.OpenInteractiveDialog(dialog); err != nil {
+		p.API.LogError("Error occurred opening delete recording confirmation modal. Error: " + err.Error())
+		w.Write([]byte("Error occurred opening delete recording confirmation modal"))
+		w.WriteHeader(http.StatusInsufficientStorage)
+		return
+	}
+
+	response := model.PostActionIntegrationResponse{
+		Update:           nil,
+		EphemeralText:    "",
+		SkipSlackParsing: false,
+	}
+
+	rawResponse, _ := json.Marshal(response)
+	w.Write(rawResponse)
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -479,16 +773,26 @@ func (p *Plugin) handleDeleteRecordings(w http.ResponseWriter, r *http.Request) 
 	body, _ := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
 
-	var request DeleteRecordingsRequestJSON
+	var request *model.SubmitDialogRequest
 	_ = json.Unmarshal(body, &request)
-	recordid := request.RecordId
 
-	if _, err := bbbAPI.DeleteRecordings(recordid); err != nil {
+	if request.Submission["sure"] != "yes" {
+		return
+	}
+
+	var state map[string]string
+	if err := json.Unmarshal([]byte(request.State), &state); err != nil {
+		p.API.LogError("Error occurred unmarshalling delete recording confirmation state. Error: " + err.Error())
+		return
+	}
+
+	recordID := state["record_id"]
+	if _, err := bbbAPI.DeleteRecordings(recordID); err != nil {
 		http.Error(w, "Error: Recording not found", http.StatusForbidden)
 		return
 	}
 
-	meetingID := request.MeetingId
+	meetingID := state["meeting_id"]
 	meetingpointer := p.FindMeeting(meetingID)
 	if meetingpointer == nil {
 		http.Error(w, "Error: Cannot find the meeting_id for the recording", http.StatusForbidden)
@@ -501,8 +805,21 @@ func (p *Plugin) handleDeleteRecordings(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	post.Props["is_deleted"] = "true"
-	post.Props["record_status"] = "Recording Deleted"
+	post.AddProp("is_deleted", "true")
+	post.AddProp("record_status", "Recording Deleted")
+
+	post.Message = strings.Replace(post.Message, "#recording", "", -1)
+	attachments := make([]*model.SlackAttachment, 1)
+	attachments[0] = &model.SlackAttachment{}
+
+	for _, field := range post.Attachments()[0].Fields {
+		if field.Title != "Notes" && field.Title != "Recordings" {
+			attachments[0].Fields = append(attachments[0].Fields, field)
+		}
+	}
+
+	model.ParseSlackAttachment(post, attachments)
+
 	if _, err := p.API.UpdatePost(post); err != nil {
 		http.Error(w, "Error: could not update post \n"+err.Error(), err.StatusCode)
 		return

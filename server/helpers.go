@@ -105,29 +105,82 @@ func (p *Plugin) FindMeeting(meetingId string) *dataStructs.MeetingRoom {
 }
 
 func (p *Plugin) createStartMeetingPost(userId string, channelId string, m *dataStructs.MeetingRoom) {
-
 	config := p.config()
 	// If config page is not set uh oh.
 	if err := config.IsValid(); err != nil {
 		return
 	}
 
-	textPost := &model.Post{UserId: userId, ChannelId: channelId,
-		Message: "#BigBlueButton #" + m.Name_ + " #ID" + m.MeetingID_, Type: "custom_bbb"}
-
-	textPost.Props = model.StringInterface{
-		"from_webhook":      "true",
-		"override_username": "BigBlueButton",
-		"override_icon_url": strings.TrimSuffix(*p.API.GetConfig().ServiceSettings.SiteURL, "/") + "/plugins/bigbluebutton/bbb.png",
-		"meeting_id":        m.MeetingID_,
-		"meeting_status":    "STARTED",
-		"meeting_personal":  false,
-		"meeting_topic":     m.Name_, // Fill in this meeting topic.
-		"meeting_desc":      m.Meta,
-		"user_count":        0,
+	post := &model.Post{
+		UserId:    userId,
+		ChannelId: channelId,
 	}
 
-	postpointer, _ := p.API.CreatePost(textPost)
+	user, appErr := p.API.GetUser(userId)
+	if appErr != nil {
+		p.API.LogError("Failed to fetch user id: " + userId)
+		return
+	}
+
+	post.AddProp("created_by", user.Id)
+
+	attachments := []*model.SlackAttachment{
+		{
+			Text: "Meeting created by @" + user.Username,
+			Fields: []*model.SlackAttachmentField{
+				{
+					Title: "Attendees",
+					Value: "*There are no attendees in this session*",
+					Short: false,
+				},
+				{
+					Title: "",
+					Value: "",
+					Short: false,
+				},
+			},
+			Actions: []*model.PostAction{
+				{
+					Id:    "bigBlueButtonJoinMeeting",
+					Type:  "button",
+					Name:  "Join Meeting",
+					Style: "primary",
+					Integration: &model.PostActionIntegration{
+						URL: "/plugins/bigbluebutton/joinmeeting",
+						Context: map[string]interface{}{
+							"meetingId": m.MeetingID_,
+						},
+					},
+				},
+				{
+					Id:    "bigBlueButtonEndMeeting",
+					Type:  "button",
+					Name:  "End Meeting",
+					Style: "danger",
+					Integration: &model.PostActionIntegration{
+						URL: "/plugins/bigbluebutton/endmeeting",
+						Context: map[string]interface{}{
+							"meetingId": m.MeetingID_,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	model.ParseSlackAttachment(post, attachments)
+
+	post.AddProp("from_webhook", true)
+	post.AddProp("override_username", "BigBlueButton")
+	post.AddProp("override_icon_url", "strings.TrimSuffix(*p.API.GetConfig().ServiceSettings.SiteURL, \"/\") + \"/plugins/bigbluebutton/bbb.png\",")
+	post.AddProp("meeting_id", m.MeetingID_)
+	post.AddProp("meeting_status", "started")
+	post.AddProp("meeting_personal", false)
+	post.AddProp("meeting_topic", m.Name_)
+	post.AddProp("meeting_desc", m.Meta)
+	post.AddProp("user_count", 0)
+
+	postpointer, _ := p.API.CreatePost(post)
 	m.PostId = postpointer.Id
 }
 
