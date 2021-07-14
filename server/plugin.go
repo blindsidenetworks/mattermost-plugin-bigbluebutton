@@ -122,7 +122,7 @@ func (p *Plugin) schedule() error {
 func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*model.CommandResponse, *model.AppError) {
 	meetingpointer := new(dataStructs.MeetingRoom)
 
-	if err := p.PopulateMeeting(meetingpointer, nil, "", args.ChannelId); err != nil {
+	if err := p.PopulateMeeting(meetingpointer, nil, "", args.UserId, args.ChannelId); err != nil {
 		return nil, model.NewAppError("ExecuteCommand", "Please provide a 'Site URL' in Settings > General > Configuration", nil, err.Error(), http.StatusInternalServerError)
 	}
 

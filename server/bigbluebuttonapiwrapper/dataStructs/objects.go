@@ -93,6 +93,8 @@ type MeetingRoom struct {
 	Meta_bbb_origin_version     string
 	Meta_bbb_origin_server_name string
 
+	Meta_dc_creator	string
+
 	CreateMeetingResponse CreateMeetingResponse
 	MeetingInfo           GetMeetingInfoResponse
 }
