@@ -341,7 +341,7 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 		p.API.SendEphemeralPost(request.UserId, &model.Post{
 			ChannelId: request.ChannelId,
 			Type:      model.POST_EPHEMERAL,
-			Message:   fmt.Sprintf("Join the BBB meeting [here](%s)", joinURL),
+			Message:   fmt.Sprintf("[Join the BBB meeting here](%s)", joinURL),
 		})
 
 		w.Header().Set("Content-Type", "application/json")
@@ -672,6 +672,7 @@ func (p *Plugin) handlePublishRecordings(w http.ResponseWriter, r *http.Request)
 	}
 
 	if publish == "true" {
+		post.Message += " #recording"
 		newAttachments[1].Actions[0].Name = "Make Recording Invisible"
 		newAttachments[1].Actions[0].Integration.Context["publish"] = "false"
 
@@ -691,6 +692,7 @@ func (p *Plugin) handlePublishRecordings(w http.ResponseWriter, r *http.Request)
 			})
 		}
 	} else {
+		post.Message = strings.Replace(post.Message, "#recording", "", -1)
 		newAttachments[1].Actions[0].Name = "Make Recording Visible"
 		newAttachments[1].Actions[0].Integration.Context["publish"] = "true"
 	}
