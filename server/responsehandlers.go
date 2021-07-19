@@ -133,7 +133,7 @@ func (p *Plugin) Loopthroughrecordings() {
 										Id:    "toggleRecordingVisibility",
 										Type:  "button",
 										Name:  "Make Recording Invisible",
-										Style: "secondary",
+										Style: "primary",
 										Integration: &model.PostActionIntegration{
 											URL: "/plugins/bigbluebutton/publishrecordings",
 											Context: map[string]interface{}{
@@ -186,9 +186,9 @@ func (p *Plugin) handleCreateMeeting(w http.ResponseWriter, r *http.Request) {
 	meetingpointer := new(dataStructs.MeetingRoom)
 	var err error
 	if request.Topic == "" {
-		err = p.PopulateMeeting(meetingpointer, nil, request.Desc, request.ChannelId)
+		err = p.PopulateMeeting(meetingpointer, nil, request.Desc, request.UserId, request.ChannelId)
 	} else {
-		err = p.PopulateMeeting(meetingpointer, []string{"create", request.Topic}, request.Desc, request.ChannelId)
+		err = p.PopulateMeeting(meetingpointer, []string{"create", request.Topic}, request.Desc, request.UserId, request.ChannelId)
 	}
 
 	if err != nil {
@@ -341,7 +341,7 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 		p.API.SendEphemeralPost(request.UserId, &model.Post{
 			ChannelId: request.ChannelId,
 			Type:      model.POST_EPHEMERAL,
-			Message:   fmt.Sprintf("[Join the BBB meeting here](%s)", joinURL),
+			Message:   fmt.Sprintf("Join the BBB meeting [here](%s)", joinURL),
 		})
 
 		w.Header().Set("Content-Type", "application/json")
