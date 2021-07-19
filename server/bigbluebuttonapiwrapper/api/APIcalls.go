@@ -72,11 +72,11 @@ func CreateMeeting(meetingRoom *dataStructs.MeetingRoom) (string, error) {
 		url.QueryEscape(strconv.FormatBool(meetingRoom.AllowStartStopRecording))
 	moderatorOnlyMessage := "&moderatorOnlyMessage=" +
 		url.QueryEscape(meetingRoom.ModeratorOnlyMessage)
-	metaBnRecordingReadyUrl := "&meta_bn-recording-ready-url=" +
-		url.QueryEscape(meetingRoom.Meta_bn_recording_ready_url)
+	metaBBBRecordingReadyURL := "&meta_bbb-recording-ready-url=" +
+		url.QueryEscape(meetingRoom.Meta_bn_recording_ready_url)  # TODO: Fix name in Meetingroom struct
 	metaChannelId := "&meta_channelid=" +
 		url.QueryEscape(meetingRoom.Meta_channelid)
-	metaEndcallback := "&meta_endcallbackurl=" +
+	metaEndCallbackURL := "&meta_endCallbackUrl=" +
 		url.QueryEscape(meetingRoom.Meta_endcallbackurl)
 	voiceBridge := "&voiceBridge=" + url.QueryEscape(meetingRoom.VoiceBridge)
 
@@ -87,8 +87,8 @@ func CreateMeeting(meetingRoom *dataStructs.MeetingRoom) (string, error) {
 	metaDC := "&meta_dc-creator=" + url.QueryEscape(meetingRoom.Meta_dc_creator)
 
 	createParam := name + meetingID + attendeePW + moderatorPW + welcome + dialNumber +
-		voiceBridge + logoutURL + record + duration + moderatorOnlyMessage + metaBnRecordingReadyUrl + metaChannelId +
-		metaEndcallback + allowStartStopRecording + metaBBBOrigin + metaDC
+		voiceBridge + logoutURL + record + duration + moderatorOnlyMessage + metaBBBRecordingReadyURL +
+		metaChannelId + metaEndCallbackURL + allowStartStopRecording + metaBBBOrigin + metaDC
 
 	checksum := helpers.GetChecksum("create" + createParam + secret)
 
