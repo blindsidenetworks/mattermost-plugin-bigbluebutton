@@ -85,9 +85,9 @@ type MeetingRoom struct {
 	LoopCount               int
 	ValidToken              string
 
-	Meta_bn_recording_ready_url string //this needs to be properly url encoded
-	Meta_channelid              string
-	Meta_endcallbackurl         string
+	Meta_bbb_recording_ready_url string //this needs to be properly url encoded
+	Meta_channelid               string
+	Meta_endcallbackurl          string
 
 	Meta_bbb_origin             string
 	Meta_bbb_origin_version     string

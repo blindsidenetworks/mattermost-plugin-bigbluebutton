@@ -73,7 +73,7 @@ func CreateMeeting(meetingRoom *dataStructs.MeetingRoom) (string, error) {
 	moderatorOnlyMessage := "&moderatorOnlyMessage=" +
 		url.QueryEscape(meetingRoom.ModeratorOnlyMessage)
 	metaBBBRecordingReadyURL := "&meta_bbb-recording-ready-url=" +
-		url.QueryEscape(meetingRoom.Meta_bn_recording_ready_url)  # TODO: Fix name in Meetingroom struct
+		url.QueryEscape(meetingRoom.Meta_bbb_recording_ready_url)
 	metaChannelId := "&meta_channelid=" +
 		url.QueryEscape(meetingRoom.Meta_channelid)
 	metaEndCallbackURL := "&meta_endCallbackUrl=" +

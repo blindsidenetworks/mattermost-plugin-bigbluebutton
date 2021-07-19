@@ -77,7 +77,7 @@ func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, d
 	Url, _ = url.Parse(callbackURL)
 	Url.Path += "/plugins/bigbluebutton/recordingready"
 	recordingcallbackurl = Url.String()
-	m.Meta_bn_recording_ready_url = recordingcallbackurl
+	m.Meta_bbb_recording_ready_url = recordingcallbackurl
 
 	m.Meta_channelid = channelId
 
