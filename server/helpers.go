@@ -38,7 +38,7 @@ const (
 	prefixMeetingList = "m_list_"
 )
 
-func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, description string, channelId string) error {
+func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, description string, UserId string, channelId string) error {
 	if len(details) == 2 {
 		m.Name_ = details[1]
 	} else {
@@ -94,6 +94,12 @@ func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, d
 	} else {
 		return errors.New("SiteURL not set")
 	}
+
+	user, err := p.API.GetUser(UserId)
+	if err != nil {
+		return errors.New("Error resolving UserId")
+	}
+	m.Meta_dc_creator = user.Email
 
 	return nil
 }

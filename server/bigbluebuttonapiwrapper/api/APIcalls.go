@@ -84,9 +84,11 @@ func CreateMeeting(meetingRoom *dataStructs.MeetingRoom) (string, error) {
 		"&meta_bbb-origin-version=" + url.QueryEscape(meetingRoom.Meta_bbb_origin_version) +
 		"&meta_bbb-origin-server-name=" + url.QueryEscape(meetingRoom.Meta_bbb_origin_server_name)
 
+	metaDC := "&meta_dc-creator=" + url.QueryEscape(meetingRoom.Meta_dc_creator)
+
 	createParam := name + meetingID + attendeePW + moderatorPW + welcome + dialNumber +
 		voiceBridge + logoutURL + record + duration + moderatorOnlyMessage + metaBnRecordingReadyUrl + metaChannelId +
-		metaEndcallback + allowStartStopRecording + metaBBBOrigin
+		metaEndcallback + allowStartStopRecording + metaBBBOrigin + metaDC
 
 	checksum := helpers.GetChecksum("create" + createParam + secret)
 
