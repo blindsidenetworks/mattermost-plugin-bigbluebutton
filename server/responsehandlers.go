@@ -731,6 +731,7 @@ func (p *Plugin) handleDeleteRecordingsConfirmation(w http.ResponseWriter, r *ht
 			Title:            "Confirm recording deletion.",
 			IntroductionText: "Once deleted, the recording will be gone forever.\nThis action is irreversible.",
 			State:            string(rawContext),
+			SubmitLabel:      "Submit",
 			Elements: []model.DialogElement{
 				{
 					DisplayName: "Are you sure?",
