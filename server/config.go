@@ -26,6 +26,7 @@ type Configuration struct {
 	Secret            string `json:"SALT"`
 	AdminOnly         bool   `json:"ADMINONLY"`
 	ProcessRecordings bool   `json:"PROCESS_RECORDINGS"`
+	AllowRecordings   bool   `json:"ALLOW_RECORDINGS"`
 }
 
 func (p *Plugin) OnConfigurationChange() error {

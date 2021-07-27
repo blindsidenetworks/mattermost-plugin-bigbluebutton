@@ -42,6 +42,13 @@
         "type": "bool",
         "default": true,
         "help_text": "Enable or disable processing BigBlueButton recordings. If set to false, the BigBlueButton meeting recordings will not be fetched into Mattermost. You can continue using all other features of the plugin as usual."
+      },
+      {
+        "key": "ALLOW_RECORDINGS",
+        "display_name": "Allow Recording Meetings",
+        "type": "bool",
+        "default": true,
+        "help_text": "Allows or disallows recording of meetings in BigBlueButton. If set to false, the record meeting option in BigBlueButton will be disabled and users won't be able to record their meetings."
       }
     ],
     "footer": "All form fields must be filled or the plugin will fail to work. Deactivate and reactivate your plugin when changing to a configuration value. Don't worry, no data will be lost"
