@@ -61,7 +61,7 @@ func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, d
 	m.AttendeePW_ = "ap"
 	m.ModeratorPW_ = "mp"
 	m.Record = "true"
-	m.AllowStartStopRecording = true
+	m.AllowStartStopRecording = p.config().AllowRecordings
 	m.AutoStartRecording = false
 	m.Meta = description
 	var RedirectUrl *url.URL
