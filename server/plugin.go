@@ -17,6 +17,7 @@ limitations under the License.
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/helpers"
 	"github.com/mattermost/mattermost-plugin-api/cluster"
@@ -170,6 +171,17 @@ func (p *Plugin) ServeHTTP(c *plugin.Context, w http.ResponseWriter, r *http.Req
 		// html file to automatically close a window
 		// nolint:staticcheck
 		_, _ = fmt.Fprintf(w, closeWindowScript)
+	} else if path == "/test" {
+		post, appErr := p.API.GetPost("zk8izxf7btfrbji7ec8edkh4zw")
+		if appErr != nil {
+			p.API.LogError(appErr.Error())
+			http.Error(w, appErr.Error(), appErr.StatusCode)
+			return
+		}
+
+		data, _ := json.Marshal(post)
+		w.Write(data)
+		w.WriteHeader(http.StatusOK)
 	} else {
 		p.handler.ServeHTTP(w, r)
 	}

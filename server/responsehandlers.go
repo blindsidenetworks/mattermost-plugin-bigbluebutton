@@ -209,7 +209,6 @@ func (p *Plugin) handleCreateMeeting(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
-
 	body, _ := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
 

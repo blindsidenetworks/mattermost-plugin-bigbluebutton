@@ -144,6 +144,11 @@ func (p *Plugin) createStartMeetingPost(userId string, channelId string, m *data
 					Value: "",
 					Short: false,
 				},
+				{
+					Title: "Sharable Link",
+					Value: fmt.Sprintf("%s/plugins/bigbluebutton?%s", *p.API.GetConfig().ServiceSettings.SiteURL, m.MeetingID_),
+					Short: true,
+				},
 			},
 			Actions: []*model.PostAction{
 				{
