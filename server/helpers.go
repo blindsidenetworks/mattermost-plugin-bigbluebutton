@@ -23,6 +23,7 @@ import (
 	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/helpers"
 	"github.com/mattermost/mattermost-server/v5/utils"
 	"net/url"
+	"strconv"
 	"strings"
 
 	bbbAPI "github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/api"
@@ -60,7 +61,7 @@ func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, d
 	m.MeetingID_ = GenerateRandomID()
 	m.AttendeePW_ = "ap"
 	m.ModeratorPW_ = "mp"
-	m.Record = "true"
+	m.Record = strconv.FormatBool(p.config().AllowRecordings)
 	m.AllowStartStopRecording = p.config().AllowRecordings
 	m.AutoStartRecording = false
 	m.Meta = description
