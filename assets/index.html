@@ -1,0 +1,166 @@
+<html>
+<head>
+    <!--  CSS Reset  -->
+    <style>
+        /* http://meyerweb.com/eric/tools/css/reset/
+   v2.0 | 20110126
+   License: none (public domain)
+*/
+
+        html, body, div, span, applet, object, iframe,
+        h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+        a, abbr, acronym, address, big, cite, code,
+        del, dfn, em, img, ins, kbd, q, s, samp,
+        small, strike, strong, sub, sup, tt, var,
+        b, u, i, center,
+        dl, dt, dd, ol, ul, li,
+        fieldset, form, label, legend,
+        table, caption, tbody, tfoot, thead, tr, th, td,
+        article, aside, canvas, details, embed,
+        figure, figcaption, footer, header, hgroup,
+        menu, nav, output, ruby, section, summary,
+        time, mark, audio, video {
+            margin: 0;
+            padding: 0;
+            border: 0;
+            font-size: 100%;
+            font: inherit;
+            vertical-align: baseline;
+        }
+
+        /* HTML5 display-role reset for older browsers */
+        article, aside, details, figcaption, figure,
+        footer, header, hgroup, menu, nav, section {
+            display: block;
+        }
+
+        body {
+            line-height: 1;
+        }
+
+        ol, ul {
+            list-style: none;
+        }
+
+        blockquote, q {
+            quotes: none;
+        }
+
+        blockquote:before, blockquote:after,
+        q:before, q:after {
+            content: '';
+            content: none;
+        }
+
+        table {
+            border-collapse: collapse;
+            border-spacing: 0;
+        }
+    </style>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --main-text-color: #4e5a66;
+            --blue: #0f70d7;
+        }
+
+        body, input, label {
+            font-family: 'Source Sans Pro', sans-serif;
+            color: #757575;
+        }
+
+        .joinPanel {
+            box-shadow: 10px 10px 54px rgba(0, 0, 0, 0.25);
+            width: 400px;
+            margin: 0 auto;
+            padding: 38px;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 37px;
+            margin-top: 10%;
+        }
+
+        .logo > img{
+            margin: 0 auto;
+            display: block;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+        }
+
+        .fieldRow {
+            display: flex;
+            gap: 8px
+        }
+
+        .name {
+            flex-direction: column;
+        }
+
+        input {
+            border: 1px solid #C7C7C7;
+            border-radius: 8px;
+            font-size: 16px;
+            padding: 12px;
+        }
+
+        label[for="name"] {
+            font-weight: lighter;
+            font-size: 14px;
+        }
+
+        label[for="rememberName"] {
+            font-weight: lighter;
+        }
+
+        button {
+            background-color: #1460AA;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+            width: 70%;
+            margin: 0 auto;
+            padding: 14px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .submit {
+            margin-top: 38px;
+        }
+
+        @media only screen and (max-width: 1000px) {
+            .joinPanel {
+                width: 70%;
+            }
+        }
+    </style>
+</head>
+<div class="joinPanel">
+    <div class="logo">
+        <img src="bbb.svg" alt="Big Blue Button Logo"/>
+    </div>
+    <form>
+        <div class="fieldRow name">
+            <label for="name">Name</label>
+            <input id="name" name="name" placeholder="Enter your name"/>
+        </div>
+        <div class="fieldRow rememberName">
+            <input type="checkbox" id="rememberName" name="rememberName"/>
+            <label for="rememberName">Remember my name for future meetings</label>
+        </div>
+        <div class="fieldRow submit">
+            <button type="submit">Join Meeting</button>
+        </div>
+    </form>
+</div>
+</html>
