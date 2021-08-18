@@ -148,6 +148,8 @@ func (p *Plugin) ServeHTTP(c *plugin.Context, w http.ResponseWriter, r *http.Req
 	path := r.URL.Path
 	if path == "/joinmeeting" {
 		p.handleJoinMeeting(w, r)
+	} else if path == "/joinmeeting/external" {
+		p.handleJoinMeetingExternalUser(w, r)
 	} else if strings.HasPrefix(path, "/endmeeting") {
 		p.handleEndMeeting(w, r)
 	} else if path == "/create" {

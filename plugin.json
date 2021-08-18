@@ -49,6 +49,13 @@
         "type": "bool",
         "default": true,
         "help_text": "Allows or disallows recording of meetings in BigBlueButton. If set to false, the record meeting option in BigBlueButton will be disabled and users won't be able to record their meetings."
+      },
+      {
+        "key": "ALLOW_EXTERNAL_USERS",
+        "display_name": "Allow External Users to Join Meetings",
+        "type": "bool",
+        "default": false,
+        "help_text": "When enabled, a sharable link is available for each meeting. This link can be shared with any external users, allowing them to join the meeting."
       }
     ],
     "footer": "All form fields must be filled or the plugin will fail to work. Deactivate and reactivate your plugin when changing to a configuration value. Don't worry, no data will be lost"

@@ -22,11 +22,12 @@ import (
 )
 
 type Configuration struct {
-	BaseURL           string `json:"BASE_URL"`
-	Secret            string `json:"SALT"`
-	AdminOnly         bool   `json:"ADMINONLY"`
-	ProcessRecordings bool   `json:"PROCESS_RECORDINGS"`
-	AllowRecordings   bool   `json:"ALLOW_RECORDINGS"`
+	BaseURL            string `json:"BASE_URL"`
+	Secret             string `json:"SALT"`
+	AdminOnly          bool   `json:"ADMINONLY"`
+	ProcessRecordings  bool   `json:"PROCESS_RECORDINGS"`
+	AllowRecordings    bool   `json:"ALLOW_RECORDINGS"`
+	AllowExternalUsers bool   `json:"ALLOW_EXTERNAL_USERS"`
 }
 
 func (p *Plugin) OnConfigurationChange() error {
