@@ -87,7 +87,7 @@ func (p *Plugin) OnActivate() error {
 		return err
 	}
 
-	// register slash command '/bbb' to create a meeting
+	//register slash command '/bbb' to create a meeting
 	return p.API.RegisterCommand(&model.Command{
 		Trigger:          "bbb",
 		AutoComplete:     true,

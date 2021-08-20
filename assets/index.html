@@ -75,7 +75,7 @@
 
         .joinPanel {
             box-shadow: 10px 10px 54px rgba(0, 0, 0, 0.25);
-            width: 380px;
+            width: 340px;
             margin: 0 auto;
             padding: 38px;
             border-radius: 10px;
@@ -193,7 +193,7 @@
 </head>
 <div class="joinPanel">
     <div class="logo">
-        <img src="bbb.svg" alt="Big Blue Button Logo"/>
+        <img src="/plugins/bigbluebutton/bbb.svg" alt="Big Blue Button Logo"/>
     </div>
     <form>
         <div class="fieldRow name">
@@ -213,7 +213,9 @@
         const storageNameKey = 'name';
 
         function getMeetingID() {
-
+            const urlSearchParams = new URLSearchParams(window.location.search);
+            const params = Object.fromEntries(urlSearchParams.entries());
+            return params.id;
         }
 
         function disableForm() {
@@ -247,22 +249,21 @@
                 }
 
                 disableForm();
+                const response = await fetch('/plugins/bigbluebutton/joinmeeting/external', {
+                    method: 'POST',
+                    cache: 'no-cache',
+                    credentials: 'include',
+                    mode: 'cors',
+                    body: JSON.stringify(body),
+                })
 
-                // const response = await fetch('http://localhost:3000/joinMeeting', {
-                //     method: 'POST',
-                //     cache: 'no-cache',
-                //     credentials: 'include',
-                //     mode: 'cors',
-                //     body: JSON.stringify(body),
-                // })
-
-                const response = {
-                    joinURL: "https://amazon.com"
-                }
+                const responseBody = await response.json()
+                console.log(responseBody);
 
                 console.log(response);
-
-                window.location.href = response.joinURL;
+                if (response.status === 200) {
+                    window.location.href = responseBody.joinURL;
+                }
             }
         });
     </script>

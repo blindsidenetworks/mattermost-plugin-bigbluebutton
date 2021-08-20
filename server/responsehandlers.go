@@ -431,7 +431,7 @@ func (p *Plugin) handleJoinMeetingExternalUser(w http.ResponseWriter, r *http.Re
 	Length, attendantsarray := GetAttendees(meetingID, meetingpointer.ModeratorPW_)
 	// we immediately add our current attendee thats trying to join the meeting
 	// to avoid the delay
-	attendantsarray = append(attendantsarray, username)
+	attendantsarray = append(attendantsarray, fmt.Sprintf("%s (**External**)", username))
 	post.AddProp("user_count", Length+1)
 
 	slackAttachments := post.Attachments()
@@ -455,7 +455,7 @@ func (p *Plugin) handleJoinMeetingExternalUser(w http.ResponseWriter, r *http.Re
 
 	post.AddProp("attendees", strings.Join(uniqueAttendeesList, ","))
 	slackAttachments[0].Fields[0].Title = fmt.Sprintf("Attendees (%d)", len(uniqueAttendeesList))
-	slackAttachments[0].Fields[0].Value = "@" + strings.Join(uniqueAttendeesList, ", @")
+	slackAttachments[0].Fields[0].Value = strings.Join(uniqueAttendeesList, ", @")
 	model.ParseSlackAttachment(post, slackAttachments)
 
 	if _, err := p.API.UpdatePost(post); err != nil {
