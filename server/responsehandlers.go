@@ -209,7 +209,6 @@ func (p *Plugin) handleCreateMeeting(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
-
 	body, _ := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
 
@@ -347,6 +346,130 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write(userJson)
 	}
+}
+
+func (p *Plugin) handleJoinMeetingExternalUser(w http.ResponseWriter, r *http.Request) {
+	if !p.config().AllowExternalUsers {
+		http.Error(w, "", http.StatusNotFound)
+		return
+	}
+
+	body, _ := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+
+	var request map[string]string
+	if err := json.Unmarshal(body, &request); err != nil {
+		p.API.LogError("Error occurred unmarshalling join meeting request body. Error: " + err.Error())
+		return
+	}
+
+	meetingID := request["meetingId"]
+
+	meetingpointer := p.FindMeeting(meetingID)
+
+	if meetingpointer == nil {
+		myresp := ButtonResponseJSON{
+			Url: "error",
+		}
+		userJson, _ := json.Marshal(myresp)
+		_, _ = w.Write(userJson)
+		return
+	}
+
+	//check if meeting has actually been created and can be joined
+	if !meetingpointer.Created {
+		if _, err := bbbAPI.CreateMeeting(meetingpointer); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		meetingpointer.Created = true
+		var fullMeetingInfo dataStructs.GetMeetingInfoResponse
+
+		// this is used to get the InternalMeetingID
+		if _, err := bbbAPI.GetMeetingInfo(meetingID, meetingpointer.ModeratorPW_, &fullMeetingInfo); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		meetingpointer.InternalMeetingId = fullMeetingInfo.InternalMeetingID
+		meetingpointer.CreatedAt = time.Now().Unix()
+	}
+
+	username := request["name"]
+
+	//golang doesnt have sets so have to iterate through array to check if meeting participant is already in meeeting
+	if !IsItemInArray(username, meetingpointer.AttendeeNames) {
+		meetingpointer.AttendeeNames = append(meetingpointer.AttendeeNames, username)
+	}
+
+	if err := p.SaveMeeting(meetingpointer); err != nil {
+		p.API.LogError("Error occurred updating meeting info in handleJoinMeeting. Error: " + err.Error())
+	}
+
+	var participant = dataStructs.Participants{} //set participant as an empty struct of type Participants
+	participant.FullName_ = username
+	if len(participant.FullName_) == 0 {
+		participant.FullName_ = username
+	}
+
+	participant.MeetingID_ = meetingID
+
+	post, appErr := p.API.GetPost(meetingpointer.PostId)
+	if appErr != nil {
+		http.Error(w, appErr.Error(), appErr.StatusCode)
+		return
+	}
+	participant.Password_ = meetingpointer.AttendeePW_
+	joinURL, err := bbbAPI.GetJoinURL(&participant)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	Length, attendantsarray := GetAttendees(meetingID, meetingpointer.ModeratorPW_)
+	// we immediately add our current attendee thats trying to join the meeting
+	// to avoid the delay
+	attendantsarray = append(attendantsarray, fmt.Sprintf("%s (**External**)", username))
+	post.AddProp("user_count", Length+1)
+
+	slackAttachments := post.Attachments()
+
+	uniqueAttendees := map[string]bool{}
+	for _, user := range attendantsarray {
+		uniqueAttendees[user] = true
+	}
+
+	if slackAttachments[0].Fields[0].Value != "*There are no attendees in this session*" {
+		for _, user := range strings.Split(slackAttachments[0].Fields[0].Value.(string), ", ") {
+			username := strings.TrimLeft(user, "@")
+			uniqueAttendees[username] = true
+		}
+	}
+
+	uniqueAttendeesList := []string{}
+	for user := range uniqueAttendees {
+		uniqueAttendeesList = append(uniqueAttendeesList, user)
+	}
+
+	post.AddProp("attendees", strings.Join(uniqueAttendeesList, ","))
+	slackAttachments[0].Fields[0].Title = fmt.Sprintf("Attendees (%d)", len(uniqueAttendeesList))
+	slackAttachments[0].Fields[0].Value = strings.Join(uniqueAttendeesList, ", @")
+	model.ParseSlackAttachment(post, slackAttachments)
+
+	if _, err := p.API.UpdatePost(post); err != nil {
+		p.API.LogError("Error occurred updating meeting post during user joining it. Error: " + err.Error())
+		http.Error(w, err.Error(), err.StatusCode)
+		return
+	}
+
+	response := map[string]string{
+		"joinURL": joinURL,
+	}
+	responseData, _ := json.Marshal(response)
+
+	w.Header().Set("Content-Type", "application/json")
+	_, _ = w.Write(responseData)
 }
 
 //this method is responsible for updating meeting has ended inside mattermost when

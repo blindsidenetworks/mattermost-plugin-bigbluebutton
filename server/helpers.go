@@ -111,11 +111,11 @@ func (p *Plugin) FindMeeting(meetingId string) *dataStructs.MeetingRoom {
 	return meeting
 }
 
-func (p *Plugin) createStartMeetingPost(userId string, channelId string, m *dataStructs.MeetingRoom) {
+func (p *Plugin) createStartMeetingPost(userId string, channelId string, m *dataStructs.MeetingRoom) error {
 	config := p.config()
 	// If config page is not set uh oh.
 	if err := config.IsValid(); err != nil {
-		return
+		return err
 	}
 
 	post := &model.Post{
@@ -126,14 +126,19 @@ func (p *Plugin) createStartMeetingPost(userId string, channelId string, m *data
 	user, appErr := p.API.GetUser(userId)
 	if appErr != nil {
 		p.API.LogError("Failed to fetch user id: " + userId)
-		return
+		return errors.New(appErr.Error())
 	}
 
 	post.AddProp("created_by", user.Id)
 
+	titlePrefix := ""
+	if p.config().AllowExternalUsers {
+		titlePrefix = ":warning: **External Users Allowed**\n\n"
+	}
+
 	attachments := []*model.SlackAttachment{
 		{
-			Text: "Meeting created by @" + user.Username,
+			Text: titlePrefix + "Meeting created by @" + user.Username,
 			Fields: []*model.SlackAttachmentField{
 				{
 					Title: "Attendees",
@@ -175,6 +180,16 @@ func (p *Plugin) createStartMeetingPost(userId string, channelId string, m *data
 		},
 	}
 
+	if p.config().AllowExternalUsers {
+		attachments[0].Fields = append(attachments[0].Fields,
+			&model.SlackAttachmentField{
+				Title: "Share URL",
+				Value: fmt.Sprintf("%s/plugins/bigbluebutton/?id=%s", *p.API.GetConfig().ServiceSettings.SiteURL, m.MeetingID_),
+				Short: false,
+			},
+		)
+	}
+
 	model.ParseSlackAttachment(post, attachments)
 
 	post.AddProp("from_webhook", true)
@@ -187,8 +202,13 @@ func (p *Plugin) createStartMeetingPost(userId string, channelId string, m *data
 	post.AddProp("meeting_desc", m.Meta)
 	post.AddProp("user_count", 0)
 
-	postpointer, _ := p.API.CreatePost(post)
+	postpointer, appErr := p.API.CreatePost(post)
+	if appErr != nil {
+		p.API.LogError("Error creating meeting post.", "channelID", channelId, "userID", userId, "error", appErr.Error())
+		return errors.New(appErr.Error())
+	}
 	m.PostId = postpointer.Id
+	return nil
 }
 
 func (p *Plugin) DeleteMeeting(meetingId string) {
