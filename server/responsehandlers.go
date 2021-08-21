@@ -363,7 +363,6 @@ func (p *Plugin) handleJoinMeetingExternalUser(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	// lol
 	meetingID := request["meetingId"]
 
 	meetingpointer := p.FindMeeting(meetingID)
