@@ -19,7 +19,7 @@ import PopoverListMembersItem from './popover_list_members_item.jsx';
 import PropTypes from 'prop-types';
 import {makeStyleFromTheme, changeOpacity} from 'mattermost-redux/utils/theme_utils';
 import {viewChannel, getChannelStats} from 'mattermost-redux/actions/channels';
-import {isDirectChannel} from 'mattermost-redux/utils/channel_utils';
+import {completeDirectChannelDisplayName, isDirectChannel} from 'mattermost-redux/utils/channel_utils';
 const {Tooltip,Popover, OverlayTrigger, Modal,Overlay} = window.ReactBootstrap
 import {Client4} from 'mattermost-redux/client';
 import {getUser} from 'mattermost-redux/selectors/entities/users';
@@ -192,28 +192,61 @@ export default class Root extends React.PureComponent {
       channelName = channel.display_name;
     }
 
+    const directMessageListItem = (
+        <PopoverListMembersItem
+            ariaLabel={'Call ' + channelName}
+            onItemClick={this.startMeeting}
+            icon={'BBBCAM'}
+            text={
+              <span>{'Call '}<strong>{channelName}</strong></span>
+            }
+            theme={this.props.theme}
+        />
+    )
+
+    const channelListItem = (
+        <React.Fragment>
+          <PopoverListMembersItem
+              ariaLabel={'Create a BigBlueButton Meeting'}
+              onItemClick={this.startMeeting}
+              icon={'ALLOW_RECORDING'}
+              text={
+                <React.Fragment>
+                  <span> {'Start New Meeting'}</span>
+                  <br/>
+                  <span> {'Allow Recording'}</span>
+                </React.Fragment>
+              }
+              theme={this.props.theme}
+          />
+
+          <PopoverListMembersItem
+              ariaLabel={'Create a BigBlueButton Meeting'}
+              onItemClick={this.startMeeting}
+              icon={'DONT_ALLOW_RECORDING'}
+              text={
+                <React.Fragment>
+                  <span> {'Start New Meeting'}</span>
+                  <br/>
+                  <span> {'No Recording'}</span>
+                </React.Fragment>
+              }
+              theme={this.props.theme}
+          />
+        </React.Fragment>
+    )
+
 
     return (
       <div>
       { !ownChannel && //shows popup when not on own channel
       <Overlay rootClose={true} show={this.props.visible}  onHide={this.close_the_popover} placement='bottom'>
-        <Popover id='bbbPopover' style={this.props.channel.type === "D"
-            ? style.popoverDM
-            : style.popover}>
-          <div style={this.props.channel.type === "D"
-              ? style.popoverBodyDM
-              : style.popoverBody}>
+        <Popover
+            id='bbbPopover'
+            style={this.props.channel.type === "D" ? style.popoverDM : style.popover}>
+          <div style={this.props.channel.type === "D" ? style.popoverBodyDM: style.popoverBody}>
             {
-              this.props.channel.type === "D"
-                ? <PopoverListMembersItem ariaLabel={'Call ' + channelName} onItemClick={this.startMeeting} cam={1} text={<span> {
-                      'Call '
-                    }
-                    <strong>{channelName}</strong>
-                  </span>} theme={this.props.theme}/>
-                : <PopoverListMembersItem ariaLabel={'Create a BigBlueButton Meeting'} onItemClick={this.startMeeting} cam={1} text={<span> {
-                      'Create a BigBlueButton Meeting'
-                    }
-                    </span>} theme={this.props.theme}/>
+              this.props.channel.type === "D" ? directMessageListItem : channelListItem
             }
           </div>
           {popoverButton}
@@ -267,9 +300,12 @@ var getStyle = makeStyleFromTheme((theme) => {
       marginLeft: x_pos,
       marginTop: "50px",
       maxWidth: '300px',
-      height: '105px',
+      // height: '105px',
       width: '300px',
-      background: theme.centerChannelBg
+      background: theme.centerChannelBg,
+      borderRadius: '12px',
+      overflow: 'hidden',
+      paddingTop: '12px',
     },
     popoverDM: {
       marginLeft: x_pos,
