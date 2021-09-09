@@ -29,7 +29,6 @@ import * as UserUtils from 'mattermost-redux/utils/user_utils';
 
 export default class Root extends React.PureComponent {
   static propTypes = {
-
     cur_user: PropTypes.object.isRequired,
     state: PropTypes.object.isRequired,
     teamname: PropTypes.string.isRequired,
@@ -38,15 +37,16 @@ export default class Root extends React.PureComponent {
     theme: PropTypes.object.isRequired,
     channelName: PropTypes.string.isRequired,
     channel: PropTypes.object.isRequired,
-    actions: PropTypes.shape({getJoinURL: PropTypes.func.isRequired,
+    pluginConfig: PropTypes.object.isRequired,
+    actions: PropTypes.shape({
+      getJoinURL: PropTypes.func.isRequired,
       channelId: PropTypes.string.isRequired,
       directChannels: PropTypes.array.isRequired,
       teamId: PropTypes.string.isRequired,
       visible: PropTypes.bool.isRequired,
       actions: PropTypes.shape({startMeeting: PropTypes.func.isRequired, showRecordings: PropTypes.func.isRequired, closePopover: PropTypes.func.isRequired}).isRequired,
-
-    startMeeting: PropTypes.func.isRequired, showRecordings: PropTypes.func.isRequired, closePopover: PropTypes.func.isRequired}).isRequired
-
+      startMeeting: PropTypes.func.isRequired, showRecordings: PropTypes.func.isRequired, closePopover: PropTypes.func.isRequired,
+    }).isRequired
   }
 
   constructor(props) {
@@ -71,8 +71,8 @@ export default class Root extends React.PureComponent {
     this.props.actions.showRecordings();
   }
 
-  startMeeting = async () => {
-    await this.props.actions.startMeeting(this.props.channelId, "", this.props.channel.display_name);
+  startMeeting = async (allowRecording) => {
+    await this.props.actions.startMeeting(this.props.channelId, allowRecording, "", this.props.channel.display_name);
     this.close_the_popover()
   }
 
@@ -195,7 +195,7 @@ export default class Root extends React.PureComponent {
     const directMessageListItem = (
         <PopoverListMembersItem
             ariaLabel={'Call ' + channelName}
-            onItemClick={this.startMeeting}
+            onItemClick={() => this.startMeeting(true)}
             icon={'BBBCAM'}
             text={
               <span>{'Call '}<strong>{channelName}</strong></span>
@@ -204,11 +204,11 @@ export default class Root extends React.PureComponent {
         />
     )
 
-    const channelListItem = (
+    const channelListItemGlobalRecordingAllowed = (
         <React.Fragment>
           <PopoverListMembersItem
               ariaLabel={'Create a BigBlueButton Meeting'}
-              onItemClick={this.startMeeting}
+              onItemClick={() => this.startMeeting(true)}
               icon={'ALLOW_RECORDING'}
               text={
                 <React.Fragment>
@@ -222,7 +222,7 @@ export default class Root extends React.PureComponent {
 
           <PopoverListMembersItem
               ariaLabel={'Create a BigBlueButton Meeting'}
-              onItemClick={this.startMeeting}
+              onItemClick={() => this.startMeeting(false)}
               icon={'DONT_ALLOW_RECORDING'}
               text={
                 <React.Fragment>
@@ -236,6 +236,17 @@ export default class Root extends React.PureComponent {
         </React.Fragment>
     )
 
+    const channelListGlobalRecordingDisallowed = (
+        <PopoverListMembersItem
+            ariaLabel={'Create a BigBlueButton Meeting'}
+            onItemClick={this.startMeeting}
+            icon={'BBBCAM'}
+            text={<span> {'Create a BigBlueButton Meeting'}</span>}
+            theme={this.props.theme}
+        />
+    )
+
+    const channelListItem = this.props.pluginConfig.ALLOW_RECORDINGS ? channelListItemGlobalRecordingAllowed : channelListGlobalRecordingDisallowed;
 
     return (
       <div>

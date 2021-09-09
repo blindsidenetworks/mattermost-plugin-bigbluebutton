@@ -32,10 +32,11 @@ import (
 )
 
 type RequestCreateMeetingJSON struct {
-	UserId    string `json:"user_id"`
-	ChannelId string `json:"channel_id"`
-	Topic     string `json:"title"`
-	Desc      string `json:"description"`
+	UserId         string `json:"user_id"`
+	ChannelId      string `json:"channel_id"`
+	Topic          string `json:"title"`
+	Desc           string `json:"description"`
+	AllowRecording bool   `json:"allow_recording"`
 }
 
 type ButtonRequestJSON struct {
@@ -950,6 +951,24 @@ func (p *Plugin) handleDeleteRecordings(w http.ResponseWriter, r *http.Request) 
 	}
 
 	w.WriteHeader(http.StatusOK)
+}
+
+func (p *Plugin) handleGetConfig(w http.ResponseWriter, r *http.Request) {
+	config := p.config()
+
+	sanitizedConfig := &Configuration{
+		AllowRecordings: config.AllowRecordings,
+	}
+
+	data, err := json.Marshal(sanitizedConfig)
+	if err != nil {
+		p.API.LogError("Error occurred marshaling sanitizing config.", "error", err.Error())
+		http.Error(w, "Error occurred marshaling sanitizing config", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_, _ = w.Write(data)
 }
 
 type isRunningResponseJSON struct {

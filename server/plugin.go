@@ -168,6 +168,8 @@ func (p *Plugin) ServeHTTP(c *plugin.Context, w http.ResponseWriter, r *http.Req
 		p.handleImmediateEndMeetingCallback(w, r, path)
 	} else if path == "/ismeetingrunning" {
 		p.handleIsMeetingRunning(w, r)
+	} else if path == "/config" {
+		p.handleGetConfig(w, r)
 	} else if path == "/redirect" {
 		// html file to automatically close a window
 		// nolint:staticcheck

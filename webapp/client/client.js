@@ -29,12 +29,13 @@ export default class Client {
     return `${this.siteUrlFunc()}/plugins/bigbluebutton`
   }
 
-  startMeeting = async (userid, channelid, topic, description) => {
+  startMeeting = async (userid, channelid, topic, description, allowRecording) => {
     return this.doPost(`${this.baseUrl}/create`, {
       user_id: userid,
       channel_id: channelid,
       title: topic,
-      description: description
+      description: description,
+      allow_recording: allowRecording,
     });
   }
 
@@ -75,6 +76,10 @@ export default class Client {
       record_id: recordid,
       meeting_id: meetingId
     });
+  }
+
+  getPluginConfig = async () => {
+    return await this.doPost(`${this.baseUrl}/config`)
   }
 
   doPost = async (url, body, headers = {}) => {

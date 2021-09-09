@@ -21,7 +21,7 @@ import {getCurrentUser} from 'mattermost-redux/selectors/entities/users';
 import {getLastPostPerChannel} from 'mattermost-redux/selectors/entities/posts';
 import {getChannelsInCurrentTeam, getDirectChannels, getSortedUnreadChannelIds, makeGetChannel} from 'mattermost-redux/selectors/entities/channels';
 import {getTheme} from 'mattermost-redux/selectors/entities/preferences';
-import {isRootModalVisible} from '../../selectors';
+import {getPluginState, isRootModalVisible} from '../../selectors';
 import {getSortedDirectChannelWithUnreadsIds} from 'mattermost-redux/selectors/entities/channels';
 import {getJoinURL,startMeeting, showRecordings,closeRootModal} from '../../actions';
 
@@ -45,6 +45,7 @@ function mapStateToProps(state, ownProps) {
     channelId = '';
   }
   let teamId = state.entities.teams.currentTeamId;
+  const pluginConfig = getPluginState(state).pluginConfig
 
   return {
     visible: isRootModalVisible(state),
@@ -59,6 +60,7 @@ function mapStateToProps(state, ownProps) {
     theme: getTheme(state),
     lastpostperchannel: getLastPostPerChannel(state),
     unreadChannelIds: getSortedDirectChannelWithUnreadsIds(state, keepChannelIdAsUnread),
+    pluginConfig,
     ...ownProps
   };
 }

@@ -1,5 +1,5 @@
 import {combineReducers} from 'redux';
-import {STATUS_CHANGE, OPEN_ROOT_MODAL, CLOSE_ROOT_MODAL} from './action_types';
+import {STATUS_CHANGE, OPEN_ROOT_MODAL, CLOSE_ROOT_MODAL, SET_PLUGIN_CONFIG} from './action_types';
 
 const enabled = (state = false, action) => {
     switch (action.type) {
@@ -22,7 +22,17 @@ const rootModalVisible = (state = false, action) => {
     }
 };
 
+const pluginConfig = (state = {}, action) => {
+    switch (action.type) {
+        case SET_PLUGIN_CONFIG:
+            return action.data;
+        default:
+            return state;
+    }
+}
+
 export default combineReducers({
     enabled,
     rootModalVisible,
+    pluginConfig,
 });
