@@ -317,7 +317,6 @@ var getStyle = makeStyleFromTheme((theme) => {
       marginLeft: x_pos,
       marginTop: "50px",
       maxWidth: '300px',
-      // height: '105px',
       width: '300px',
       background: theme.centerChannelBg,
       borderRadius: '12px',

@@ -25,7 +25,6 @@ export default class PopoverListMembersItem extends React.PureComponent {
   static propTypes = {
     onItemClick: PropTypes.func.isRequired,
     text: PropTypes.element.isRequired,
-    // cam: PropTypes.number.isRequired,
     icon: PropTypes.string.isRequired,
     theme: PropTypes.object.isRequired,
     ariaLabel: PropTypes.string,
