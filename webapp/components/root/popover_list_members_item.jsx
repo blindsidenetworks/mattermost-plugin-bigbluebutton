@@ -25,7 +25,7 @@ export default class PopoverListMembersItem extends React.PureComponent {
   static propTypes = {
     onItemClick: PropTypes.func.isRequired,
     text: PropTypes.element.isRequired,
-    cam: PropTypes.number.isRequired,
+    icon: PropTypes.string.isRequired,
     theme: PropTypes.object.isRequired,
     ariaLabel: PropTypes.string,
   };
@@ -52,6 +52,10 @@ export default class PopoverListMembersItem extends React.PureComponent {
   render() {
     const style = getStyle(this.props.theme);
 
+    console.log(this.props);
+    console.log(this.props.icon);
+    console.log(Svgs[this.props.icon]);
+
     return (
       <button
         aria-label={this.props.ariaLabel}
@@ -59,12 +63,13 @@ export default class PopoverListMembersItem extends React.PureComponent {
         onMouseEnter={this.rowStartShowHover}
         onMouseLeave={this.rowStartHideHover}
         onClick={this.handleClick}
-        style={this.state.rowStartHover ? style.popoverRowHover : style.popoverRowNoHover}
+        style={this.state.rowStartHover ? {...style.popoverRowBase, ...style.popoverRowHover} : style.popoverRowBase}
       >
         <span
           style={style.popoverIcon}
           className='pull-left'
-          dangerouslySetInnerHTML={this.props.cam == 1 ? {__html: Svgs.BBBCAM} : {__html: Svgs.VID_CAM_PLAY}}
+          // dangerouslySetInnerHTML={this.props.cam == 1 ? {__html: Svgs.BBBCAM} : {__html: Svgs.VID_CAM_PLAY}}
+          dangerouslySetInnerHTML={{__html: Svgs[this.props.icon]}}
           aria-hidden='true'
         />
         <div style={style.popoverRow}>
@@ -80,18 +85,16 @@ const getStyle = makeStyleFromTheme((theme) => {
   return {
 
     popoverRow: {
-      border: 'none',
-      cursor: 'pointer',
-      height: '50px',
-      margin: '1px 0',
-      overflow: 'auto',
-      padding: '6px 19px 0 10px',
+      padding: '0 12px',
     },
-    popoverRowNoHover: {
+    popoverRowBase: {
       borderLeft: '3px solid',
       borderColor: theme.centerChannelBg,
       fontWeight: 'normal',
       width: '100%',
+      display: 'flex',
+      height: '60px',
+      padding: '6px 12px',
     },
     popoverRowHover: {
       borderLeft: '3px solid transparent',
@@ -101,19 +104,12 @@ const getStyle = makeStyleFromTheme((theme) => {
     },
     popoverText: {
       fontWeight: 'inherit',
-      fontSize: '14px',
-      position: 'relative',
-      top: '10px',
-      left: '4px',
+      fontSize: '13px',
       textAlign: 'left',
     },
     popoverIcon: {
-      margin: '0',
-      paddingLeft: '16px',
-      position: 'relative',
-      top: '12px',
-      fontSize: '20px',
-      fill: theme.buttonBg,
+      height: '90%',
+      padding: '4px',
     },
   };
 });

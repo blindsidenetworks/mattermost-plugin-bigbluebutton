@@ -39,7 +39,7 @@ const (
 	prefixMeetingList = "m_list_"
 )
 
-func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, description string, UserId string, channelId string) error {
+func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, description string, UserId string, channelId string, allowRecording bool) error {
 	if len(details) == 2 {
 		m.Name_ = details[1]
 	} else {
@@ -61,8 +61,8 @@ func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, d
 	m.MeetingID_ = GenerateRandomID()
 	m.AttendeePW_ = "ap"
 	m.ModeratorPW_ = "mp"
-	m.Record = strconv.FormatBool(p.config().AllowRecordings)
-	m.AllowStartStopRecording = p.config().AllowRecordings
+	m.Record = strconv.FormatBool(p.config().AllowRecordings && allowRecording)
+	m.AllowStartStopRecording = p.config().AllowRecordings && allowRecording
 	m.AutoStartRecording = false
 	m.Meta = description
 	var RedirectUrl *url.URL
@@ -138,11 +138,16 @@ func (p *Plugin) createStartMeetingPost(userId string, channelId string, m *data
 
 	attachments := []*model.SlackAttachment{
 		{
-			Text: titlePrefix + "Meeting created by @" + user.Username,
+			Text: titlePrefix + "Meeting created by @" + user.Username + "\n\n",
 			Fields: []*model.SlackAttachmentField{
 				{
 					Title: "Attendees",
 					Value: "*There are no attendees in this session*",
+					Short: false,
+				},
+				{
+					Title: "Recording",
+					Value: "",
 					Short: false,
 				},
 				{
@@ -178,6 +183,12 @@ func (p *Plugin) createStartMeetingPost(userId string, channelId string, m *data
 				},
 			},
 		},
+	}
+
+	if m.AllowStartStopRecording {
+		attachments[0].Fields[1].Value = "Allowed"
+	} else {
+		attachments[0].Fields[1].Value = "Disabled"
 	}
 
 	if p.config().AllowExternalUsers {

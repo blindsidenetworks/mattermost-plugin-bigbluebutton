@@ -17,6 +17,8 @@ limitations under the License.
 package main
 
 import (
+	"encoding/json"
+	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/pkg/errors"
 	"strings"
 )
@@ -28,6 +30,13 @@ type Configuration struct {
 	ProcessRecordings  bool   `json:"PROCESS_RECORDINGS"`
 	AllowRecordings    bool   `json:"ALLOW_RECORDINGS"`
 	AllowExternalUsers bool   `json:"ALLOW_EXTERNAL_USERS"`
+}
+
+func (c Configuration) AsMap() map[string]interface{} {
+	data, _ := json.Marshal(c)
+	var asMap *map[string]interface{}
+	_ = json.Unmarshal(data, &asMap)
+	return *asMap
 }
 
 func (p *Plugin) OnConfigurationChange() error {
@@ -45,9 +54,21 @@ func (p *Plugin) OnConfigurationChange() error {
 		p.job.Close()
 	}
 
-	// stores the config in an Atomic.Value place
+	if p.configuration.Load() != nil {
+		p.broadcastConfigChange(newConfig)
+	}
+
+	// stores the config in an `Atomic.Value` place
 	p.configuration.Store(&newConfig)
 	return err
+}
+
+func (p *Plugin) broadcastConfigChange(config Configuration) {
+	payload := map[string]interface{}{
+		"config": config.AsMap(),
+	}
+
+	p.API.PublishWebSocketEvent("config_update", payload, &model.WebsocketBroadcast{})
 }
 
 func (p *Plugin) config() *Configuration {
