@@ -92,6 +92,18 @@ func (p *Plugin) OnActivate() error {
 		Trigger:          "bbb",
 		AutoComplete:     true,
 		AutoCompleteDesc: "Create a BigBlueButton meeting",
+		AutocompleteData: &model.AutocompleteData{
+			Trigger: "bbb",
+			HelpText: "Start a new BigBlueButton recording",
+			RoleID: model.SYSTEM_USER_ROLE_ID,
+			SubCommands: []*model.AutocompleteData{
+				{
+					Trigger: "no_recording",
+					HelpText: "Start a new meeting with recording disabled",
+					RoleID: model.SYSTEM_USER_ROLE_ID,
+				},
+			},
+		},
 	})
 }
 
@@ -122,7 +134,8 @@ func (p *Plugin) schedule() error {
 func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*model.CommandResponse, *model.AppError) {
 	meetingpointer := new(dataStructs.MeetingRoom)
 
-	if err := p.PopulateMeeting(meetingpointer, nil, "", args.UserId, args.ChannelId); err != nil {
+	allowRecording := !strings.Contains(args.Command, "no_recording")
+	if err := p.PopulateMeeting(meetingpointer, nil, "", args.UserId, args.ChannelId, allowRecording); err != nil {
 		return nil, model.NewAppError("ExecuteCommand", "Please provide a 'Site URL' in Settings > General > Configuration", nil, err.Error(), http.StatusInternalServerError)
 	}
 

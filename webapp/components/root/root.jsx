@@ -228,7 +228,7 @@ export default class Root extends React.PureComponent {
                 <React.Fragment>
                   <span> {'Start New Meeting'}</span>
                   <br/>
-                  <span> {'No Recording'}</span>
+                  <span> {'Recording Disabled'}</span>
                 </React.Fragment>
               }
               theme={this.props.theme}
@@ -239,9 +239,15 @@ export default class Root extends React.PureComponent {
     const channelListGlobalRecordingDisallowed = (
         <PopoverListMembersItem
             ariaLabel={'Create a BigBlueButton Meeting'}
-            onItemClick={this.startMeeting}
-            icon={'BBBCAM'}
-            text={<span> {'Create a BigBlueButton Meeting'}</span>}
+            onItemClick={() => this.startMeeting(false)}
+            icon={'DONT_ALLOW_RECORDING'}
+            text={
+              <React.Fragment>
+                <span> {'Start New Meeting'}</span>
+                <br/>
+                <span> {'Recording Disabled'}</span>
+              </React.Fragment>
+            }
             theme={this.props.theme}
         />
     )

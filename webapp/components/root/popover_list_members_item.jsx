@@ -95,7 +95,7 @@ const getStyle = makeStyleFromTheme((theme) => {
       width: '100%',
       display: 'flex',
       height: '60px',
-      padding: '12px',
+      padding: '6px 12px',
     },
     popoverRowHover: {
       borderLeft: '3px solid transparent',
@@ -105,11 +105,11 @@ const getStyle = makeStyleFromTheme((theme) => {
     },
     popoverText: {
       fontWeight: 'inherit',
-      fontSize: '14px',
+      fontSize: '13px',
       textAlign: 'left',
     },
     popoverIcon: {
-      height: '100%',
+      height: '90%',
       padding: '4px',
     },
   };

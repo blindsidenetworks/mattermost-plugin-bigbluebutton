@@ -18,7 +18,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/pkg/errors"
 	"strings"
@@ -56,7 +55,6 @@ func (p *Plugin) OnConfigurationChange() error {
 	}
 
 	if p.configuration.Load() != nil {
-		fmt.Println("######################################################################")
 		p.broadcastConfigChange(newConfig)
 	}
 
