@@ -1,0 +1,61 @@
+run:
+  modules-download-mode: readonly
+
+linters-settings:
+  gofmt:
+    simplify: true
+  govet:
+    check-shadowing: true
+    enable-all: true
+    disable:
+      - fieldalignment
+  lll:
+    line-length: 150
+  revive:
+    enableAllRules: true
+    rules:
+      - name: exported
+        disabled: true
+
+linters:
+  disable-all: true
+  enable:
+    - gofmt
+    - goimports
+    - deadcode
+    - ineffassign
+    - structcheck
+    - varcheck
+    - errcheck
+    - govet
+    - bodyclose
+    - durationcheck
+    - errorlint
+    - exhaustive
+    - exportloopref
+    - gosec
+    - makezero
+    - staticcheck
+    - prealloc
+    - asciicheck
+    - depguard
+    - dogsled
+    - dupl
+    - goconst
+    - gocritic
+    - godot
+    - goheader
+    - revive
+    - nakedret
+    - gomodguard
+    - goprintffuncname
+    - gosimple
+    - lll
+    - misspell
+    - nolintlint
+    - stylecheck
+    - typecheck
+    - unconvert
+    - unused
+    - whitespace
+    - gocyclo
