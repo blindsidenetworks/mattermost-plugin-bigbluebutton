@@ -127,7 +127,7 @@ release: dist
 	@ghr -t $(GITHUB_TOKEN) -u $(ORG_NAME) -r $(REPO_NAME) $(PLUGINVERSION) dist/
 
 golangci-lint:
-	golangci-lint run ./...
+	golangci-lint run ./server/...
 
 check-style-server: golangci-lint
 	@echo Running GOFMT
