@@ -19,9 +19,9 @@ import ClientClass from './client.js';
 let Client;
 
 export function GetClient() {
-    return Client;
+	return Client;
 }
 
 export function initClient(siteUrlFunc) {
-    Client = new ClientClass(siteUrlFunc);
+	Client = new ClientClass(siteUrlFunc);
 }

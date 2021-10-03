@@ -16,132 +16,141 @@ limitations under the License.
 
 
 import React from 'react';
-const {Overlay, OverlayTrigger, Popover, Tooltip} = window.ReactBootstrap;
-
-import PopoverListMembersItem from './popover_list_members_item.jsx';
-
 import {Svgs} from '../../constants';
 
 import PropTypes from 'prop-types';
-import {makeStyleFromTheme, changeOpacity} from 'mattermost-redux/utils/theme_utils';
-import {searchPosts} from 'mattermost-redux/actions/search'
-import {getChannel} from 'mattermost-redux/selectors/entities/channels';
-import * as UserUtils from 'mattermost-redux/utils/user_utils';
+import {makeStyleFromTheme} from 'mattermost-redux/utils/theme_utils';
 
+const {OverlayTrigger, Tooltip} = window.ReactBootstrap;
 
 
 export default class ChannelHeaderButton extends React.PureComponent {
-  static propTypes = {
-    channelId: PropTypes.string.isRequired,
-    state: PropTypes.object.isRequired,
-    channelName: PropTypes.string.isRequired,
-    theme: PropTypes.object.isRequired,
-    directChannels: PropTypes.array.isRequired,
-    teamId: PropTypes.string.isRequired,
-    channel: PropTypes.object.isRequired,
-    visible: PropTypes.bool.isRequired,
-    actions: PropTypes.shape({startMeeting: PropTypes.func.isRequired, showRecordings: PropTypes.func.isRequired, closePopover: PropTypes.func.isRequired}).isRequired,
-  }
+	static propTypes = {
+		channelId: PropTypes.string.isRequired,
+		state: PropTypes.object.isRequired,
+		channelName: PropTypes.string.isRequired,
+		theme: PropTypes.object.isRequired,
+		directChannels: PropTypes.array.isRequired,
+		teamId: PropTypes.string.isRequired,
+		channel: PropTypes.object.isRequired,
+		visible: PropTypes.bool.isRequired,
+		actions: PropTypes.shape({
+			startMeeting: PropTypes.func.isRequired,
+			showRecordings: PropTypes.func.isRequired,
+			closePopover: PropTypes.func.isRequired
+		}).isRequired,
+	};
 
-  constructor(props) {
-    super(props);
+	constructor(props) {
+		super(props);
 
-    this.state = {
-      showPopover: false
-    };
-  }
+		this.state = {
+			showPopover: false
+		};
 
-  searchRecordings = () => {
-    this.props.actions.showRecordings();
-  }
+		this.overlayRef = React.createRef();
+	}
 
-  startMeeting = async () => {
-    await this.props.actions.startMeeting(this.props.channelId, "", this.props.channel.display_name);
-    this.close_the_popover()
-  }
-  close_the_popover = () =>{
-    this.props.actions.closePopover();
-    this.setState({showPopover: false});
-  }
+	searchRecordings = () => {
+		this.props.actions.showRecordings();
+	};
 
-  render() {
+	startMeeting = async () => {
+		await this.props.actions.startMeeting(this.props.channelId, '', this.props.channel.display_name);
+		this.close_the_popover();
+	};
+	close_the_popover = () => {
+		this.props.actions.closePopover();
+		this.setState({showPopover: false});
+	};
 
-    if (this.props.channelId === '') {
-      return <div/>;
-    }
+	render() {
 
-    var channel = getChannel(this.props.state, this.props.channelId);
-    var channelName = channel.display_name;
+		if (this.props.channelId === '') {
+			return <div/>;
+		}
 
-    const style = getStyle(this.props.theme);
+		const style = getStyle(this.props.theme);
 
-
-    return (<div>
-      <div >
-        <OverlayTrigger trigger={['hover']} delayShow={400} ref = "overlay" placement='bottom' overlay={(<Tooltip id='bbbChannelHeaderTooltip'>
-            {'BigBlueButton'}
-          </Tooltip>)}>
-          <div id='bbbChannelHeaderButton' onClick={(e) => {
-              this.refs.overlay.hide();
-              this.setState({
-                popoverTarget: e.target,
-                showPopover: !this.props.visible
-              });
-            }}
-               style={style.foo}
-          >
-            <span style={style.iconStyle} aria-hidden='true' dangerouslySetInnerHTML={{
-                __html: Svgs.BBB_LOGO_SIMPLIFIED
-              }}/>
-          </div>
-        </OverlayTrigger>
-      </div>
-    </div>);
-  }
+		return (<div>
+			<div>
+				<OverlayTrigger
+					trigger={['hover']}
+					delayShow={400}
+					ref={el => this.overlayRef = el}
+					placement="bottom"
+					overlay={(
+						<Tooltip id="bbbChannelHeaderTooltip">
+							{'BigBlueButton'}
+						</Tooltip>
+					)}
+				>
+					<div
+						id="bbbChannelHeaderButton"
+						onClick={(e) => {
+							this.overlayRef.hide();
+							this.setState({
+								popoverTarget: e.target,
+								showPopover: !this.props.visible
+							});
+						}}
+						style={style.foo}
+					>
+						<span
+							style={style.iconStyle}
+							aria-hidden="true"
+							dangerouslySetInnerHTML={{
+								__html: Svgs.BBB_LOGO_SIMPLIFIED
+							}}/>
+					</div>
+				</OverlayTrigger>
+			</div>
+		</div>);
+	}
 }
 
 
 const getStyle = makeStyleFromTheme((theme) => {
-  return {
-    iconStyle: {
-      position: 'relative',
-      top: '2px'
-    },
-    popover: {
-      marginLeft: '-100px',
-      maxWidth: '300px',
-      height: '105px',
-      width: '300px',
-      background: theme.centerChannelBg
-    },
-    popoverBody: {
-      maxHeight: '305px',
-      overflow: 'auto',
-      position: 'relative',
-      width: '298px',
-      left: '-14px',
-      top: '-9px',
-      borderBottom: '1px solid #D8D8D9'
-    },
-    popoverDM: {
-      marginLeft: '-50px',
-      maxWidth: '220px',
-      height: '105px',
-      width: '220px',
-      background: theme.centerChannelBg
-    },
-    popoverBodyDM: {
-      maxHeight: '305px',
-      overflow: 'auto',
-      position: 'relative',
-      width: '218px',
-      left: '-14px',
-      top: '-9px',
-      borderBottom: '1px solid #D8D8D9'
-    },
-    foo: {
-      width: '28px',
-      height: '28px',
-    }
-  };
+	return {
+		iconStyle: {
+			position: 'relative',
+			top: '2px'
+		},
+		popover: {
+			marginLeft: '-100px',
+			maxWidth: '300px',
+			height: '105px',
+			width: '300px',
+			background: theme.centerChannelBg
+		},
+		popoverBody: {
+			maxHeight: '305px',
+			overflow: 'auto',
+			position: 'relative',
+			width: '298px',
+			left: '-14px',
+			top: '-9px',
+			borderBottom: '1px solid #D8D8D9'
+		},
+		popoverDM: {
+			marginLeft: '-50px',
+			maxWidth: '220px',
+			height: '105px',
+			width: '220px',
+			background: theme.centerChannelBg
+		},
+		popoverBodyDM: {
+			maxHeight: '305px',
+			overflow: 'auto',
+			position: 'relative',
+			width: '218px',
+			left: '-14px',
+			top: '-9px',
+			borderBottom: '1px solid #D8D8D9'
+		},
+		foo: {
+			width: '28px',
+			height: '28px',
+		}
+	};
 });

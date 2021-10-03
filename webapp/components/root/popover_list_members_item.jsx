@@ -23,93 +23,93 @@ import {makeStyleFromTheme, changeOpacity} from 'mattermost-redux/utils/theme_ut
 
 export default class PopoverListMembersItem extends React.PureComponent {
   static propTypes = {
-    onItemClick: PropTypes.func.isRequired,
-    text: PropTypes.element.isRequired,
-    icon: PropTypes.string.isRequired,
-    theme: PropTypes.object.isRequired,
-    ariaLabel: PropTypes.string,
+  	onItemClick: PropTypes.func.isRequired,
+  	text: PropTypes.element.isRequired,
+  	icon: PropTypes.string.isRequired,
+  	theme: PropTypes.object.isRequired,
+  	ariaLabel: PropTypes.string,
   };
 
   constructor(props) {
-    super(props);
-    this.state = {
-      rowStartHover: false,
-    };
+  	super(props);
+  	this.state = {
+  		rowStartHover: false,
+  	};
   }
 
   handleClick = () => {
-    this.props.onItemClick();
+  	this.props.onItemClick();
   };
 
   rowStartShowHover = () => {
-    this.setState({rowStartHover: true});
+  	this.setState({rowStartHover: true});
   };
 
   rowStartHideHover = () => {
-    this.setState({rowStartHover: false});
+  	this.setState({rowStartHover: false});
   };
 
   render() {
-    const style = getStyle(this.props.theme);
+  	const style = getStyle(this.props.theme);
 
-    console.log(this.props);
-    console.log(this.props.icon);
-    console.log(Svgs[this.props.icon]);
+  	console.log(this.props);
+  	console.log(this.props.icon);
+  	console.log(Svgs[this.props.icon]);
 
-    return (
-      <button
-        aria-label={this.props.ariaLabel}
-        className={'style--none'}
-        onMouseEnter={this.rowStartShowHover}
-        onMouseLeave={this.rowStartHideHover}
-        onClick={this.handleClick}
-        style={this.state.rowStartHover ? {...style.popoverRowBase, ...style.popoverRowHover} : style.popoverRowBase}
-      >
-        <span
-          style={style.popoverIcon}
-          className='pull-left'
-          // dangerouslySetInnerHTML={this.props.cam == 1 ? {__html: Svgs.BBBCAM} : {__html: Svgs.VID_CAM_PLAY}}
-          dangerouslySetInnerHTML={{__html: Svgs[this.props.icon]}}
-          aria-hidden='true'
-        />
-        <div style={style.popoverRow}>
-          <div style={style.popoverText}>
-            {this.props.text}
-          </div>
-        </div>
-      </button>);
+  	return (
+  		<button
+  			aria-label={this.props.ariaLabel}
+  			className={'style--none'}
+  			onMouseEnter={this.rowStartShowHover}
+  			onMouseLeave={this.rowStartHideHover}
+  			onClick={this.handleClick}
+  			style={this.state.rowStartHover ? {...style.popoverRowBase, ...style.popoverRowHover} : style.popoverRowBase}
+  		>
+  			<span
+  				style={style.popoverIcon}
+  				className='pull-left'
+  				// dangerouslySetInnerHTML={this.props.cam == 1 ? {__html: Svgs.BBBCAM} : {__html: Svgs.VID_CAM_PLAY}}
+  				dangerouslySetInnerHTML={{__html: Svgs[this.props.icon]}}
+  				aria-hidden='true'
+  			/>
+  			<div style={style.popoverRow}>
+  				<div style={style.popoverText}>
+  					{this.props.text}
+  				</div>
+  			</div>
+  		</button>);
   }
 }
 
 const getStyle = makeStyleFromTheme((theme) => {
-  return {
+	return {
 
-    popoverRow: {
-      padding: '0 12px',
-    },
-    popoverRowBase: {
-      borderLeft: '3px solid',
-      borderColor: theme.centerChannelBg,
-      fontWeight: 'normal',
-      width: '100%',
-      display: 'flex',
-      height: '60px',
-      padding: '6px 12px',
-    },
-    popoverRowHover: {
-      borderLeft: '3px solid transparent',
-      borderColor: theme.linkColor,
-      background: changeOpacity(theme.linkColor, 0.08),
-      width: '100%',
-    },
-    popoverText: {
-      fontWeight: 'inherit',
-      fontSize: '13px',
-      textAlign: 'left',
-    },
-    popoverIcon: {
-      height: '90%',
-      padding: '4px',
-    },
-  };
+		popoverRow: {
+			padding: '0 12px',
+		},
+		popoverRowBase: {
+			borderLeft: '3px solid',
+			borderColor: theme.centerChannelBg,
+			fontWeight: 'normal',
+			width: '100%',
+			display: 'flex',
+			height: '60px',
+			padding: '6px 12px',
+		},
+		popoverRowHover: {
+			borderLeft: '3px solid transparent',
+			borderColor: theme.linkColor,
+			background: changeOpacity(theme.linkColor, 0.08),
+			width: '100%',
+		},
+		popoverText: {
+			fontWeight: 'inherit',
+			fontSize: '13px',
+			textAlign: 'left',
+		},
+		popoverIcon: {
+			height: '90%',
+			padding: '4px',
+		},
+	};
 });
