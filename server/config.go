@@ -18,9 +18,10 @@ package main
 
 import (
 	"encoding/json"
+	"strings"
+
 	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/pkg/errors"
-	"strings"
 )
 
 type Configuration struct {

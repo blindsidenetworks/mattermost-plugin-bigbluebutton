@@ -59,7 +59,7 @@ type Plugin struct {
 	handler       http.Handler
 }
 
-//OnActivate runs as soon as plugin activates
+// OnActivate runs as soon as plugin activates.
 func (p *Plugin) OnActivate() error {
 	mattermost.API = p.API
 	if err := p.OnConfigurationChange(); err != nil {
@@ -87,20 +87,20 @@ func (p *Plugin) OnActivate() error {
 		return err
 	}
 
-	//register slash command '/bbb' to create a meeting
+	// register slash command '/bbb' to create a meeting
 	return p.API.RegisterCommand(&model.Command{
 		Trigger:          "bbb",
 		AutoComplete:     true,
 		AutoCompleteDesc: "Create a BigBlueButton meeting",
 		AutocompleteData: &model.AutocompleteData{
-			Trigger: "bbb",
+			Trigger:  "bbb",
 			HelpText: "Start a new BigBlueButton recording",
-			RoleID: model.SYSTEM_USER_ROLE_ID,
+			RoleID:   model.SYSTEM_USER_ROLE_ID,
 			SubCommands: []*model.AutocompleteData{
 				{
-					Trigger: "no_recording",
+					Trigger:  "no_recording",
 					HelpText: "Start a new meeting with recording disabled",
-					RoleID: model.SYSTEM_USER_ROLE_ID,
+					RoleID:   model.SYSTEM_USER_ROLE_ID,
 				},
 			},
 		},
@@ -130,28 +130,32 @@ func (p *Plugin) schedule() error {
 	return nil
 }
 
-//following method is to create a meeting from '/bbb' slash command
+// ExecuteCommand method is to create a meeting from '/bbb' slash command.
 func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*model.CommandResponse, *model.AppError) {
 	meetingpointer := new(dataStructs.MeetingRoom)
 
 	allowRecording := !strings.Contains(args.Command, "no_recording")
 	if err := p.PopulateMeeting(meetingpointer, nil, "", args.UserId, args.ChannelId, allowRecording); err != nil {
-		return nil, model.NewAppError("ExecuteCommand", "Please provide a 'Site URL' in Settings > General > Configuration", nil, err.Error(), http.StatusInternalServerError)
+		return nil, model.NewAppError(
+			"ExecuteCommand",
+			"Please provide a 'Site URL' in Settings > General > Configuration",
+			nil,
+			err.Error(),
+			http.StatusInternalServerError,
+		)
 	}
 
-	p.createStartMeetingPost(args.UserId, args.ChannelId, meetingpointer)
+	_ = p.createStartMeetingPost(args.UserId, args.ChannelId, meetingpointer)
 	if err := p.SaveMeeting(meetingpointer); err != nil {
 		return nil, model.NewAppError("ExecuteCommand", "Unable so save meeting", nil, err.Error(), http.StatusInternalServerError)
 	}
 
 	return &model.CommandResponse{}, nil
-
 }
 
-//this is the router to handle our server calls
-//methods are all in responsehandlers.go
+// ServeHTTP is the router to handle our server calls
+// methods are all in responsehandlers.go.
 func (p *Plugin) ServeHTTP(c *plugin.Context, w http.ResponseWriter, r *http.Request) {
-
 	config := p.config()
 	if err := config.IsValid(); err != nil {
 		http.Error(w, "This plugin is not configured.", http.StatusNotImplemented)
@@ -159,35 +163,34 @@ func (p *Plugin) ServeHTTP(c *plugin.Context, w http.ResponseWriter, r *http.Req
 	}
 
 	path := r.URL.Path
-	if path == "/joinmeeting" {
+	switch {
+	case path == "/joinmeeting":
 		p.handleJoinMeeting(w, r)
-	} else if path == "/joinmeeting/external" {
+	case path == "/joinmeeting/external":
 		p.handleJoinMeetingExternalUser(w, r)
-	} else if strings.HasPrefix(path, "/endmeeting") {
+	case strings.HasPrefix(path, "/endmeeting"):
 		p.handleEndMeeting(w, r)
-	} else if path == "/create" {
+	case path == "/create":
 		p.handleCreateMeeting(w, r)
-	} else if strings.HasPrefix(path, "/recordingready") {
+	case strings.HasPrefix(path, "/recordingready"):
 		p.handleRecordingReady(w, r)
-	} else if path == "/getattendees" {
+	case path == "/getattendees":
 		p.handleGetAttendeesInfo(w, r)
-	} else if path == "/publishrecordings" {
+	case path == "/publishrecordings":
 		p.handlePublishRecordings(w, r)
-	} else if path == "/deleterecordingsconfirmation" {
+	case path == "/deleterecordingsconfirmation":
 		p.handleDeleteRecordingsConfirmation(w, r)
-	} else if path == "/deleterecordings" {
+	case path == "/deleterecordings":
 		p.handleDeleteRecordings(w, r)
-	} else if strings.HasPrefix(path, "/meetingendedcallback") {
+	case strings.HasPrefix(path, "/meetingendedcallback"):
 		p.handleImmediateEndMeetingCallback(w, r, path)
-	} else if path == "/ismeetingrunning" {
+	case path == "/ismeetingrunning":
 		p.handleIsMeetingRunning(w, r)
-	} else if path == "/config" {
+	case path == "/config":
 		p.handleGetConfig(w, r)
-	} else if path == "/redirect" {
-		// html file to automatically close a window
-		// nolint:staticcheck
+	case path == "/redirect":
 		_, _ = fmt.Fprintf(w, closeWindowScript)
-	} else {
+	default:
 		p.handler.ServeHTTP(w, r)
 	}
 }
@@ -204,7 +207,7 @@ func (p *Plugin) setupStaticFileServer() error {
 }
 
 func (p *Plugin) OnDeactivate() error {
-	//on deactivate, save meetings details, stop check recordings looper, destroy webhook
+	// on deactivate, save meetings details, stop check recordings looper, destroy webhook.
 	p.c.Stop()
 	return nil
 }

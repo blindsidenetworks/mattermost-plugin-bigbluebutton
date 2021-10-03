@@ -173,10 +173,9 @@ func (p *Plugin) Loopthroughrecordings() {
 	}
 }
 
-//Create meeting doesn't call the BBB api to start a meeting
-//Only populates the meeting with details. Meeting is started when first person joins
+// Create meeting doesn't call the BBB api to start a meeting
+// Only populates the meeting with details. Meeting is started when first person joins.
 func (p *Plugin) handleCreateMeeting(w http.ResponseWriter, r *http.Request) {
-
 	// reads in information to create a meeting from client inside
 	// whats being read in is the stuff in RequestCreateMeetingJSON
 	body, _ := ioutil.ReadAll(r.Body)
@@ -215,7 +214,7 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 
 	var request *model.PostActionIntegrationRequest
 	if err := json.Unmarshal(body, &request); err != nil {
-		p.API.LogError("Error occured unmarshaling join meeting request body. Error: " + err.Error())
+		p.API.LogError("Error occurred unmarshalling join meeting request body. Error: " + err.Error())
 		return
 	}
 
@@ -613,6 +612,10 @@ func (p *Plugin) handleEndMeeting(w http.ResponseWriter, r *http.Request) {
 			myresp = model.PostActionIntegrationResponse{
 				EphemeralText: "error occurred checking meeting running status.",
 			}
+
+			response, _ := json.Marshal(myresp)
+			_, _ = w.Write(response)
+			return
 		}
 
 		if !running {
@@ -694,7 +697,6 @@ func (p *Plugin) handleIsMeetingRunning(w http.ResponseWriter, r *http.Request) 
 
 	w.Header().Set("Content-Type", "application/json")
 	_, _ = w.Write(userJson)
-
 }
 
 func (p *Plugin) handleRecordingReady(w http.ResponseWriter, r *http.Request) {
@@ -702,7 +704,6 @@ func (p *Plugin) handleRecordingReady(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *Plugin) handleGetAttendeesInfo(w http.ResponseWriter, r *http.Request) {
-
 	body, _ := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
 
@@ -766,7 +767,12 @@ func (p *Plugin) handlePublishRecordings(w http.ResponseWriter, r *http.Request)
 	}
 
 	if _, err := bbbAPI.PublishRecordings(recordid, publish); err != nil {
-		p.API.LogError(fmt.Sprintf("Error occurred toggling publish recording. Pubish: %s, meeting ID: %s, error: %s", publish, meetingpointer.MeetingID_, err.Error()))
+		p.API.LogError(fmt.Sprintf(
+			"Error occurred toggling publish recording. Pubish: %s, meeting ID: %s, error: %s",
+			publish,
+			meetingpointer.MeetingID_,
+			err.Error()),
+		)
 		http.Error(w, "Error: Recording not found", http.StatusForbidden)
 		return
 	}
@@ -816,7 +822,7 @@ func (p *Plugin) handlePublishRecordings(w http.ResponseWriter, r *http.Request)
 			})
 		}
 	} else {
-		post.Message = strings.Replace(post.Message, "#recording", "", -1)
+		post.Message = strings.ReplaceAll(post.Message, "#recording", "")
 		newAttachments[1].Actions[0].Name = "Make Recording Visible"
 		newAttachments[1].Actions[0].Integration.Context["publish"] = "true"
 	}
@@ -824,12 +830,17 @@ func (p *Plugin) handlePublishRecordings(w http.ResponseWriter, r *http.Request)
 	model.ParseSlackAttachment(post, newAttachments)
 
 	if _, err := p.API.UpdatePost(post); err != nil {
-		p.API.LogError("Failed to update post after updating recording publish status. Meeting ID: %s, post ID: %s, error: %s", meetingpointer.MeetingID_, post.Id, err.Error())
+		p.API.LogError(
+			"Failed to update post after updating recording publish status. Meeting ID: %s, post ID: %s, error: %s",
+			meetingpointer.MeetingID_,
+			post.Id,
+			err.Error(),
+		)
 		http.Error(w, err.Error(), err.StatusCode)
 		return
 	}
 
-	//update post props with new recording  status
+	// update post props with new recording status
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -933,7 +944,7 @@ func (p *Plugin) handleDeleteRecordings(w http.ResponseWriter, r *http.Request) 
 	post.AddProp("is_deleted", "true")
 	post.AddProp("record_status", "Recording Deleted")
 
-	post.Message = strings.Replace(post.Message, "#recording", "", -1)
+	post.Message = strings.ReplaceAll(post.Message, "#recording", "")
 	attachments := make([]*model.SlackAttachment, 1)
 	attachments[0] = &model.SlackAttachment{}
 

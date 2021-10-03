@@ -53,7 +53,6 @@ linters:
     - lll
     - misspell
     - nolintlint
-    - stylecheck
     - typecheck
     - unconvert
     - unused
