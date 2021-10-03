@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+    http:// www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,11 +20,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/mattermost"
 	"io/ioutil"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/mattermost"
 
 	bbbAPI "github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/api"
 	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/dataStructs"
@@ -173,10 +174,9 @@ func (p *Plugin) Loopthroughrecordings() {
 	}
 }
 
-//Create meeting doesn't call the BBB api to start a meeting
-//Only populates the meeting with details. Meeting is started when first person joins
+// Create meeting doesn't call the BBB api to start a meeting
+// Only populates the meeting with details. Meeting is started when first person joins.
 func (p *Plugin) handleCreateMeeting(w http.ResponseWriter, r *http.Request) {
-
 	// reads in information to create a meeting from client inside
 	// whats being read in is the stuff in RequestCreateMeetingJSON
 	body, _ := ioutil.ReadAll(r.Body)
@@ -197,8 +197,8 @@ func (p *Plugin) handleCreateMeeting(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//creates the start meeting post
-	p.createStartMeetingPost(request.UserId, request.ChannelId, meetingpointer)
+	// creates the start meeting post
+	_ = p.createStartMeetingPost(request.UserId, request.ChannelId, meetingpointer)
 
 	// add our newly created meeting to our array of meetings
 	if err := p.SaveMeeting(meetingpointer); err != nil {
@@ -215,7 +215,7 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 
 	var request *model.PostActionIntegrationRequest
 	if err := json.Unmarshal(body, &request); err != nil {
-		p.API.LogError("Error occured unmarshaling join meeting request body. Error: " + err.Error())
+		p.API.LogError("Error occurred unmarshalling join meeting request body. Error: " + err.Error())
 		return
 	}
 
@@ -230,7 +230,7 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write(userJson)
 		return
 	} else {
-		//check if meeting has actually been created and can be joined
+		// check if meeting has actually been created and can be joined
 		if !meetingpointer.Created {
 			if _, err := bbbAPI.CreateMeeting(meetingpointer); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -253,7 +253,7 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 		user, _ := p.API.GetUser(request.UserId)
 		username := user.Username
 
-		//golang doesnt have sets so have to iterate through array to check if meeting participant is already in meeeting
+		// golang doesnt have sets so have to iterate through array to check if meeting participant is already in meeeting
 		if !IsItemInArray(username, meetingpointer.AttendeeNames) {
 			meetingpointer.AttendeeNames = append(meetingpointer.AttendeeNames, username)
 		}
@@ -262,7 +262,7 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 			p.API.LogError("Error occurred updating meeting info in handleJoinMeeting. Error: " + err.Error())
 		}
 
-		var participant = dataStructs.Participants{} //set participant as an empty struct of type Participants
+		var participant = dataStructs.Participants{} // set participant as an empty struct of type Participants
 		participant.FullName_ = user.GetFullName()
 		if len(participant.FullName_) == 0 {
 			participant.FullName_ = user.Username
@@ -289,7 +289,7 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 		} else {
-			participant.Password_ = meetingpointer.ModeratorPW_ //make everyone in channel a mod
+			participant.Password_ = meetingpointer.ModeratorPW_ // make everyone in channel a mod
 		}
 		joinURL, err := bbbAPI.GetJoinURL(&participant)
 		if err != nil {
@@ -377,7 +377,7 @@ func (p *Plugin) handleJoinMeetingExternalUser(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	//check if meeting has actually been created and can be joined
+	// check if meeting has actually been created and can be joined
 	if !meetingpointer.Created {
 		if _, err := bbbAPI.CreateMeeting(meetingpointer); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -399,7 +399,7 @@ func (p *Plugin) handleJoinMeetingExternalUser(w http.ResponseWriter, r *http.Re
 
 	username := request["name"]
 
-	//golang doesnt have sets so have to iterate through array to check if meeting participant is already in meeeting
+	// golang doesnt have sets so have to iterate through array to check if meeting participant is already in meeeting
 	if !IsItemInArray(username, meetingpointer.AttendeeNames) {
 		meetingpointer.AttendeeNames = append(meetingpointer.AttendeeNames, username)
 	}
@@ -408,7 +408,7 @@ func (p *Plugin) handleJoinMeetingExternalUser(w http.ResponseWriter, r *http.Re
 		p.API.LogError("Error occurred updating meeting info in handleJoinMeeting. Error: " + err.Error())
 	}
 
-	var participant = dataStructs.Participants{} //set participant as an empty struct of type Participants
+	var participant = dataStructs.Participants{} // set participant as an empty struct of type Participants
 	participant.FullName_ = username
 	if len(participant.FullName_) == 0 {
 		participant.FullName_ = username
@@ -473,8 +473,8 @@ func (p *Plugin) handleJoinMeetingExternalUser(w http.ResponseWriter, r *http.Re
 	_, _ = w.Write(responseData)
 }
 
-//this method is responsible for updating meeting has ended inside mattermost when
-// we end our meeting from inside BigBlueButton
+// this method is responsible for updating meeting has ended inside mattermost when
+// we end our meeting from inside BigBlueButton.
 func (p *Plugin) handleImmediateEndMeetingCallback(w http.ResponseWriter, r *http.Request, path string) {
 	startpoint := len("/meetingendedcallback?")
 	endpoint := strings.Index(path, "&")
@@ -503,7 +503,7 @@ func (p *Plugin) handleImmediateEndMeetingCallback(w http.ResponseWriter, r *htt
 	}
 
 	post.AddProp("meeting_status", "ENDED")
-	post.AddProp("attendents", strings.Join(meetingpointer.AttendeeNames, ","))
+	post.AddProp("attendants", strings.Join(meetingpointer.AttendeeNames, ","))
 	timediff := meetingpointer.EndedAt - meetingpointer.CreatedAt
 	durationstring := FormatSeconds(timediff)
 	post.AddProp("duration", durationstring)
@@ -563,7 +563,7 @@ func (p *Plugin) handleImmediateEndMeetingCallback(w http.ResponseWriter, r *htt
 	w.WriteHeader(http.StatusOK)
 }
 
-//when user clicks endmeeting button inside Mattermost
+// when user clicks endmeeting button inside Mattermost.
 func (p *Plugin) handleEndMeeting(w http.ResponseWriter, r *http.Request) {
 	mattermost.API.LogInfo("Processing End Meeting Request")
 
@@ -613,6 +613,10 @@ func (p *Plugin) handleEndMeeting(w http.ResponseWriter, r *http.Request) {
 			myresp = model.PostActionIntegrationResponse{
 				EphemeralText: "error occurred checking meeting running status.",
 			}
+
+			response, _ := json.Marshal(myresp)
+			_, _ = w.Write(response)
+			return
 		}
 
 		if !running {
@@ -652,7 +656,7 @@ func (p *Plugin) handleEndMeeting(w http.ResponseWriter, r *http.Request) {
 	}
 
 	rawResponse, _ := json.Marshal(response)
-	w.Write(rawResponse)
+	_, _ = w.Write(rawResponse)
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -694,7 +698,6 @@ func (p *Plugin) handleIsMeetingRunning(w http.ResponseWriter, r *http.Request) 
 
 	w.Header().Set("Content-Type", "application/json")
 	_, _ = w.Write(userJson)
-
 }
 
 func (p *Plugin) handleRecordingReady(w http.ResponseWriter, r *http.Request) {
@@ -702,7 +705,6 @@ func (p *Plugin) handleRecordingReady(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *Plugin) handleGetAttendeesInfo(w http.ResponseWriter, r *http.Request) {
-
 	body, _ := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
 
@@ -766,7 +768,12 @@ func (p *Plugin) handlePublishRecordings(w http.ResponseWriter, r *http.Request)
 	}
 
 	if _, err := bbbAPI.PublishRecordings(recordid, publish); err != nil {
-		p.API.LogError(fmt.Sprintf("Error occurred toggling publish recording. Pubish: %s, meeting ID: %s, error: %s", publish, meetingpointer.MeetingID_, err.Error()))
+		p.API.LogError(fmt.Sprintf(
+			"Error occurred toggling publish recording. Pubish: %s, meeting ID: %s, error: %s",
+			publish,
+			meetingpointer.MeetingID_,
+			err.Error()),
+		)
 		http.Error(w, "Error: Recording not found", http.StatusForbidden)
 		return
 	}
@@ -816,7 +823,7 @@ func (p *Plugin) handlePublishRecordings(w http.ResponseWriter, r *http.Request)
 			})
 		}
 	} else {
-		post.Message = strings.Replace(post.Message, "#recording", "", -1)
+		post.Message = strings.ReplaceAll(post.Message, "#recording", "")
 		newAttachments[1].Actions[0].Name = "Make Recording Visible"
 		newAttachments[1].Actions[0].Integration.Context["publish"] = "true"
 	}
@@ -824,12 +831,17 @@ func (p *Plugin) handlePublishRecordings(w http.ResponseWriter, r *http.Request)
 	model.ParseSlackAttachment(post, newAttachments)
 
 	if _, err := p.API.UpdatePost(post); err != nil {
-		p.API.LogError("Failed to update post after updating recording publish status. Meeting ID: %s, post ID: %s, error: %s", meetingpointer.MeetingID_, post.Id, err.Error())
+		p.API.LogError(
+			"Failed to update post after updating recording publish status. Meeting ID: %s, post ID: %s, error: %s",
+			meetingpointer.MeetingID_,
+			post.Id,
+			err.Error(),
+		)
 		http.Error(w, err.Error(), err.StatusCode)
 		return
 	}
 
-	//update post props with new recording  status
+	// update post props with new recording status
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -840,7 +852,7 @@ func (p *Plugin) handleDeleteRecordingsConfirmation(w http.ResponseWriter, r *ht
 	var request *model.PostActionIntegrationRequest
 	if err := json.Unmarshal(body, &request); err != nil {
 		p.API.LogError("Error occurred unmarshalling handleDeleteRecordingsConfirmation request body. Error: " + err.Error())
-		w.Write([]byte("Error occurred unmarshalling handleDeleteRecordingsConfirmation request body"))
+		_, _ = w.Write([]byte("Error occurred unmarshalling handleDeleteRecordingsConfirmation request body"))
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -878,7 +890,7 @@ func (p *Plugin) handleDeleteRecordingsConfirmation(w http.ResponseWriter, r *ht
 
 	if err := p.API.OpenInteractiveDialog(dialog); err != nil {
 		p.API.LogError("Error occurred opening delete recording confirmation modal. Error: " + err.Error())
-		w.Write([]byte("Error occurred opening delete recording confirmation modal"))
+		_, _ = w.Write([]byte("Error occurred opening delete recording confirmation modal"))
 		w.WriteHeader(http.StatusInsufficientStorage)
 		return
 	}
@@ -890,7 +902,7 @@ func (p *Plugin) handleDeleteRecordingsConfirmation(w http.ResponseWriter, r *ht
 	}
 
 	rawResponse, _ := json.Marshal(response)
-	w.Write(rawResponse)
+	_, _ = w.Write(rawResponse)
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -933,7 +945,7 @@ func (p *Plugin) handleDeleteRecordings(w http.ResponseWriter, r *http.Request) 
 	post.AddProp("is_deleted", "true")
 	post.AddProp("record_status", "Recording Deleted")
 
-	post.Message = strings.Replace(post.Message, "#recording", "", -1)
+	post.Message = strings.ReplaceAll(post.Message, "#recording", "")
 	attachments := make([]*model.SlackAttachment, 1)
 	attachments[0] = &model.SlackAttachment{}
 
