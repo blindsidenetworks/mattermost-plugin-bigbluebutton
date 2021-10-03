@@ -304,10 +304,10 @@ export default class PostTypebbb extends React.PureComponent {
       const start = formatDate(startDate);
       const length = Math.ceil((new Date(post.update_at) - startDate) / 1000 / 60);
       var attendeestext;
-      if (props.attendents == undefined || props.attendents === "") {
+      if (props.attendants == undefined || props.attendents === "") {
         attendees = "there were no attendees in this session";
       } else {
-        var arrayAttendants = props.attendents.split(",");
+        var arrayAttendants = props.attendants.split(",");
         attendees = "";
         attendeesFull = "";
         otherWords = "";
@@ -359,7 +359,7 @@ export default class PostTypebbb extends React.PureComponent {
           Attendees:
         </span>
         {
-          (props.attendents != undefined && arrayAttendants != null && arrayAttendants.length > 0)
+          (props.attendants != undefined && arrayAttendants != null && arrayAttendants.length > 0)
             ? <span style={style.summaryItem}>&ensp; {attendeestext}</span>
             : <span style={style.summaryItemGreyItalics}>
                 &ensp; {attendees}</span>

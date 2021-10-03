@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+    http:// www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,14 +18,15 @@ package main
 
 import (
 	"fmt"
-	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/helpers"
-	"github.com/mattermost/mattermost-plugin-api/cluster"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync/atomic"
 	"time"
+
+	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/helpers"
+	"github.com/mattermost/mattermost-plugin-api/cluster"
 
 	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/mattermost"
 
@@ -189,7 +190,7 @@ func (p *Plugin) ServeHTTP(c *plugin.Context, w http.ResponseWriter, r *http.Req
 	case path == "/config":
 		p.handleGetConfig(w, r)
 	case path == "/redirect":
-		_, _ = fmt.Fprintf(w, closeWindowScript)
+		_, _ = fmt.Fprint(w, closeWindowScript)
 	default:
 		p.handler.ServeHTTP(w, r)
 	}

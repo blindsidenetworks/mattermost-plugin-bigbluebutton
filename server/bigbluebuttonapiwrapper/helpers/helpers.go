@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+    http:// www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,17 +17,18 @@ limitations under the License.
 package helpers
 
 import (
-	"crypto/sha1"
+	"crypto/sha1" //nolint:gosec
 	"encoding/hex"
 	"encoding/xml"
-	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/mattermost"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/mattermost"
 )
 
 var PluginVersion string
 
-//sends a get request to the url given, returns the result as a string
+// sends a get request to the url given, returns the result as a string.
 func HttpGet(url string) (string, error) {
 	client := http.Client{}
 	req, err := http.NewRequest(http.MethodGet, url, nil)
@@ -56,7 +57,7 @@ func HttpGet(url string) (string, error) {
 
 func GetChecksum(toConvert string) string {
 	toByte := []byte(toConvert)
-	checkSumString := sha1.Sum(toByte)
+	checkSumString := sha1.Sum(toByte) //nolint:gosec
 
 	return hex.EncodeToString(checkSumString[:])
 }

@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+    http:// www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,7 +18,7 @@ package dataStructs
 
 import "errors"
 
-//the following structs are the types we create to interact with the API
+// the following structs are the types we create to interact with the API
 // ie participants, meetingRooms, recordings
 
 type Recording struct {
@@ -85,7 +85,7 @@ type MeetingRoom struct {
 	LoopCount               int
 	ValidToken              string
 
-	Meta_bbb_recording_ready_url string //this needs to be properly url encoded
+	Meta_bbb_recording_ready_url string // this needs to be properly url encoded
 	Meta_channelid               string
 	Meta_endcallbackurl          string
 
@@ -93,7 +93,7 @@ type MeetingRoom struct {
 	Meta_bbb_origin_version     string
 	Meta_bbb_origin_server_name string
 
-	Meta_dc_creator	string
+	Meta_dc_creator string
 
 	CreateMeetingResponse CreateMeetingResponse
 	MeetingInfo           GetMeetingInfoResponse

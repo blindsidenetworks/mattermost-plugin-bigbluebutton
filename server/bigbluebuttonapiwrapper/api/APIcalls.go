@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+    http:// www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,31 +17,34 @@ limitations under the License.
 package api
 
 import (
+	"net/url"
+	"strconv"
+
 	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/dataStructs"
 	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/helpers"
 	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/mattermost"
 	"github.com/pkg/errors"
-	"net/url"
-	"strconv"
 )
 
-//url of the BigBlueButton server
+const SUCCESS_STATUS_CODE = "SUCCESS"
+
+// url of the BigBlueButton server.
 var BaseUrl string
 
-//Secret of the BigBlueButton server
+// Secret of the BigBlueButton server.
 var secret string
 
-//Sets the BaseUrl and secret
+// Sets the BaseUrl and secret.
 func SetAPI(url string, secretParam string) {
 	BaseUrl = url
 	secret = secretParam
 }
 
-//CreateMeeting creates A BigBlueButton meeting
+// CreateMeeting creates A BigBlueButton meeting
 // note: a BigBlueButton meeting will terminate 1 minute after its creation
 // if there are no attendees currently present in the meeting
 //
-// see http://docs.bigbluebutton.org/dev/api.html for API documentation
+// see http:// docs.bigbluebutton.org/dev/api.html for API documentation.
 func CreateMeeting(meetingRoom *dataStructs.MeetingRoom) (string, error) {
 	if meetingRoom.Name_ == "" {
 		return "", errors.New("meeting name cannot be empty")
@@ -103,7 +106,7 @@ func CreateMeeting(meetingRoom *dataStructs.MeetingRoom) (string, error) {
 		return "", err
 	}
 
-	if "SUCCESS" == meetingRoom.CreateMeetingResponse.Returncode {
+	if SUCCESS_STATUS_CODE == meetingRoom.CreateMeetingResponse.Returncode {
 		mattermost.API.LogInfo("SUCCESS CREATE MEETINGROOM. MEETING ID: " +
 			meetingRoom.CreateMeetingResponse.MeetingID)
 		return meetingRoom.CreateMeetingResponse.MeetingID, nil
@@ -113,7 +116,7 @@ func CreateMeeting(meetingRoom *dataStructs.MeetingRoom) (string, error) {
 	return "", errors.New(response)
 }
 
-// GetJoinURL: we send in a Participant struct and get back a joinurl that participant can go to
+// GetJoinURL: we send in a Participant struct and get back a joinurl that participant can go to.
 func GetJoinURL(participants *dataStructs.Participants) (string, error) {
 	if err := participants.IsValid(); err != nil {
 		return "", err
@@ -162,7 +165,7 @@ func GetJoinURL(participants *dataStructs.Participants) (string, error) {
 	return joinUrl, nil
 }
 
-//IsMeetingRunning: only returns true when someone has joined the meeting
+// IsMeetingRunning: only returns true when someone has joined the meeting.
 func IsMeetingRunning(meetingID string) (bool, error) {
 	checksum := helpers.GetChecksum("isMeetingRunning" + "meetingID=" + meetingID + secret)
 	getURL := BaseUrl + "isMeetingRunning?" + "meetingID=" + meetingID + "&checksum=" + checksum
@@ -179,7 +182,7 @@ func IsMeetingRunning(meetingID string) (bool, error) {
 	return xmlResp.Running, nil
 }
 
-//EndMeeting ends a BBB meeting
+// EndMeeting ends a BBB meeting.
 func EndMeeting(meetingId string, modPw string) (string, error) {
 	meetingID := "meetingID=" + url.QueryEscape(meetingId)
 	modPW := "&password=" + url.QueryEscape(modPw)
@@ -199,15 +202,15 @@ func EndMeeting(meetingId string, modPw string) (string, error) {
 		return "", err
 	}
 
-	if "SUCCESS" == XMLResp.ReturnCode {
+	if SUCCESS_STATUS_CODE == XMLResp.ReturnCode {
 		return "Successfully ended meeting " + meetingId, nil
 	}
 
 	return "", errors.New("Could not end meeting " + meetingId)
 }
 
-//GetMeetingInfo: pass in meeting id, moderator password and address of a response structure,
-// able to see new response info without having to get passed back the structure
+// GetMeetingInfo: pass in meeting id, moderator password and address of a response structure,
+// able to see new response info without having to get passed back the structure.
 func GetMeetingInfo(meetingId string, modPw string, responseXML *dataStructs.GetMeetingInfoResponse) (string, error) {
 	meetingID := "meetingID=" + url.QueryEscape(meetingId)
 	modPW := "&password=" + url.QueryEscape(modPw)
@@ -225,7 +228,7 @@ func GetMeetingInfo(meetingId string, modPw string, responseXML *dataStructs.Get
 		return "", err
 	}
 
-	if "SUCCESS" == responseXML.ReturnCode {
+	if SUCCESS_STATUS_CODE == responseXML.ReturnCode {
 		mattermost.API.LogInfo("Successfully got meeting info")
 		return "Successfully got meeting info" + meetingId, nil
 	} else {
@@ -233,7 +236,7 @@ func GetMeetingInfo(meetingId string, modPw string, responseXML *dataStructs.Get
 	}
 }
 
-//GetMeetings: Gets all meetings and the details by returning a struct
+// GetMeetings: Gets all meetings and the details by returning a struct.
 func GetMeetings() (dataStructs.GetMeetingsResponse, error) {
 	checksum := helpers.GetChecksum("getMeetings" + secret)
 	getURL := BaseUrl + "getMeetings?" + "&checksum=" + checksum
@@ -248,7 +251,7 @@ func GetMeetings() (dataStructs.GetMeetingsResponse, error) {
 		return dataStructs.GetMeetingsResponse{}, err
 	}
 
-	if "SUCCESS" == XMLResp.ReturnCode {
+	if SUCCESS_STATUS_CODE == XMLResp.ReturnCode {
 		mattermost.API.LogInfo("Successfully got meetings info")
 	} else {
 		mattermost.API.LogError("Could not get meetings info ")
@@ -256,18 +259,19 @@ func GetMeetings() (dataStructs.GetMeetingsResponse, error) {
 	return XMLResp, nil
 }
 
-//GetRecordings gets a recording for a BBB meeting
+// GetRecordings gets a recording for a BBB meeting.
 func GetRecordings(meetingId string, recordId string, metachannelid string) (dataStructs.GetRecordingsResponse, string, error) {
 	meetingID := "meetingID=" + url.QueryEscape(meetingId)
 	recordid := "&recordID=" + url.QueryEscape(recordId)
 	var param string
-	if metachannelid != "" {
+	switch {
+	case metachannelid != "":
 		metaChannelId := "meta_channelid=" +
 			url.QueryEscape(metachannelid)
 		param = metaChannelId
-	} else if meetingId != "" && recordId != "" {
+	case meetingId != "" && recordId != "":
 		param = meetingID + recordid
-	} else if meetingId != "" {
+	case meetingId != "":
 		param = meetingID
 	}
 	checksum := helpers.GetChecksum("getRecordings" + param + secret)
@@ -283,7 +287,7 @@ func GetRecordings(meetingId string, recordId string, metachannelid string) (dat
 		return dataStructs.GetRecordingsResponse{}, "", err
 	}
 
-	if "SUCCESS" == XMLResp.ReturnCode {
+	if SUCCESS_STATUS_CODE == XMLResp.ReturnCode {
 		mattermost.API.LogInfo("Successfully got recordings info")
 	} else {
 		return dataStructs.GetRecordingsResponse{}, "", errors.New("Could not get recordings info")
@@ -291,7 +295,7 @@ func GetRecordings(meetingId string, recordId string, metachannelid string) (dat
 	return XMLResp, response, nil
 }
 
-//PublishRecordings
+// PublishRecordings.
 func PublishRecordings(recordid string, publish string) (dataStructs.PublishRecordingsResponse, error) {
 	recordID := "recordID=" + url.QueryEscape(recordid)
 	Publish := "&publish=" + url.QueryEscape(publish)
@@ -314,7 +318,7 @@ func PublishRecordings(recordid string, publish string) (dataStructs.PublishReco
 	return XMLResp, nil
 }
 
-//DeleteRecordings
+// DeleteRecordings.
 func DeleteRecordings(recordid string) (dataStructs.DeleteRecordingsResponse, error) {
 	recordID := "recordID=" + url.QueryEscape(recordid)
 	param := recordID

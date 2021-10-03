@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+    http:// www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,11 +20,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/helpers"
-	"github.com/mattermost/mattermost-server/v5/utils"
 	"net/url"
 	"strconv"
 	"strings"
+
+	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/helpers"
+	"github.com/mattermost/mattermost-server/v5/utils"
 
 	bbbAPI "github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/api"
 	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/dataStructs"
@@ -34,12 +35,19 @@ import (
 )
 
 const (
-	// KV Store key prefixes
+	// KV Store key prefixes.
 	prefixMeeting     = "m_"
 	prefixMeetingList = "m_list_"
 )
 
-func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, description string, UserId string, channelId string, allowRecording bool) error {
+func (p *Plugin) PopulateMeeting(
+	m *dataStructs.MeetingRoom,
+	details []string,
+	description string,
+	userId string,
+	channelId string,
+	allowRecording bool,
+) error {
 	if len(details) == 2 {
 		m.Name_ = details[1]
 	} else {
@@ -55,7 +63,7 @@ func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, d
 
 	callbackURL = *siteConfig.ServiceSettings.SiteURL
 	if !strings.HasPrefix(callbackURL, "http") {
-		callbackURL = "http://" + callbackURL
+		callbackURL = "http:// " + callbackURL
 	}
 
 	m.MeetingID_ = GenerateRandomID()
@@ -96,9 +104,9 @@ func (p *Plugin) PopulateMeeting(m *dataStructs.MeetingRoom, details []string, d
 		return errors.New("SiteURL not set")
 	}
 
-	user, err := p.API.GetUser(UserId)
+	user, err := p.API.GetUser(userId)
 	if err != nil {
-		return errors.New("Error resolving UserId")
+		return errors.New("Error resolving userId")
 	}
 	m.Meta_dc_creator = user.Email
 
@@ -322,10 +330,10 @@ func GetAttendees(meetingId string, modPw string) (int, []string) {
 
 func FormatSeconds(seconds int64) string {
 	hours := seconds / 3600
-	seconds = seconds - 3600*hours
+	seconds -= 3600 * hours
 
 	minutes := seconds / 60
-	seconds = seconds - 60*minutes
+	seconds -= 60 * minutes
 
 	if hours != 0 {
 		return fmt.Sprintf("%d hours, %d minutes and %d seconds", hours, minutes, seconds)
