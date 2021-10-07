@@ -23,7 +23,6 @@ import ProfilePopover from './profile_popover.jsx';
 import {startMeeting} from '../../actions';
 
 function mapStateToProps(state, ownProps) {
-	const post = ownProps.post || {};
 	let team = getCurrentTeam(state) || {};
 	let teamname = team.name;
 	let cur_user = getCurrentUser(state) || {};

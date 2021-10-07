@@ -176,6 +176,7 @@ export default class PostTypebbb extends React.PureComponent {
 
 	render() {
 
+		let i;
 		//overrides default Mattermost style with out own
 		bootstrapUtils.addStyle(Button, 'custom');
 		var arrayAttendants = [];
@@ -202,7 +203,7 @@ export default class PostTypebbb extends React.PureComponent {
 		} else {
 			arrayAttendants = props.attendees.split(',');
 			if (arrayAttendants != null && props.user_count > 0) {
-				for (var i = 0; i < arrayAttendants.length; i++) {
+				for (i = 0; i < arrayAttendants.length; i++) {
 					if (i <= 3) {
 
 						attendees += arrayAttendants[i];
@@ -297,7 +298,7 @@ export default class PostTypebbb extends React.PureComponent {
 				otherWords = '';
 
 				if (attendants != null && attendants.length > 0) {
-					for (var i = 0; i < attendants.length; i++) {
+					for (i = 0; i < attendants.length; i++) {
 						if (i <= 3) {
 							attendees += attendants[i];
 							if (i != attendants.length - 1) {
@@ -357,7 +358,7 @@ export default class PostTypebbb extends React.PureComponent {
 				if (props.images !== undefined && props.images !== '' && typeof props.images === 'string') {
 					var imagesArray = props.images.split(',');
 
-					for (var i = 0; i < imagesArray.length; i++) {
+					for (i = 0; i < imagesArray.length; i++) {
 						images.push(<Col sm={3} xs={3} md={2} lg={2}>
 							<Thumbnail href={props.recording_url} responsive="responsive" src={imagesArray[i]}/>
 						</Col>);
