@@ -36,6 +36,8 @@ export default class Root extends React.PureComponent {
 		channelName: PropTypes.string.isRequired,
 		channel: PropTypes.object.isRequired,
 		pluginConfig: PropTypes.object.isRequired,
+		channelId: PropTypes.string,
+		visible: PropTypes.bool,
 		actions: PropTypes.shape({
 			getJoinURL: PropTypes.func.isRequired,
 			channelId: PropTypes.string.isRequired,
@@ -109,18 +111,18 @@ export default class Root extends React.PureComponent {
 	};
 
 	getJoinURL = async () => {
-		var userAgent = navigator.userAgent.toLowerCase();
-		var myurl;
-		var myvar;
+		let myurl;
+		const userAgent = navigator.userAgent.toLowerCase();
+		let myvar;
 		//for electron apps
 		if (userAgent.indexOf(' electron/') > -1) {
-			var myurl = await this.props.actions.getJoinURL(this.state.channelId, this.state.meetingId, '');
+			myurl = await this.props.actions.getJoinURL(this.state.channelId, this.state.meetingId, '');
 			myvar = await myurl.data.joinurl.url;
 			window.open(myvar);
 		} else { //for webapps to circumvent popup blockers
-			var newtab = await window.open('about:blank');
+			let newtab = await window.open('about:blank');
 			try {
-				var myurl = await this.props.actions.getJoinURL(this.state.channelId, this.state.meetingId, '');
+				myurl = await this.props.actions.getJoinURL(this.state.channelId, this.state.meetingId, '');
 				myvar = await myurl.data.joinurl.url;
 				newtab.location = myvar;
 				newtab.focus();
@@ -275,8 +277,10 @@ export default class Root extends React.PureComponent {
 					<Modal.Body style={style.body}>
 						<div>
 							<div>
-								<img src={this.getSiteUrl() + this.state.profilePicUrl}
-									 class="img-responsive img-circle center-block "/>
+								<img 
+									src={this.getSiteUrl() + this.state.profilePicUrl}
+									className="img-responsive img-circle center-block "
+								/>
 							</div>
 							<div style={style.bodyText}>
 								<span>

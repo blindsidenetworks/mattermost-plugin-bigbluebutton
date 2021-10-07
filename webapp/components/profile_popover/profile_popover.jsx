@@ -82,6 +82,7 @@ export default class ProfilePopover extends React.PureComponent {
 }
 
 /* Define CSS styles here */
+// eslint-disable-next-line no-unused-vars
 const getStyle = makeStyleFromTheme((theme) => {
 	return {
 		container: {

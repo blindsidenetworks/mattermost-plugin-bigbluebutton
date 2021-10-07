@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+import React from 'react';
 import ChannelHeaderButton from './components/channel_header_button';
 import ProfilePopover from './components/profile_popover';
 import PostTypebbb from './components/post_type_bbb';
@@ -55,4 +56,4 @@ class PluginClass {
 	}
 }
 
-global.window.registerPlugin(PluginId, new PluginClass());
+window.registerPlugin(PluginId, new PluginClass());
