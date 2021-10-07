@@ -19,7 +19,7 @@ const {bindActionCreators} = window.Redux;
 import {getCurrentTeam} from 'mattermost-redux/selectors/entities/teams';
 import {getCurrentUser} from 'mattermost-redux/selectors/entities/users';
 import {getLastPostPerChannel} from 'mattermost-redux/selectors/entities/posts';
-import {getChannelsInCurrentTeam, getDirectChannels, getSortedUnreadChannelIds, makeGetChannel} from 'mattermost-redux/selectors/entities/channels';
+import {getDirectChannels} from 'mattermost-redux/selectors/entities/channels';
 import {getTheme} from 'mattermost-redux/selectors/entities/preferences';
 import {getPluginState, isRootModalVisible} from '../../selectors';
 import {getSortedDirectChannelWithUnreadsIds} from 'mattermost-redux/selectors/entities/channels';
@@ -31,51 +31,50 @@ import Root from './root.jsx';
 // BigBlueButton meeting started from a direct message
 
 function mapStateToProps(state, ownProps) {
-  const post = ownProps.post || {};
-  /* Provide values for any custom props or override any existing props here */
-  let team = getCurrentTeam(state) || {};
-  let teamname = team.name;
-  let cur_user = getCurrentUser(state) || {};
-  const keepChannelIdAsUnread = state.views.channel.keepChannelIdAsUnread;
+	/* Provide values for any custom props or override any existing props here */
+	let team = getCurrentTeam(state) || {};
+	let teamname = team.name;
+	let cur_user = getCurrentUser(state) || {};
+	const keepChannelIdAsUnread = state.views.channel.keepChannelIdAsUnread;
 
-  let channelId = state.entities.channels.currentChannelId;
-  const channel = state.entities.channels.channels[channelId] || {};
-  const userId = state.entities.users.currentUserId;
-  if (channel.name === `${userId}__${userId}`) {
-    channelId = '';
-  }
-  let teamId = state.entities.teams.currentTeamId;
-  const pluginConfig = getPluginState(state).pluginConfig
+	let channelId = state.entities.channels.currentChannelId;
+	const channel = state.entities.channels.channels[channelId] || {};
+	const userId = state.entities.users.currentUserId;
+	if (channel.name === `${userId}__${userId}`) {
+		channelId = '';
+	}
+	let teamId = state.entities.teams.currentTeamId;
+	const pluginConfig = getPluginState(state).pluginConfig;
 
-  return {
-    visible: isRootModalVisible(state),
-    channelId,
-    channel: channel,
-    channelName: channel.name,
-    directChannels: getDirectChannels(state),
-    teamId,
-    cur_user,
-    teamname,
-    state,
-    theme: getTheme(state),
-    lastpostperchannel: getLastPostPerChannel(state),
-    unreadChannelIds: getSortedDirectChannelWithUnreadsIds(state, keepChannelIdAsUnread),
-    pluginConfig,
-    ...ownProps
-  };
+	return {
+		visible: isRootModalVisible(state),
+		channelId,
+		channel: channel,
+		channelName: channel.name,
+		directChannels: getDirectChannels(state),
+		teamId,
+		cur_user,
+		teamname,
+		state,
+		theme: getTheme(state),
+		lastpostperchannel: getLastPostPerChannel(state),
+		unreadChannelIds: getSortedDirectChannelWithUnreadsIds(state, keepChannelIdAsUnread),
+		pluginConfig,
+		...ownProps
+	};
 }
 
 function mapDispatchToProps(dispatch) {
-  /* Provide actions here if needed */
-  let closePopover = closeRootModal
-  return {
-    actions: bindActionCreators({
-      getJoinURL,
-      startMeeting,
-      showRecordings,
-      closePopover,
-    }, dispatch)
-  };
+	/* Provide actions here if needed */
+	let closePopover = closeRootModal;
+	return {
+		actions: bindActionCreators({
+			getJoinURL,
+			startMeeting,
+			showRecordings,
+			closePopover,
+		}, dispatch)
+	};
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Root);
