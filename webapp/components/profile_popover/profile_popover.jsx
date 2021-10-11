@@ -17,7 +17,7 @@ limitations under the License.
 import React from 'react';
 
 import PropTypes from 'prop-types';
-import {makeStyleFromTheme, changeOpacity} from 'mattermost-redux/utils/theme_utils';
+import {changeOpacity, makeStyleFromTheme} from 'mattermost-redux/utils/theme_utils';
 import * as ChannelActions from 'mattermost-redux/actions/channels';
 
 export default class ProfilePopover extends React.PureComponent {
@@ -62,20 +62,23 @@ export default class ProfilePopover extends React.PureComponent {
 		const myteam = this.props.teamname;
 		const url = '/' + myteam + '/messages/@' + user.username;
 
+		console.log(this.props);
+
+		if (this.props.user.id === this.props.cur_user.id) {
+			return null;
+		}
 
 		return (
 			<div>
 				<hr style={{
 					margin: '10px -15px 10px'
 				}}/>
-				{
-					this.props.user.id != this.props.cur_user.id && <div>
-						<a onClick={(e) => this.handleDirectMessage(e, url)}>
-							<i className="fa fa-video-camera"/>{'  Start BigBlueButton Meeting'}
-						</a>
-						<br/>
-					</div>
-				}
+				<div>
+					<a onClick={(e) => this.handleDirectMessage(e, url)}>
+						<i className="fa fa-video-camera"/>{'  Start BigBlueButton Meeting'}
+					</a>
+					<br/>
+				</div>
 			</div>
 		);
 	}
