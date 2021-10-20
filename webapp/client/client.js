@@ -40,7 +40,7 @@ export default class Client {
 	}
 
 	getJoinURL = async (userid, meetingid, ismod) => {
-		var body = await this.doPost(`${this.baseUrl}/joinmeeting`, {
+		var body = await this.doPost(`${this.baseUrl}/joininvite`, {
 			user_id: userid,
 			meeting_id: meetingid,
 			is_mod: ismod

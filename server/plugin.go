@@ -25,6 +25,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/helpers"
 	"github.com/mattermost/mattermost-plugin-api/cluster"
 
@@ -151,7 +153,51 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 		return nil, model.NewAppError("ExecuteCommand", "Unable so save meeting", nil, err.Error(), http.StatusInternalServerError)
 	}
 
+	toUserID, show, err := p.shouldShowCallPopup(args.UserId, args.ChannelId)
+	if err == nil && show {
+		p.sendCallAlert(meetingpointer.MeetingID_, args.UserId, toUserID)
+	}
+
 	return &model.CommandResponse{}, nil
+}
+
+func (p *Plugin) shouldShowCallPopup(fromUserID, channelID string) (string, bool, error) {
+	channel, appErr := p.API.GetChannel(channelID)
+	if appErr != nil {
+		p.API.LogError("Error occurred fetching channel", "channelID", channelID, "error", appErr.Error())
+		return "", false, errors.New(appErr.Error())
+	}
+
+	if channel.Type != model.CHANNEL_DIRECT {
+		return "", false, nil
+	}
+
+	channelMembers := strings.Split(channel.Name, "__")
+	if len(channelMembers) != 2 {
+		return "", false, errors.New("Invalid length of channel members found for direct channel. channelName: " + channel.Name)
+	}
+
+	var toUserID string
+	if channelMembers[0] == fromUserID {
+		toUserID = channelMembers[1]
+	} else {
+		toUserID = channelMembers[0]
+	}
+
+	return toUserID, true, nil
+}
+
+func (p *Plugin) sendCallAlert(meetingID, fromUserID, toUserID string) {
+	p.API.PublishWebSocketEvent(
+		"incoming_call",
+		map[string]interface{}{
+			"meetingId":  meetingID,
+			"fromUserID": fromUserID,
+		},
+		&model.WebsocketBroadcast{
+			UserId: toUserID,
+		},
+	)
 }
 
 // ServeHTTP is the router to handle our server calls
@@ -191,6 +237,8 @@ func (p *Plugin) ServeHTTP(c *plugin.Context, w http.ResponseWriter, r *http.Req
 		p.handleGetConfig(w, r)
 	case path == "/redirect":
 		_, _ = fmt.Fprint(w, closeWindowScript)
+	case path == "/joininvite":
+		p.handleJoinInvite(w, r)
 	default:
 		p.handler.ServeHTTP(w, r)
 	}

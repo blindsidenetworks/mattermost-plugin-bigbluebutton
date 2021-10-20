@@ -21,7 +21,7 @@ import {getCurrentTeamId} from 'mattermost-redux/selectors/entities/teams';
 import {searchPosts} from 'mattermost-redux/actions/search';
 
 import {ActionTypes, RHSStates} from '../utils/constants.jsx';
-import {OPEN_ROOT_MODAL, CLOSE_ROOT_MODAL} from '../action_types';
+import {OPEN_ROOT_MODAL, CLOSE_ROOT_MODAL, DISMISS_INCOMING_CALL} from '../action_types';
 import {GetClient} from '../client';
 
 export const openRootModal = () => (dispatch) => {
@@ -306,5 +306,13 @@ export function performSearch(terms, isMentionSearch) {
 		const teamId = getCurrentTeamId(getState());
 
 		return dispatch(searchPosts(teamId, terms, isMentionSearch));
+	};
+}
+
+export function dismissIncomingCall() {
+	return (dispatch) => {
+		dispatch({
+			type: DISMISS_INCOMING_CALL,
+		});
 	};
 }

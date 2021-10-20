@@ -1,5 +1,12 @@
 import {combineReducers} from 'redux';
-import {STATUS_CHANGE, OPEN_ROOT_MODAL, CLOSE_ROOT_MODAL, SET_PLUGIN_CONFIG} from './action_types';
+import {
+	CLOSE_ROOT_MODAL,
+	DISMISS_INCOMING_CALL,
+	INCOMING_CALL,
+	OPEN_ROOT_MODAL,
+	SET_PLUGIN_CONFIG,
+	STATUS_CHANGE
+} from './action_types';
 
 const enabled = (state = false, action) => {
 	switch (action.type) {
@@ -31,8 +38,25 @@ const pluginConfig = (state = {}, action) => {
 	}
 };
 
+const incomingCall = (state = {}, action) => {
+	switch (action.type) {
+	case INCOMING_CALL:
+		return {
+			...action.data,
+			dismissed: false,
+		};
+	case DISMISS_INCOMING_CALL:
+		return {
+			dismissed: true,
+		};
+	default:
+		return state;
+	}
+};
+
 export default combineReducers({
 	enabled,
 	rootModalVisible,
 	pluginConfig,
+	incomingCall,
 });
