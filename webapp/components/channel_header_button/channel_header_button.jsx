@@ -51,27 +51,12 @@ export default class ChannelHeaderButton extends React.PureComponent {
 		this.overlayRef = React.createRef();
 	}
 
-	searchRecordings = () => {
-		this.props.actions.showRecordings();
-	};
-
-	startMeeting = async () => {
-		await this.props.actions.startMeeting(this.props.channelId, '', this.props.channel.display_name);
-		this.close_the_popover();
-	};
-	close_the_popover = () => {
-		this.props.actions.closePopover();
-		this.setState({showPopover: false});
-	};
-
 	render() {
-
 		if (this.props.channelId === '') {
 			return <div/>;
 		}
 
 		const style = getStyle(this.props.theme);
-
 		return (<div>
 			<div>
 				<OverlayTrigger
@@ -94,7 +79,7 @@ export default class ChannelHeaderButton extends React.PureComponent {
 								showPopover: !this.props.visible
 							});
 						}}
-						style={style.foo}
+						style={style.svg}
 					>
 						<span
 							style={style.iconStyle}
@@ -148,7 +133,7 @@ const getStyle = makeStyleFromTheme((theme) => {
 			top: '-9px',
 			borderBottom: '1px solid #D8D8D9'
 		},
-		foo: {
+		svg: {
 			width: '28px',
 			height: '28px',
 		}

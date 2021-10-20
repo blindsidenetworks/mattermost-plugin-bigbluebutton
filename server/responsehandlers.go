@@ -59,6 +59,11 @@ type AttendeesResponseJSON struct {
 	Attendees []string `json:"attendees"`
 }
 
+type joinInviteRequest struct {
+	UserID    string `json:"user_id"`
+	MeetingID string `json:"meeting_id"`
+}
+
 func (p *Plugin) Loopthroughrecordings() {
 	meetingsWaitingforRecordings, err := p.GetRecordingWaitingList()
 	if err != nil {
@@ -206,7 +211,156 @@ func (p *Plugin) handleCreateMeeting(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	toUserID, show, err := p.shouldShowCallPopup(request.UserId, request.ChannelId)
+	if err == nil && show {
+		p.sendCallAlert(meetingpointer.MeetingID_, request.UserId, toUserID)
+	}
+
 	w.WriteHeader(http.StatusOK)
+}
+
+func (p *Plugin) handleJoinInvite(w http.ResponseWriter, r *http.Request) {
+	body, _ := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+
+	var payload *joinInviteRequest
+	if err := json.Unmarshal(body, &payload); err != nil {
+		p.API.LogError("Error occurred unmarshalling join invite request body. Error: " + err.Error())
+		return
+	}
+
+	joinURL, err := p.foo(payload.MeetingID, payload.UserID)
+	if err != nil {
+		p.API.LogError("Error occurred fetching join URL when joining meeting invite", "error", err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	response := map[string]string{
+		"joinURL": joinURL,
+	}
+	data, err := json.Marshal(response)
+	if err != nil {
+		p.API.LogError("Error occurred marshaling join meeting response", "error", err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_, _ = w.Write(data)
+}
+
+func (p *Plugin) foo(meetingID, userID string) (string, error) {
+	meetingpointer := p.FindMeeting(meetingID)
+
+	if meetingpointer == nil {
+		return "", errors.New("meeting not found")
+	}
+
+	// check if meeting has actually been created and can be joined
+	if !meetingpointer.Created {
+		if _, err := bbbAPI.CreateMeeting(meetingpointer); err != nil {
+			p.API.LogError("Error occurred in creating meeting when joining. Error: " + err.Error())
+			return "", err
+		}
+
+		meetingpointer.Created = true
+		var fullMeetingInfo dataStructs.GetMeetingInfoResponse
+
+		// this is used to get the InternalMeetingID
+		if _, err := bbbAPI.GetMeetingInfo(meetingID, meetingpointer.ModeratorPW_, &fullMeetingInfo); err != nil {
+			p.API.LogError("Error occurred in fetching meeting when joining. Error: " + err.Error())
+			return "", err
+		}
+
+		meetingpointer.InternalMeetingId = fullMeetingInfo.InternalMeetingID
+		meetingpointer.CreatedAt = time.Now().Unix()
+	}
+
+	user, _ := p.API.GetUser(userID)
+	username := user.Username
+
+	// golang doesnt have sets so have to iterate through array to check if meeting participant is already in meeeting
+	if !IsItemInArray(username, meetingpointer.AttendeeNames) {
+		meetingpointer.AttendeeNames = append(meetingpointer.AttendeeNames, username)
+	}
+
+	if err := p.SaveMeeting(meetingpointer); err != nil {
+		p.API.LogError("Error occurred updating meeting info in handleJoinMeeting. Error: " + err.Error())
+	}
+
+	var participant = dataStructs.Participants{} // set participant as an empty struct of type Participants
+	participant.FullName_ = user.GetFullName()
+	if len(participant.FullName_) == 0 {
+		participant.FullName_ = user.Username
+	}
+
+	participant.MeetingID_ = meetingID
+
+	post, appErr := p.API.GetPost(meetingpointer.PostId)
+	if appErr != nil {
+		p.API.LogError("Error cocurred getting meeting post", "error", appErr.Error())
+		return "", errors.New(appErr.Error())
+	}
+	config := p.config()
+	if config.AdminOnly {
+		participant.Password_ = meetingpointer.AttendeePW_
+		if post.UserId == userID {
+			participant.Password_ = meetingpointer.ModeratorPW_ // the creator of a room is always moderator
+		} else {
+			for _, role := range user.GetRoles() {
+				if role == "SYSTEM_ADMIN" || role == "TEAM_ADMIN" {
+					participant.Password_ = meetingpointer.ModeratorPW_
+					break
+				}
+			}
+		}
+	} else {
+		participant.Password_ = meetingpointer.ModeratorPW_ // make everyone in channel a mod
+	}
+
+	joinURL, err := bbbAPI.GetJoinURL(&participant)
+	if err != nil {
+		p.API.LogError("Error occurred generating meeting join URL", "error", err.Error())
+		return "", err
+	}
+
+	Length, attendantsarray := GetAttendees(meetingID, meetingpointer.ModeratorPW_)
+	// we immediately add our current attendee thats trying to join the meeting
+	// to avoid the delay
+	attendantsarray = append(attendantsarray, username)
+	post.AddProp("user_count", Length+1)
+
+	slackAttachments := post.Attachments()
+
+	uniqueAttendees := map[string]bool{}
+	for _, user := range attendantsarray {
+		uniqueAttendees[user] = true
+	}
+
+	if slackAttachments[0].Fields[0].Value != "*There are no attendees in this session*" {
+		for _, user := range strings.Split(slackAttachments[0].Fields[0].Value.(string), ", ") {
+			username := strings.TrimLeft(user, "@")
+			uniqueAttendees[username] = true
+		}
+	}
+
+	uniqueAttendeesList := []string{}
+	for user := range uniqueAttendees {
+		uniqueAttendeesList = append(uniqueAttendeesList, user)
+	}
+
+	post.AddProp("attendees", strings.Join(uniqueAttendeesList, ","))
+	slackAttachments[0].Fields[0].Title = fmt.Sprintf("Attendees (%d)", len(uniqueAttendeesList))
+	slackAttachments[0].Fields[0].Value = "@" + strings.Join(uniqueAttendeesList, ", @")
+	model.ParseSlackAttachment(post, slackAttachments)
+
+	if _, appErr := p.API.UpdatePost(post); appErr != nil {
+		p.API.LogError("Error occurred updating meeting post during user joining it. Error: " + appErr.Error())
+		return "", errors.New(appErr.Error())
+	}
+
+	return joinURL, nil
 }
 
 func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
@@ -221,7 +375,6 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 
 	meetingID := request.Context["meetingId"].(string)
 	meetingpointer := p.FindMeeting(meetingID)
-
 	if meetingpointer == nil {
 		myresp := ButtonResponseJSON{
 			Url: "error",
@@ -230,70 +383,9 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write(userJson)
 		return
 	} else {
-		// check if meeting has actually been created and can be joined
-		if !meetingpointer.Created {
-			if _, err := bbbAPI.CreateMeeting(meetingpointer); err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-
-			meetingpointer.Created = true
-			var fullMeetingInfo dataStructs.GetMeetingInfoResponse
-
-			// this is used to get the InternalMeetingID
-			if _, err := bbbAPI.GetMeetingInfo(meetingID, meetingpointer.ModeratorPW_, &fullMeetingInfo); err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-
-			meetingpointer.InternalMeetingId = fullMeetingInfo.InternalMeetingID
-			meetingpointer.CreatedAt = time.Now().Unix()
-		}
-
-		user, _ := p.API.GetUser(request.UserId)
-		username := user.Username
-
-		// golang doesnt have sets so have to iterate through array to check if meeting participant is already in meeeting
-		if !IsItemInArray(username, meetingpointer.AttendeeNames) {
-			meetingpointer.AttendeeNames = append(meetingpointer.AttendeeNames, username)
-		}
-
-		if err := p.SaveMeeting(meetingpointer); err != nil {
-			p.API.LogError("Error occurred updating meeting info in handleJoinMeeting. Error: " + err.Error())
-		}
-
-		var participant = dataStructs.Participants{} // set participant as an empty struct of type Participants
-		participant.FullName_ = user.GetFullName()
-		if len(participant.FullName_) == 0 {
-			participant.FullName_ = user.Username
-		}
-
-		participant.MeetingID_ = meetingID
-
-		post, appErr := p.API.GetPost(meetingpointer.PostId)
-		if appErr != nil {
-			http.Error(w, appErr.Error(), appErr.StatusCode)
-			return
-		}
-		config := p.config()
-		if config.AdminOnly {
-			participant.Password_ = meetingpointer.AttendeePW_
-			if post.UserId == request.UserId {
-				participant.Password_ = meetingpointer.ModeratorPW_ // the creator of a room is always moderator
-			} else {
-				for _, role := range user.GetRoles() {
-					if role == "SYSTEM_ADMIN" || role == "TEAM_ADMIN" {
-						participant.Password_ = meetingpointer.ModeratorPW_
-						break
-					}
-				}
-			}
-		} else {
-			participant.Password_ = meetingpointer.ModeratorPW_ // make everyone in channel a mod
-		}
-		joinURL, err := bbbAPI.GetJoinURL(&participant)
+		joinURL, err := p.foo(meetingID, request.UserId)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
@@ -301,43 +393,6 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 			Url: joinURL,
 		}
 		userJson, _ := json.Marshal(myresp)
-
-		Length, attendantsarray := GetAttendees(meetingID, meetingpointer.ModeratorPW_)
-		// we immediately add our current attendee thats trying to join the meeting
-		// to avoid the delay
-		attendantsarray = append(attendantsarray, username)
-		post.AddProp("user_count", Length+1)
-
-		slackAttachments := post.Attachments()
-
-		uniqueAttendees := map[string]bool{}
-		for _, user := range attendantsarray {
-			uniqueAttendees[user] = true
-		}
-
-		if slackAttachments[0].Fields[0].Value != "*There are no attendees in this session*" {
-			for _, user := range strings.Split(slackAttachments[0].Fields[0].Value.(string), ", ") {
-				username := strings.TrimLeft(user, "@")
-				uniqueAttendees[username] = true
-			}
-		}
-
-		uniqueAttendeesList := []string{}
-		for user := range uniqueAttendees {
-			uniqueAttendeesList = append(uniqueAttendeesList, user)
-		}
-
-		post.AddProp("attendees", strings.Join(uniqueAttendeesList, ","))
-		slackAttachments[0].Fields[0].Title = fmt.Sprintf("Attendees (%d)", len(uniqueAttendeesList))
-		slackAttachments[0].Fields[0].Value = "@" + strings.Join(uniqueAttendeesList, ", @")
-		model.ParseSlackAttachment(post, slackAttachments)
-
-		if _, err := p.API.UpdatePost(post); err != nil {
-			p.API.LogError("Error occurred updating meeting post during user joining it. Error: " + err.Error())
-			http.Error(w, err.Error(), err.StatusCode)
-			return
-		}
-
 		p.API.SendEphemeralPost(request.UserId, &model.Post{
 			ChannelId: request.ChannelId,
 			Type:      model.POST_EPHEMERAL,

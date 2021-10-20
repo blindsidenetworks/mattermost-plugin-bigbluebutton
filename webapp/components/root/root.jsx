@@ -110,28 +110,6 @@ export default class Root extends React.PureComponent {
 
 	};
 
-	getJoinURL = async () => {
-		let myurl;
-		const userAgent = navigator.userAgent.toLowerCase();
-		let myvar;
-		//for electron apps
-		if (userAgent.indexOf(' electron/') > -1) {
-			myurl = await this.props.actions.getJoinURL(this.state.channelId, this.state.meetingId, '');
-			myvar = await myurl.data.joinurl.url;
-			window.open(myvar);
-		} else { //for webapps to circumvent popup blockers
-			let newtab = await window.open('about:blank');
-			try {
-				myurl = await this.props.actions.getJoinURL(this.state.channelId, this.state.meetingId, '');
-				myvar = await myurl.data.joinurl.url;
-				newtab.location = myvar;
-				newtab.focus();
-			} catch (e) {
-				newtab.close();
-			}
-		}
-	};
-
 	getSiteUrl = () => {
 		if (window.location.origin) {
 			return window.location.origin;
@@ -147,8 +125,6 @@ export default class Root extends React.PureComponent {
 		let src = '';
 
 		for (let i = 0; i < this.props.unreadChannelIds.length; i++) {
-
-
 			var channelid = this.props.unreadChannelIds[i];
 			if (channelid in this.props.lastpostperchannel) {
 				if (this.props.lastpostperchannel[channelid].type === 'custom_bbb' && !this.state.ignoredPosts.includes(this.props.lastpostperchannel[channelid].id) && (Date.now() - this.props.lastpostperchannel[channelid].create_at < 2000) && this.props.lastpostperchannel[channelid].user_id != this.props.cur_user.id) {
@@ -177,10 +153,6 @@ export default class Root extends React.PureComponent {
 
 		style.popover['marginLeft'] = pos_width;
 		style.popoverDM['marginLeft'] = pos_width;
-
-		const tooltip = (<Tooltip id="tooltip">
-			Go to this channel
-		</Tooltip>);
 
 		var channel = getChannel(this.props.state, this.props.channelId);
 		// console.log(channel)
@@ -270,44 +242,6 @@ export default class Root extends React.PureComponent {
 					</Popover>
 				</Overlay>
 				}
-
-				<Modal show={this.state.show} onHide={this.handleClose}>
-					<Modal.Header closeButton={true} style={style.header}></Modal.Header>
-
-					<Modal.Body style={style.body}>
-						<div>
-							<div>
-								<img 
-									src={this.getSiteUrl() + this.state.profilePicUrl}
-									className="img-responsive img-circle center-block "
-								/>
-							</div>
-							<div style={style.bodyText}>
-								<span>
-									{'BigBlueButton meeting request from '}
-									<strong>
-										<OverlayTrigger placement="top" overlay={tooltip}>
-											<a href={'/' + this.props.teamname + this.state.channelURL}>
-												{this.state.channelName}
-											</a>
-										</OverlayTrigger>
-									</strong>
-								</span>
-							</div>
-						</div>
-					</Modal.Body>
-					<Modal.Footer>
-						<button type="button" className="btn btn-default" onClick={this.handleClose}>
-							Close
-
-						</button>
-
-						<button type="button" className="btn btn-primary pull-left" onClick={this.getJoinURL}>
-							Join Meeting
-						</button>
-
-					</Modal.Footer>
-				</Modal>
 			</div>);
 	}
 }

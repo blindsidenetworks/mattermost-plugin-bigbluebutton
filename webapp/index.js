@@ -17,32 +17,49 @@ limitations under the License.
 import React from 'react';
 import ChannelHeaderButton from './components/channel_header_button';
 import ProfilePopover from './components/profile_popover';
-import PostTypebbb from './components/post_type_bbb';
 import Root from './components/root';
 import PluginId from './plugin_id';
 
 import {channelHeaderButtonAction} from './actions';
 import reducer from './reducer';
 import {GetClient, initClient} from './client';
-import {SET_PLUGIN_CONFIG} from './action_types';
+import {INCOMING_CALL, SET_PLUGIN_CONFIG} from './action_types';
+import IncomingCallPopup from './components/incoming_call';
 
 class PluginClass {
 	async initialize(registry, store) {
 		window.store = store;
 		initClient(() => store.getState().entities.general.config.SiteURL);
 
-		registry.registerPostTypeComponent('custom_bbb', PostTypebbb);
 		registry.registerChannelHeaderButtonAction(
-			<ChannelHeaderButton/>, () => store.dispatch(channelHeaderButtonAction()), 'BigBlueButton');
+			<ChannelHeaderButton/>,
+			() => store.dispatch(channelHeaderButtonAction()),
+			'BigBlueButton',
+		);
 		registry.registerPopoverUserActionsComponent(ProfilePopover);
 		registry.registerRootComponent(Root);
+		registry.registerRootComponent(IncomingCallPopup);
 		registry.registerReducer(reducer);
-		registry.registerWebSocketEventHandler('custom_bigbluebutton_config_update', (payload) => {
-			store.dispatch({
-				type: SET_PLUGIN_CONFIG,
-				data: payload.data.config,
-			});
-		});
+		
+		registry.registerWebSocketEventHandler(
+			`custom_${PluginId}_config_update`,
+			(payload) => {
+				store.dispatch({
+					type: SET_PLUGIN_CONFIG,
+					data: payload.data.config,
+				});
+			}
+		);
+		
+		registry.registerWebSocketEventHandler(
+			`custom_${PluginId}_incoming_call`,
+			(payload) => {
+				store.dispatch({
+					type: INCOMING_CALL,
+					data: payload.data,
+				});
+			}
+		);
 
 		await this.setPluginConfig(store);
 	}
