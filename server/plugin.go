@@ -18,13 +18,14 @@ package main
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync/atomic"
 	"time"
+
+	"github.com/pkg/errors"
 
 	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/helpers"
 	"github.com/mattermost/mattermost-plugin-api/cluster"

@@ -124,7 +124,7 @@ export default class IncomingCallPopup extends React.Component {
 	}
 }
 
-const getStyle = makeStyleFromTheme((theme) => {
+const getStyle = makeStyleFromTheme(() => {
 	return {
 		header: {
 			background: 'transparent',
