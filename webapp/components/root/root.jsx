@@ -121,6 +121,9 @@ export default class Root extends React.PureComponent {
 	};
 
 	render() {
+		const pos_width = (window.innerWidth - 400 + 'px');
+		const style = getStyle(pos_width, this.props.theme);
+		
 		let meetingid;
 		let src = '';
 
@@ -139,17 +142,13 @@ export default class Root extends React.PureComponent {
 				}
 			}
 		}
-		let popoverButton = (<div className="more-modal__button">
-
-			<a className="btn  btn-link" onClick={this.searchRecordings}>
-
-				{'View Recordings'}
-			</a>
-
-		</div>);
-
-		const pos_width = (window.innerWidth - 400 + 'px');
-		const style = getStyle(pos_width, this.props.theme);
+		let popoverButton = this.props.pluginConfig.ALLOW_RECORDINGS ? (
+			<div className="more-modal__button" style={style.viewRecordingBtn}>
+				<a className="btn  btn-link" onClick={this.searchRecordings}>
+					{'View Recordings'}
+				</a>
+			</div>
+		) : null;
 
 		style.popover['marginLeft'] = pos_width;
 		style.popoverDM['marginLeft'] = pos_width;
@@ -318,7 +317,6 @@ var getStyle = makeStyleFromTheme((theme) => {
 			width: '298px',
 			left: '-14px',
 			top: '-9px',
-			borderBottom: '1px solid #D8D8D9'
 		},
 
 		popoverBodyDM: {
@@ -328,7 +326,11 @@ var getStyle = makeStyleFromTheme((theme) => {
 			width: '218px',
 			left: '-14px',
 			top: '-9px',
-			borderBottom: '1px solid #D8D8D9'
 		},
+		viewRecordingBtn: {
+			borderTop: '1px solid',
+			borderColor: theme.centerChannelColor,
+			padding: '8px 0px 0px',
+		}
 	};
 });

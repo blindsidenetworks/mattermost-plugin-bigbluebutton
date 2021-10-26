@@ -77,7 +77,6 @@ func (p *Plugin) OnActivate() error {
 	}
 
 	bbbAPI.SetAPI(config.BaseURL+"/", config.Secret)
-
 	helpers.PluginVersion = PluginVersion
 
 	if config.ProcessRecordings {
