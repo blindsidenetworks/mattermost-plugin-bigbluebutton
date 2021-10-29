@@ -36,7 +36,6 @@ export const closeRootModal = () => (dispatch) => {
 	});
 };
 
-export const mainMenuAction = openRootModal;
 export const channelHeaderButtonAction = openRootModal;
 
 export function startMeeting(channelId, allowRecording, description = '', topic = '') {
