@@ -18,8 +18,6 @@ function mapDispatchTooProps(dispatch) {
 
 function mapStateToProps(state, ownProps) {
 	const pluginState = getPluginState(state);
-	console.log(pluginState);
-	
 	return {
 		show: pluginState.incomingCall.dismissed === false,
 		theme: getTheme(state),

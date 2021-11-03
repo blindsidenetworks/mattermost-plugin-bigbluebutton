@@ -18,8 +18,6 @@ import React from 'react';
 import PopoverListMembersItem from './popover_list_members_item.jsx';
 import PropTypes from 'prop-types';
 import {makeStyleFromTheme} from 'mattermost-redux/utils/theme_utils';
-import {Client4} from 'mattermost-redux/client';
-import {getUser} from 'mattermost-redux/selectors/entities/users';
 import {getChannel} from 'mattermost-redux/selectors/entities/channels';
 
 // eslint-disable-next-line no-unused-vars
@@ -87,61 +85,10 @@ export default class Root extends React.PureComponent {
 		this.setState({showPopover: false});
 	};
 
-	openmodal = async (postid, channelid, meetingId, src) => {
-		var channel = getChannel(this.props.state, channelid);
-		var channelurl;
-		if (channel.type === 'D') {
-			channelurl = '/messages/@' + channel.display_name;
-		} else if (channel.type === 'G') {
-			channelurl = '/messages/' + channel.name;
-		}
-		await this.setState({
-			ignoredPosts: [
-				...this.state.ignoredPosts,
-				postid
-			],
-			show: true,
-			channelId: channelid,
-			meetingId: meetingId,
-			profilePicUrl: src,
-			channelName: channel.display_name,
-			channelURL: channelurl
-		});
-
-	};
-
-	getSiteUrl = () => {
-		if (window.location.origin) {
-			return window.location.origin;
-		}
-		return window.location.protocol + '//' + window.location.hostname + (
-			window.location.port
-				? ':' + window.location.port
-				: '');
-	};
-
 	render() {
 		const pos_width = (window.innerWidth - 400 + 'px');
 		const style = getStyle(pos_width, this.props.theme);
-		
-		let meetingid;
-		let src = '';
 
-		for (let i = 0; i < this.props.unreadChannelIds.length; i++) {
-			var channelid = this.props.unreadChannelIds[i];
-			if (channelid in this.props.lastpostperchannel) {
-				if (this.props.lastpostperchannel[channelid].type === 'custom_bbb' && !this.state.ignoredPosts.includes(this.props.lastpostperchannel[channelid].id) && (Date.now() - this.props.lastpostperchannel[channelid].create_at < 2000) && this.props.lastpostperchannel[channelid].user_id != this.props.cur_user.id) {
-					const postid = this.props.lastpostperchannel[channelid].id;
-					const user = getUser(this.props.state, this.props.lastpostperchannel[channelid].user_id);
-					src = Client4.getProfilePictureUrl(user.id, user.last_picture_update);
-					var message = this.props.lastpostperchannel[channelid].message;
-					var index = message.indexOf('#ID');
-					meetingid = message.substr(index + 3);
-					this.openmodal(postid, channelid, meetingid, src);
-
-				}
-			}
-		}
 		let popoverButton = this.props.pluginConfig.ALLOW_RECORDINGS ? (
 			<div className="more-modal__button" style={style.viewRecordingBtn}>
 				<a className="btn  btn-link" onClick={this.searchRecordings}>
@@ -174,40 +121,24 @@ export default class Root extends React.PureComponent {
 				theme={this.props.theme}
 			/>
 		);
-
-		const channelListItemGlobalRecordingAllowed = (
-			<React.Fragment>
-				<PopoverListMembersItem
-					ariaLabel={'Create a BigBlueButton Meeting'}
-					onItemClick={() => this.startMeeting(true)}
-					icon={'ALLOW_RECORDING'}
-					text={
-						<React.Fragment>
-							<span> {'Start New Meeting'}</span>
-							<br/>
-							<span> {'Allow Recording'}</span>
-						</React.Fragment>
-					}
-					theme={this.props.theme}
-				/>
-
-				<PopoverListMembersItem
-					ariaLabel={'Create a BigBlueButton Meeting'}
-					onItemClick={() => this.startMeeting(false)}
-					icon={'DONT_ALLOW_RECORDING'}
-					text={
-						<React.Fragment>
-							<span> {'Start New Meeting'}</span>
-							<br/>
-							<span> {'Recording Disabled'}</span>
-						</React.Fragment>
-					}
-					theme={this.props.theme}
-				/>
-			</React.Fragment>
+		
+		const allowRecordingBtn = (
+			<PopoverListMembersItem
+				ariaLabel={'Create a BigBlueButton Meeting'}
+				onItemClick={() => this.startMeeting(true)}
+				icon={'ALLOW_RECORDING'}
+				text={
+					<React.Fragment>
+						<span> {'Start New Meeting'}</span>
+						<br/>
+						<span> {'Allow Recording'}</span>
+					</React.Fragment>
+				}
+				theme={this.props.theme}
+			/>
 		);
-
-		const channelListGlobalRecordingDisallowed = (
+		
+		const noRecordingBtn = (
 			<PopoverListMembersItem
 				ariaLabel={'Create a BigBlueButton Meeting'}
 				onItemClick={() => this.startMeeting(false)}
@@ -222,8 +153,17 @@ export default class Root extends React.PureComponent {
 				theme={this.props.theme}
 			/>
 		);
+		
+		
 
-		const channelListItem = this.props.pluginConfig.ALLOW_RECORDINGS ? channelListItemGlobalRecordingAllowed : channelListGlobalRecordingDisallowed;
+		const channelListItemGlobalRecordingAllowed = (
+			<React.Fragment>
+				{allowRecordingBtn}
+				{noRecordingBtn}
+			</React.Fragment>
+		);
+
+		const channelListItem = this.props.pluginConfig.ALLOW_RECORDINGS ? channelListItemGlobalRecordingAllowed : noRecordingBtn;
 
 		return (
 			<div>
