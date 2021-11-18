@@ -225,6 +225,21 @@
             document.querySelector('button').className = document.querySelector('button').className + ' loading';
            document.querySelector('button').innerHTML = '<div class="loader"><div></div></div>';
         }
+		
+		function getBasePath() {
+			const components = window.location.href.split('/plugins');
+			return components.length >= 2 ? components[0] + '/plugins' : '';
+        }
+		
+		function setLogoBasePath(basePath) {
+			const logo = document.querySelector('.logo > img');
+			logo.src = `${basePath}/${logo.src.split('/plugins/')[1]}`;
+        }
+		
+		function initBasePath() {
+			const basePath = getBasePath();
+			setLogoBasePath(basePath);
+        }
 
         document.addEventListener("DOMContentLoaded", function(){
             const savedName = window.localStorage.getItem(storageNameKey);
@@ -249,7 +264,7 @@
                 }
 
                 disableForm();
-                const response = await fetch('/plugins/bigbluebutton/joinmeeting/external', {
+                const response = await fetch(`${getBasePath()}/bigbluebutton/joinmeeting/external`, {
                     method: 'POST',
                     cache: 'no-cache',
                     credentials: 'include',
@@ -265,6 +280,8 @@
                     window.location.href = responseBody.joinURL;
                 }
             }
+			
+			initBasePath();
         });
     </script>
 </div>
