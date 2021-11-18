@@ -369,7 +369,6 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 
 	var request *model.PostActionIntegrationRequest
 	if err := json.Unmarshal(body, &request); err != nil {
-		p.API.LogError("AAAA")
 		p.API.LogError("Error occurred unmarshalling join meeting request body. Error: " + err.Error())
 		return
 	}
