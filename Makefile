@@ -16,6 +16,8 @@ dist: install-dependencies insertReleaseNotes quickdist removeReleaseNotes insta
 
 build: install-dependencies quickbuild
 
+export GOFLAGS=-trimpath
+
 define GetFromManifest
 $(shell node -p "require('./plugin.json').$(1)")
 endef
