@@ -287,9 +287,7 @@ func GetRecordings(meetingId string, recordId string, metachannelid string) (dat
 		return dataStructs.GetRecordingsResponse{}, "", err
 	}
 
-	if SUCCESS_STATUS_CODE == XMLResp.ReturnCode {
-		mattermost.API.LogInfo("Successfully got recordings info")
-	} else {
+	if SUCCESS_STATUS_CODE != XMLResp.ReturnCode {
 		return dataStructs.GetRecordingsResponse{}, "", errors.New("Could not get recordings info")
 	}
 	return XMLResp, response, nil
