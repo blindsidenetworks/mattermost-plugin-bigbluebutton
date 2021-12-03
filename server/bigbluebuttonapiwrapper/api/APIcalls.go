@@ -17,6 +17,7 @@ limitations under the License.
 package api
 
 import (
+	"fmt"
 	"net/url"
 	"strconv"
 
@@ -95,6 +96,9 @@ func CreateMeeting(meetingRoom *dataStructs.MeetingRoom) (string, error) {
 
 	checksum := helpers.GetChecksum("create" + createParam + secret)
 
+	fmt.Println("BBB_DEBUG checksum: " + checksum + "/n")
+	fmt.Println("BBB_DEBUG BaseUrl: " + BaseUrl + "/n")
+
 	response, err := helpers.HttpGet(BaseUrl + "create?" + createParam + "&checksum=" + checksum)
 
 	if err != nil {
@@ -102,8 +106,10 @@ func CreateMeeting(meetingRoom *dataStructs.MeetingRoom) (string, error) {
 		return "", errors.New(response)
 	}
 
+	fmt.Println("BBB_DEBUG create meeting API call successful: " + response + "/n")
+
 	if err := helpers.ReadXML(response, &meetingRoom.CreateMeetingResponse); err != nil {
-		return "", err
+		return "", errors.Wrap(err, "Error parsing response XML")
 	}
 
 	if SUCCESS_STATUS_CODE == meetingRoom.CreateMeetingResponse.Returncode {
