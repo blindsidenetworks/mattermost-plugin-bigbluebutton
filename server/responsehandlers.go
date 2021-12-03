@@ -373,6 +373,12 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	p.API.SendEphemeralPost(request.UserId, &model.Post{
+		ChannelId: request.ChannelId,
+		Type:      model.POST_EPHEMERAL,
+		Message:   "Generating meeting link...",
+	})
+
 	meetingID := request.Context["meetingId"].(string)
 	meetingpointer := p.FindMeeting(meetingID)
 	if meetingpointer == nil {
