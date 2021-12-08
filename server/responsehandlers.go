@@ -32,6 +32,10 @@ import (
 	"github.com/mattermost/mattermost-server/v5/model"
 )
 
+const (
+	externalUsernameMaxLength = 128
+)
+
 type RequestCreateMeetingJSON struct {
 	UserId         string `json:"user_id"`
 	ChannelId      string `json:"channel_id"`
@@ -459,6 +463,9 @@ func (p *Plugin) handleJoinMeetingExternalUser(w http.ResponseWriter, r *http.Re
 	}
 
 	username := request["name"]
+	if len(username) > externalUsernameMaxLength {
+		username = username[:externalUsernameMaxLength-1]
+	}
 
 	// golang doesnt have sets so have to iterate through array to check if meeting participant is already in meeeting
 	if !IsItemInArray(username, meetingpointer.AttendeeNames) {
