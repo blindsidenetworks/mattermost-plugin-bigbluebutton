@@ -208,39 +208,8 @@ func (p *Plugin) ServeHTTP(c *plugin.Context, w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	path := r.URL.Path
-	switch {
-	case path == "/joinmeeting":
-		p.handleJoinMeeting(w, r)
-	case path == "/joinmeeting/external":
-		p.handleJoinMeetingExternalUser(w, r)
-	case strings.HasPrefix(path, "/endmeeting"):
-		p.handleEndMeeting(w, r)
-	case path == "/create":
-		p.handleCreateMeeting(w, r)
-	case strings.HasPrefix(path, "/recordingready"):
-		p.handleRecordingReady(w, r)
-	case path == "/getattendees":
-		p.handleGetAttendeesInfo(w, r)
-	case path == "/publishrecordings":
-		p.handlePublishRecordings(w, r)
-	case path == "/deleterecordingsconfirmation":
-		p.handleDeleteRecordingsConfirmation(w, r)
-	case path == "/deleterecordings":
-		p.handleDeleteRecordings(w, r)
-	case strings.HasPrefix(path, "/meetingendedcallback"):
-		p.handleImmediateEndMeetingCallback(w, r, path)
-	case path == "/ismeetingrunning":
-		p.handleIsMeetingRunning(w, r)
-	case path == "/config":
-		p.handleGetConfig(w, r)
-	case path == "/redirect":
-		_, _ = fmt.Fprint(w, closeWindowScript)
-	case path == "/joininvite":
-		p.handleJoinInvite(w, r)
-	default:
-		p.handler.ServeHTTP(w, r)
-	}
+	handler := p.GetRouteHandler(r.URL.Path)
+	handler(w, r)
 }
 
 func (p *Plugin) setupStaticFileServer() error {
