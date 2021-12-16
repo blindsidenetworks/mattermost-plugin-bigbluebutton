@@ -543,8 +543,9 @@ func (p *Plugin) handleJoinMeetingExternalUser(w http.ResponseWriter, r *http.Re
 
 // this method is responsible for updating meeting has ended inside mattermost when
 // we end our meeting from inside BigBlueButton.
-func (p *Plugin) handleImmediateEndMeetingCallback(w http.ResponseWriter, r *http.Request, path string) {
+func (p *Plugin) handleImmediateEndMeetingCallback(w http.ResponseWriter, r *http.Request) {
 	startpoint := len("/meetingendedcallback?")
+	path := r.URL.Path
 	endpoint := strings.Index(path, "&")
 	meetingid := path[startpoint:endpoint]
 	validation := path[endpoint+1:]
@@ -1049,6 +1050,10 @@ func (p *Plugin) handleGetConfig(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	_, _ = w.Write(data)
+}
+
+func (p *Plugin) handleRedirect(w http.ResponseWriter, r *http.Request) {
+	_, _ = fmt.Fprint(w, closeWindowScript)
 }
 
 type isRunningResponseJSON struct {
