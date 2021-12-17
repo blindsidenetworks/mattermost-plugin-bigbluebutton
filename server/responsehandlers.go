@@ -34,6 +34,19 @@ import (
 
 const (
 	externalUsernameMaxLength = 128
+
+	propKeyRecordingStatus = "recording_status"
+	propKeyIsPublished     = "is_published"
+	propKeyRecordID        = "record_id"
+	propKeyRecordingURL    = "recording_url"
+	propKeyImages          = "images"
+	propKeyNotes           = "notes"
+	propKeyNotesURL        = "notes_url"
+	propKeyAttendees       = "attendees"
+	propKeyDuration        = "duration"
+	propKeyEndedBy         = "ended_by"
+	propKeyIsDeleted       = "is_deleted"
+	propKeyRecordStatus    = "record_status"
 )
 
 type RequestCreateMeetingJSON struct {
@@ -101,8 +114,8 @@ func (p *Plugin) Loopthroughrecordings() {
 				if postid != "" {
 					post, _ := p.API.GetPost(postid)
 					post.Message = "#BigBlueButton #recording"
-					post.AddProp("recording_status", "COMPLETE")
-					post.AddProp("is_published", "true")
+					post.AddProp(propKeyRecordStatus, "COMPLETE")
+					post.AddProp(propKeyIsPublished, "true")
 
 					attachments := post.Attachments()
 					recordingsAdded := false
@@ -110,9 +123,9 @@ func (p *Plugin) Loopthroughrecordings() {
 					for _, playback := range recordingsresponse.Recordings.Recording[0].Playback.Format {
 						switch playback.Type {
 						case "presentation":
-							post.AddProp("record_id", recordingsresponse.Recordings.Recording[0].RecordID)
-							post.AddProp("recording_url", playback.Url)
-							post.AddProp("images", strings.Join(playback.Images, ", "))
+							post.AddProp(propKeyRecordID, recordingsresponse.Recordings.Recording[0].RecordID)
+							post.AddProp(propKeyRecordingURL, playback.Url)
+							post.AddProp(propKeyImages, strings.Join(playback.Images, ", "))
 
 							attachments[0].Fields = append(attachments[0].Fields, &model.SlackAttachmentField{
 								Title: "Recordings",
@@ -122,8 +135,8 @@ func (p *Plugin) Loopthroughrecordings() {
 
 							recordingsAdded = true
 						case "notes":
-							post.AddProp("notes", true)
-							post.AddProp("notes_url", playback.Url)
+							post.AddProp(propKeyNotes, true)
+							post.AddProp(propKeyNotesURL, playback.Url)
 
 							attachments[0].Fields = append(attachments[0].Fields, &model.SlackAttachmentField{
 								Title: "Notes",
@@ -333,7 +346,7 @@ func (p *Plugin) foo(meetingID, userID string) (string, error) {
 	// we immediately add our current attendee thats trying to join the meeting
 	// to avoid the delay
 	attendantsarray = append(attendantsarray, username)
-	post.AddProp("user_count", Length+1)
+	post.AddProp(propKeyUserCount, Length+1)
 
 	slackAttachments := post.Attachments()
 
@@ -354,7 +367,7 @@ func (p *Plugin) foo(meetingID, userID string) (string, error) {
 		uniqueAttendeesList = append(uniqueAttendeesList, user)
 	}
 
-	post.AddProp("attendees", strings.Join(uniqueAttendeesList, ","))
+	post.AddProp(propKeyAttendees, strings.Join(uniqueAttendeesList, ","))
 	slackAttachments[0].Fields[0].Title = fmt.Sprintf("Attendees (%d)", len(uniqueAttendeesList))
 	slackAttachments[0].Fields[0].Value = "@" + strings.Join(uniqueAttendeesList, ", @")
 	model.ParseSlackAttachment(post, slackAttachments)
@@ -500,7 +513,7 @@ func (p *Plugin) handleJoinMeetingExternalUser(w http.ResponseWriter, r *http.Re
 	// we immediately add our current attendee thats trying to join the meeting
 	// to avoid the delay
 	attendantsarray = append(attendantsarray, fmt.Sprintf("%s (**External**)", username))
-	post.AddProp("user_count", Length+1)
+	post.AddProp(propKeyUserCount, Length+1)
 
 	slackAttachments := post.Attachments()
 
@@ -521,7 +534,7 @@ func (p *Plugin) handleJoinMeetingExternalUser(w http.ResponseWriter, r *http.Re
 		uniqueAttendeesList = append(uniqueAttendeesList, user)
 	}
 
-	post.AddProp("attendees", strings.Join(uniqueAttendeesList, ","))
+	post.AddProp(propKeyAttendees, strings.Join(uniqueAttendeesList, ","))
 	slackAttachments[0].Fields[0].Title = fmt.Sprintf("Attendees (%d)", len(uniqueAttendeesList))
 	slackAttachments[0].Fields[0].Value = strings.Join(uniqueAttendeesList, ", @")
 	model.ParseSlackAttachment(post, slackAttachments)
@@ -571,11 +584,11 @@ func (p *Plugin) handleImmediateEndMeetingCallback(w http.ResponseWriter, r *htt
 		return
 	}
 
-	post.AddProp("meeting_status", "ENDED")
-	post.AddProp("attendants", strings.Join(meetingpointer.AttendeeNames, ","))
+	post.AddProp(propKeyMeetingStatus, "ENDED")
+	post.AddProp(propKeyAttendees, strings.Join(meetingpointer.AttendeeNames, ","))
 	timediff := meetingpointer.EndedAt - meetingpointer.CreatedAt
 	durationstring := FormatSeconds(timediff)
-	post.AddProp("duration", durationstring)
+	post.AddProp(propKeyDuration, durationstring)
 
 	attachments := []*model.SlackAttachment{
 		{
@@ -600,7 +613,7 @@ func (p *Plugin) handleImmediateEndMeetingCallback(w http.ResponseWriter, r *htt
 		},
 	}
 
-	endedByUserId := post.GetProp("ended_by")
+	endedByUserId := post.GetProp(propKeyEndedBy)
 	if endedByUserId != nil {
 		user, err := p.API.GetUser(endedByUserId.(string))
 		if err != nil {
@@ -644,6 +657,23 @@ func (p *Plugin) handleEndMeeting(w http.ResponseWriter, r *http.Request) {
 	meetingID := request.Context["meetingId"].(string)
 	meetingpointer := p.FindMeeting(meetingID)
 
+	post, err := p.API.GetPost(meetingpointer.PostId)
+	if err != nil {
+		http.Error(w, err.Error(), err.StatusCode)
+		p.API.LogError(err.Error())
+		return
+	}
+
+	// only the meeting creator can end the meeting
+	if post.GetProp(propKeyCreatedBy) != request.UserId {
+		p.API.SendEphemeralPost(request.UserId, &model.Post{
+			ChannelId: request.ChannelId,
+			Message:   "You cannot end this meeting. Only the meeting creator can end the meeting.",
+		})
+		http.Error(w, "only the meeting creator and end the meeting", http.StatusForbidden)
+		return
+	}
+
 	user, err := p.API.GetUser(request.UserId)
 	if err != nil {
 		http.Error(w, err.Error(), err.StatusCode)
@@ -651,13 +681,7 @@ func (p *Plugin) handleEndMeeting(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	post, err := p.API.GetPost(meetingpointer.PostId)
-	if err != nil {
-		http.Error(w, err.Error(), err.StatusCode)
-		p.API.LogError(err.Error())
-		return
-	}
-	post.AddProp("ended_by", user.Id)
+	post.AddProp(propKeyEndedBy, user.Id)
 
 	if meetingpointer == nil {
 		if err := p.cleanupForEndMeeting(post); err != nil {
@@ -854,7 +878,7 @@ func (p *Plugin) handlePublishRecordings(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	post.AddProp("is_published", publish)
+	post.AddProp(propKeyIsPublished, publish)
 
 	originalAttachments := post.Attachments()
 	newAttachments := []*model.SlackAttachment{
@@ -876,7 +900,7 @@ func (p *Plugin) handlePublishRecordings(w http.ResponseWriter, r *http.Request)
 		newAttachments[1].Actions[0].Name = "Make Recording Invisible"
 		newAttachments[1].Actions[0].Integration.Context["publish"] = "false"
 
-		if recordingURL := post.GetProp("recording_url"); recordingURL != nil {
+		if recordingURL := post.GetProp(propKeyRecordingURL); recordingURL != nil {
 			newAttachments[0].Fields = append(newAttachments[0].Fields, &model.SlackAttachmentField{
 				Title: "Recordings",
 				Value: fmt.Sprintf("[Click to view recordings](%s)", recordingURL),
@@ -884,7 +908,7 @@ func (p *Plugin) handlePublishRecordings(w http.ResponseWriter, r *http.Request)
 			})
 		}
 
-		if notesURL := post.GetProp("notes_url"); notesURL != nil {
+		if notesURL := post.GetProp(propKeyNotesURL); notesURL != nil {
 			newAttachments[0].Fields = append(newAttachments[0].Fields, &model.SlackAttachmentField{
 				Title: "Notes",
 				Value: fmt.Sprintf("[Click to view notes](%s)", notesURL),
@@ -1011,8 +1035,8 @@ func (p *Plugin) handleDeleteRecordings(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	post.AddProp("is_deleted", "true")
-	post.AddProp("record_status", "Recording Deleted")
+	post.AddProp(propKeyIsDeleted, "true")
+	post.AddProp(propKeyRecordingStatus, "Recording Deleted")
 
 	post.Message = strings.ReplaceAll(post.Message, "#recording", "")
 	attachments := make([]*model.SlackAttachment, 1)
