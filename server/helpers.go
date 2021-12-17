@@ -38,6 +38,17 @@ const (
 	// KV Store key prefixes.
 	prefixMeeting     = "m_"
 	prefixMeetingList = "m_list_"
+
+	propKeyCreatedBy          = "created_by"
+	propKeyFromWebhook        = "from_webhook"
+	propKeyOverriderUsername  = "override_username"
+	propKeyOverrideIconURL    = "override_icon_url"
+	propKeyMeetingID          = "meeting_id"
+	propKeyMeetingStatus      = "meeting_status"
+	propKeyMeetingPersonal    = "meeting_personal"
+	propKeyMeetingTopic       = "meeting_topic"
+	propKeyMeetingDescription = "meeting_desc"
+	propKeyUserCount          = "user_count"
 )
 
 func (p *Plugin) PopulateMeeting(
@@ -137,7 +148,7 @@ func (p *Plugin) createStartMeetingPost(userId string, channelId string, m *data
 		return errors.New(appErr.Error())
 	}
 
-	post.AddProp("created_by", user.Id)
+	post.AddProp(propKeyCreatedBy, user.Id)
 
 	titlePrefix := ""
 	if p.config().AllowExternalUsers {
@@ -211,15 +222,15 @@ func (p *Plugin) createStartMeetingPost(userId string, channelId string, m *data
 
 	model.ParseSlackAttachment(post, attachments)
 
-	post.AddProp("from_webhook", true)
-	post.AddProp("override_username", "BigBlueButton")
-	post.AddProp("override_icon_url", "strings.TrimSuffix(*p.API.GetConfig().ServiceSettings.SiteURL, \"/\") + \"/plugins/bigbluebutton/bbb.png\",")
-	post.AddProp("meeting_id", m.MeetingID_)
-	post.AddProp("meeting_status", "started")
-	post.AddProp("meeting_personal", false)
-	post.AddProp("meeting_topic", m.Name_)
-	post.AddProp("meeting_desc", m.Meta)
-	post.AddProp("user_count", 0)
+	post.AddProp(propKeyFromWebhook, true)
+	post.AddProp(propKeyOverriderUsername, "BigBlueButton")
+	post.AddProp(propKeyOverrideIconURL, "strings.TrimSuffix(*p.API.GetConfig().ServiceSettings.SiteURL, \"/\") + \"/plugins/bigbluebutton/bbb.png\",")
+	post.AddProp(propKeyMeetingID, m.MeetingID_)
+	post.AddProp(propKeyMeetingStatus, "started")
+	post.AddProp(propKeyMeetingPersonal, false)
+	post.AddProp(propKeyMeetingTopic, m.Name_)
+	post.AddProp(propKeyMeetingDescription, m.Meta)
+	post.AddProp(propKeyUserCount, 0)
 
 	postpointer, appErr := p.API.CreatePost(post)
 	if appErr != nil {
