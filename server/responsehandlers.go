@@ -588,7 +588,6 @@ func (p *Plugin) handleImmediateEndMeetingCallback(w http.ResponseWriter, r *htt
 		meetingpointer.EndedAt = time.Now().Unix()
 	}
 
-	p.API.LogDebug("AAA AddMeetingWaitingForRecording")
 	if err := p.AddMeetingWaitingForRecording(meetingpointer); err != nil {
 		p.API.LogError(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -747,7 +746,6 @@ func (p *Plugin) handleEndMeeting(w http.ResponseWriter, r *http.Request) {
 		meetingpointer.EndedAt = time.Now().Unix()
 	}
 
-	p.API.LogDebug("BBB AddMeetingWaitingForRecording")
 	if err := p.AddMeetingWaitingForRecording(meetingpointer); err != nil {
 		p.API.LogError("Error occurred adding meeting for recording after manually endining it. Error: " + err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
