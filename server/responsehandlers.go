@@ -88,109 +88,122 @@ func (p *Plugin) Loopthroughrecordings() {
 	}
 
 	for _, meetingID := range meetingsWaitingforRecordings {
-		Meeting, err := p.GetMeetingWaitingForRecording(meetingID)
-		if err != nil || Meeting == nil {
+		meeting, err := p.GetMeetingWaitingForRecording(meetingID)
+		if err != nil || meeting == nil {
+			_ = p.RemoveMeetingWaitingForRecording(meetingID)
 			continue
 		}
 
 		// TODO Harshil Sharma: explore better alternative of waiting for specific count of re-tries
 		// instead of duration of re-tries.
-		if Meeting.LoopCount > 144 {
-			_ = p.RemoveMeetingWaitingForRecording(Meeting.MeetingID_)
+		if meeting.LoopCount > 5 {
+			_ = p.RemoveMeetingWaitingForRecording(meeting.MeetingID_)
 			continue
 		}
 
-		recordingsresponse, _, _ := bbbAPI.GetRecordings(Meeting.MeetingID_, "", "")
+		recordingsresponse, _, _ := bbbAPI.GetRecordings(meeting.MeetingID_, "", "")
 		if recordingsresponse.ReturnCode == "SUCCESS" {
-			if len(recordingsresponse.Recordings.Recording) > 0 {
-				recordings, err := json.Marshal(recordingsresponse.Recordings.Recording)
-				if err != nil {
-					p.API.LogError(err.Error())
-				} else {
-					p.API.LogInfo(string(recordings))
+			if len(recordingsresponse.Recordings.Recording) == 0 {
+				meeting.LoopCount += 1
+				if err := p.saveMeetingForRecording(meeting); err != nil {
+					p.API.LogError("error occurred updating meeting loop count", "meetingID", meeting.MeetingID_, "error", err.Error())
 				}
 
-				postid := Meeting.PostId
-				if postid != "" {
-					post, _ := p.API.GetPost(postid)
-					post.Message = "#BigBlueButton #recording"
-					post.AddProp(propKeyRecordStatus, "COMPLETE")
-					post.AddProp(propKeyIsPublished, "true")
+				continue
+			}
 
-					attachments := post.Attachments()
-					recordingsAdded := false
+			if len(recordingsresponse.Recordings.Recording) > 0 {
+				postID := meeting.PostId
+				if postID == "" {
+					p.API.LogError("post not found for meeting", "meetingID", meeting.MeetingID_)
+					_ = p.RemoveMeetingWaitingForRecording(meeting.MeetingID_)
+					continue
+				}
 
-					for _, playback := range recordingsresponse.Recordings.Recording[0].Playback.Format {
-						switch playback.Type {
-						case "presentation":
-							post.AddProp(propKeyRecordID, recordingsresponse.Recordings.Recording[0].RecordID)
-							post.AddProp(propKeyRecordingURL, playback.Url)
-							post.AddProp(propKeyImages, strings.Join(playback.Images, ", "))
+				post, _ := p.API.GetPost(postID)
+				post.Message = "#BigBlueButton #recording"
+				post.AddProp(propKeyRecordStatus, "COMPLETE")
+				post.AddProp(propKeyIsPublished, "true")
 
-							attachments[0].Fields = append(attachments[0].Fields, &model.SlackAttachmentField{
-								Title: "Recordings",
-								Value: fmt.Sprintf("[Click to view recordings](%s)", playback.Url),
-								Short: true,
-							})
+				attachments := post.Attachments()
+				recordingsAdded := false
 
-							recordingsAdded = true
-						case "notes":
-							post.AddProp(propKeyNotes, true)
-							post.AddProp(propKeyNotesURL, playback.Url)
+				for _, playback := range recordingsresponse.Recordings.Recording[0].Playback.Format {
+					switch playback.Type {
+					case "presentation":
+						post.AddProp(propKeyRecordID, recordingsresponse.Recordings.Recording[0].RecordID)
+						post.AddProp(propKeyRecordingURL, playback.Url)
+						post.AddProp(propKeyImages, strings.Join(playback.Images, ", "))
 
-							attachments[0].Fields = append(attachments[0].Fields, &model.SlackAttachmentField{
-								Title: "Notes",
-								Value: fmt.Sprintf("[Click to view notes](%s)", playback.Url),
-							})
+						attachments[0].Fields = append(attachments[0].Fields, &model.SlackAttachmentField{
+							Title: "Recordings",
+							Value: fmt.Sprintf("[Click to view recordings](%s)", playback.Url),
+							Short: true,
+						})
 
-							recordingsAdded = true
-						}
+						recordingsAdded = true
+					case "notes":
+						post.AddProp(propKeyNotes, true)
+						post.AddProp(propKeyNotesURL, playback.Url)
+
+						attachments[0].Fields = append(attachments[0].Fields, &model.SlackAttachmentField{
+							Title: "Notes",
+							Value: fmt.Sprintf("[Click to view notes](%s)", playback.Url),
+						})
+
+						recordingsAdded = true
 					}
+				}
 
-					if recordingsAdded {
-						meetingAttachment := attachments[0]
-						attachments = []*model.SlackAttachment{
-							meetingAttachment,
-							{
-								Actions: []*model.PostAction{
-									{
-										Id:    "toggleRecordingVisibility",
-										Type:  "button",
-										Name:  "Make Recording Invisible",
-										Style: "primary",
-										Integration: &model.PostActionIntegration{
-											URL: "/plugins/bigbluebutton/publishrecordings",
-											Context: map[string]interface{}{
-												"publish":    "false",
-												"meeting_id": meetingID,
-												"record_id":  recordingsresponse.Recordings.Recording[0].RecordID,
-											},
+				if recordingsAdded {
+					meetingAttachment := attachments[0]
+					attachments = []*model.SlackAttachment{
+						meetingAttachment,
+						{
+							Actions: []*model.PostAction{
+								{
+									Id:    "toggleRecordingVisibility",
+									Type:  "button",
+									Name:  "Make Recording Invisible",
+									Style: "primary",
+									Integration: &model.PostActionIntegration{
+										URL: "/plugins/bigbluebutton/publishrecordings",
+										Context: map[string]interface{}{
+											"publish":    "false",
+											"meeting_id": meetingID,
+											"record_id":  recordingsresponse.Recordings.Recording[0].RecordID,
 										},
 									},
-									{
-										Id:    "deleteRecordings",
-										Type:  "button",
-										Name:  "Delete Recordings",
-										Style: "danger",
-										Integration: &model.PostActionIntegration{
-											URL: "/plugins/bigbluebutton/deleterecordingsconfirmation",
-											Context: map[string]interface{}{
-												"meeting_id": meetingID,
-												"record_id":  recordingsresponse.Recordings.Recording[0].RecordID,
-											},
+								},
+								{
+									Id:    "deleteRecordings",
+									Type:  "button",
+									Name:  "Delete Recordings",
+									Style: "danger",
+									Integration: &model.PostActionIntegration{
+										URL: "/plugins/bigbluebutton/deleterecordingsconfirmation",
+										Context: map[string]interface{}{
+											"meeting_id": meetingID,
+											"record_id":  recordingsresponse.Recordings.Recording[0].RecordID,
 										},
 									},
 								},
 							},
-						}
-					}
-
-					model.ParseSlackAttachment(post, attachments)
-
-					if _, err := p.API.UpdatePost(post); err == nil {
-						_ = p.RemoveMeetingWaitingForRecording(Meeting.MeetingID_)
+						},
 					}
 				}
+
+				model.ParseSlackAttachment(post, attachments)
+
+				if _, err := p.API.UpdatePost(post); err == nil {
+					_ = p.RemoveMeetingWaitingForRecording(meeting.MeetingID_)
+				}
+			}
+		} else {
+			meeting.LoopCount += 1
+			if err := p.saveMeetingForRecording(meeting); err != nil {
+				p.API.LogError("error occurred updating loop count for meeting recording", "meetingID", meeting.MeetingID_, "error", err.Error())
+				continue
 			}
 		}
 	}
@@ -485,10 +498,6 @@ func (p *Plugin) handleJoinMeetingExternalUser(w http.ResponseWriter, r *http.Re
 		meetingpointer.AttendeeNames = append(meetingpointer.AttendeeNames, username)
 	}
 
-	if err := p.SaveMeeting(meetingpointer); err != nil {
-		p.API.LogError("Error occurred updating meeting info in handleJoinMeeting. Error: " + err.Error())
-	}
-
 	var participant = dataStructs.Participants{} // set participant as an empty struct of type Participants
 	participant.FullName_ = username
 	if len(participant.FullName_) == 0 {
@@ -578,6 +587,7 @@ func (p *Plugin) handleImmediateEndMeetingCallback(w http.ResponseWriter, r *htt
 	if meetingpointer.EndedAt == 0 {
 		meetingpointer.EndedAt = time.Now().Unix()
 	}
+
 	if err := p.AddMeetingWaitingForRecording(meetingpointer); err != nil {
 		p.API.LogError(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
