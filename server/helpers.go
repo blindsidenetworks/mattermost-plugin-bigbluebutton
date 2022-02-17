@@ -103,7 +103,7 @@ func (p *Plugin) PopulateMeeting(
 
 	var UrlEnd *url.URL
 	UrlEnd, _ = url.Parse(callbackURL)
-	UrlEnd.Path += "/plugins/bigbluebutton/meetingendedcallback?" + m.MeetingID_ + "&" + m.ValidToken
+	UrlEnd.Path += "/plugins/bigbluebutton/meetingendedcallback/" + m.MeetingID_ + "/" + m.ValidToken
 	Endmeetingcallback := UrlEnd.String()
 	m.Meta_endcallbackurl = Endmeetingcallback
 
