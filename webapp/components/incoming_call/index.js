@@ -19,7 +19,6 @@ function mapDispatchTooProps(dispatch) {
 function mapStateToProps(state, ownProps) {
 	const pluginState = getPluginState(state);
 	return {
-		show: pluginState.incomingCall.dismissed === false,
 		theme: getTheme(state),
 		siteURL: state.entities.general.config.SiteURL,
 		currentTeam: getTeam(state, getCurrentTeamId(state)),
