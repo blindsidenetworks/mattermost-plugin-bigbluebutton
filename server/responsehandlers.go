@@ -566,11 +566,17 @@ func (p *Plugin) handleJoinMeetingExternalUser(w http.ResponseWriter, r *http.Re
 // this method is responsible for updating meeting has ended inside mattermost when
 // we end our meeting from inside BigBlueButton.
 func (p *Plugin) handleImmediateEndMeetingCallback(w http.ResponseWriter, r *http.Request) {
-	startpoint := len("/meetingendedcallback?")
-	path := r.URL.Path
-	endpoint := strings.Index(path, "&")
-	meetingid := path[startpoint:endpoint]
-	validation := path[endpoint+1:]
+	pathComponents := strings.Split(r.URL.Path, "/")
+
+	if len(pathComponents) != 4 {
+		p.API.LogError("incorrect meeting end callback URL encountered. URL: " + r.URL.String())
+		http.Error(w, "incorrect meeting end callback URL encountered", http.StatusInternalServerError)
+		return
+	}
+
+	validation := pathComponents[len(pathComponents)-1]
+	meetingid := pathComponents[len(pathComponents)-2]
+
 	meetingpointer := p.FindMeeting(meetingid)
 	if meetingpointer == nil || meetingpointer.ValidToken != validation {
 		http.Error(w, "Validation token mismatch", http.StatusForbidden)
