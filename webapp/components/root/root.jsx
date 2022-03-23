@@ -85,6 +85,12 @@ export default class Root extends React.PureComponent {
 		this.setState({showPopover: false});
 	};
 
+	componentDidUpdate(prevProps) {
+		if (!this.props.pluginConfig.ALLOW_RECORDINGS && !prevProps.visible && this.props.visible) {
+			this.startMeeting(false);
+		}
+	}
+
 	render() {
 		const pos_width = (window.innerWidth - 400 + 'px');
 		const style = getStyle(pos_width, this.props.theme);
@@ -100,10 +106,9 @@ export default class Root extends React.PureComponent {
 		style.popover['marginLeft'] = pos_width;
 		style.popoverDM['marginLeft'] = pos_width;
 
-		var channel = getChannel(this.props.state, this.props.channelId);
-		// console.log(channel)
-		var channelName = '';
-		var ownChannel = false;
+		const channel = getChannel(this.props.state, this.props.channelId);
+		let channelName = '';
+		let ownChannel = false;
 		if (channel == undefined) {
 			ownChannel = true;
 		} else {
@@ -121,7 +126,7 @@ export default class Root extends React.PureComponent {
 				theme={this.props.theme}
 			/>
 		);
-		
+
 		const allowRecordingBtn = (
 			<PopoverListMembersItem
 				ariaLabel={'Create a BigBlueButton Meeting'}
@@ -137,7 +142,7 @@ export default class Root extends React.PureComponent {
 				theme={this.props.theme}
 			/>
 		);
-		
+
 		const noRecordingBtn = (
 			<PopoverListMembersItem
 				ariaLabel={'Create a BigBlueButton Meeting'}
@@ -153,17 +158,17 @@ export default class Root extends React.PureComponent {
 				theme={this.props.theme}
 			/>
 		);
-		
-		
 
-		const channelListItemGlobalRecordingAllowed = (
+		const channelListItem = (
 			<React.Fragment>
 				{allowRecordingBtn}
 				{noRecordingBtn}
 			</React.Fragment>
 		);
 
-		const channelListItem = this.props.pluginConfig.ALLOW_RECORDINGS ? channelListItemGlobalRecordingAllowed : noRecordingBtn;
+		if (!this.props.pluginConfig.ALLOW_RECORDINGS) {
+			return null;
+		}
 
 		return (
 			<div>
@@ -192,8 +197,8 @@ var getStyle = makeStyleFromTheme((theme) => {
 		popover: {
 			marginLeft: x_pos,
 			marginTop: '50px',
-			maxWidth: '300px',
-			width: '300px',
+			maxWidth: '250px',
+			width: '250px',
 			background: theme.centerChannelBg,
 			borderRadius: '12px',
 			overflow: 'hidden',
