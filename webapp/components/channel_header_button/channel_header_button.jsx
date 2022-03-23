@@ -89,11 +89,10 @@ const getStyle = makeStyleFromTheme((theme) => {
 	return {
 		iconStyle: {
 			position: 'relative',
-			top: '2px'
 		},
 		svg: {
-			width: '28px',
-			height: '28px',
+			width: '20px',
+			height: '20px',
 		}
 	};
 });
