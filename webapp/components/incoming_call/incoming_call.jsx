@@ -22,20 +22,20 @@ import {Client4} from 'mattermost-redux/client';
 
 export default class IncomingCallPopup extends React.Component {
 	static propTypes = {
-		show: PropTypes.bool.isRequired,
+		show: PropTypes.bool,
 		theme: PropTypes.object.isRequired,
 		siteURL: PropTypes.string.isRequired,
 		currentTeam: PropTypes.object.isRequired,
-		incomingCall: {
+		incomingCall: PropTypes.shape({
 			meetingId: PropTypes.string,
 			fromUserID: PropTypes.string,
-		},
+		}),
 		actions: PropTypes.shape({
 			dismissIncomingCall: PropTypes.func.isRequired,
 			getJoinURL: PropTypes.func.isRequired,
 		}).isRequired,
 	}
-	
+
 	constructor(props) {
 		super(props);
 		this.state = {
@@ -46,17 +46,17 @@ export default class IncomingCallPopup extends React.Component {
 	handleClose = () => {
 		this.props.actions.dismissIncomingCall();
 	};
-	
+
 	async componentDidMount() {
-		
+
 	}
-	
+
 	async componentDidUpdate() {
 		if (this.props.show && !this.state.fromUser) {
 			const fromUser = await Client4.getUser(this.props.incomingCall.fromUserID);
 			this.setState({
 				fromUser,
-			});	
+			});
 		}
 	}
 
@@ -84,7 +84,7 @@ export default class IncomingCallPopup extends React.Component {
 
 	render() {
 		const show = this.props.show && this.state.fromUser;
-		
+
 		if (!show) {
 			return null;
 		}
@@ -114,7 +114,7 @@ export default class IncomingCallPopup extends React.Component {
 					<button type='button' className='btn btn-default' onClick={this.handleClose}>
 						{'Close'}
 					</button>
-					
+
 					<button type='button' className='btn btn-primary pull-left' onClick={this.getJoinURL}>
 						{'Join Meeting'}
 					</button>

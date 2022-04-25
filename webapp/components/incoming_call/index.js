@@ -17,7 +17,6 @@ function mapDispatchTooProps(dispatch) {
 }
 
 function mapStateToProps(state, ownProps) {
-	const pluginState = getPluginState(state);
 	return {
 		theme: getTheme(state),
 		siteURL: state.entities.general.config.SiteURL,

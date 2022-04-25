@@ -40,7 +40,7 @@ class PluginClass {
 		registry.registerRootComponent(Root);
 		registry.registerRootComponent(IncomingCallPopup);
 		registry.registerReducer(reducer);
-		
+
 		registry.registerWebSocketEventHandler(
 			`custom_${PluginId}_config_update`,
 			(payload) => {
@@ -50,7 +50,7 @@ class PluginClass {
 				});
 			}
 		);
-		
+
 		registry.registerWebSocketEventHandler(
 			`custom_${PluginId}_incoming_call`,
 			(payload) => {

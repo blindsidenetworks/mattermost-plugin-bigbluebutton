@@ -44,7 +44,12 @@ function mapStateToProps(state, ownProps) {
 		channelId = '';
 	}
 	let teamId = state.entities.teams.currentTeamId;
-	const pluginConfig = getPluginState(state).pluginConfig;
+	let pluginConfig = getPluginState(state).pluginConfig;
+	if (!pluginConfig) {
+		pluginConfig = {
+			ALLOW_RECORDINGS: false,
+		};
+	}
 
 	return {
 		visible: isRootModalVisible(state),
@@ -69,7 +74,6 @@ function mapDispatchToProps(dispatch) {
 	let closePopover = closeRootModal;
 	return {
 		actions: bindActionCreators({
-			getJoinURL,
 			startMeeting,
 			showRecordings,
 			closePopover,
