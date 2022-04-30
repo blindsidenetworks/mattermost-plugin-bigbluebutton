@@ -37,16 +37,6 @@ export default class Root extends React.PureComponent {
 		channelId: PropTypes.string,
 		visible: PropTypes.bool,
 		actions: PropTypes.shape({
-			getJoinURL: PropTypes.func.isRequired,
-			channelId: PropTypes.string.isRequired,
-			directChannels: PropTypes.array.isRequired,
-			teamId: PropTypes.string.isRequired,
-			visible: PropTypes.bool.isRequired,
-			actions: PropTypes.shape({
-				startMeeting: PropTypes.func.isRequired,
-				showRecordings: PropTypes.func.isRequired,
-				closePopover: PropTypes.func.isRequired
-			}).isRequired,
 			startMeeting: PropTypes.func.isRequired,
 			showRecordings: PropTypes.func.isRequired,
 			closePopover: PropTypes.func.isRequired,
