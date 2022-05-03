@@ -56,9 +56,6 @@ export default class OpenMeeting extends React.Component {
 		const isTargetChannel = this.props.channelID === this.props.meeting.channelID;
 		const isInProduct = this.isInProduct();
 
-		console.log(`isTargetChannel: ${isTargetChannel}`);
-		console.log(`isInProduct: ${isInProduct}`);
-
 		if (!isTargetChannel || isInProduct) {
 			this.props.actions.dismissOpenMeeting();
 			return;
