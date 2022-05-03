@@ -21,7 +21,7 @@ import {getCurrentTeamId} from 'mattermost-redux/selectors/entities/teams';
 import {searchPosts} from 'mattermost-redux/actions/search';
 
 import {ActionTypes, RHSStates} from '../utils/constants.jsx';
-import {OPEN_ROOT_MODAL, CLOSE_ROOT_MODAL, DISMISS_INCOMING_CALL} from '../action_types';
+import {OPEN_ROOT_MODAL, CLOSE_ROOT_MODAL, DISMISS_INCOMING_CALL, DISMISS_OPEN_MEETING} from '../action_types';
 import {GetClient} from '../client';
 
 export const openRootModal = () => (dispatch) => {
@@ -300,6 +300,7 @@ export function showRecordings() {
 		]));
 	};
 }
+
 export function performSearch(terms, isMentionSearch) {
 	return(dispatch, getState) => {
 		const teamId = getCurrentTeamId(getState());
@@ -312,6 +313,14 @@ export function dismissIncomingCall() {
 	return (dispatch) => {
 		dispatch({
 			type: DISMISS_INCOMING_CALL,
+		});
+	};
+}
+
+export function dismissOpenMeeting() {
+	return (dispatch) => {
+		dispatch({
+			type: DISMISS_OPEN_MEETING,
 		});
 	};
 }
