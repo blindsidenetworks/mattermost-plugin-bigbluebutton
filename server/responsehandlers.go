@@ -408,6 +408,7 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 	p.API.SendEphemeralPost(request.UserId, &model.Post{
 		ChannelId: request.ChannelId,
 		Type:      model.POST_EPHEMERAL,
+		RootId:    request.PostId,
 		Message:   "Generating meeting link...",
 	})
 
@@ -436,6 +437,7 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 		p.API.SendEphemeralPost(request.UserId, &model.Post{
 			ChannelId: request.ChannelId,
 			Type:      model.POST_EPHEMERAL,
+			RootId:    request.PostId,
 			Message:   fmt.Sprintf("Join the BBB meeting [here](%s)", joinURL),
 		})
 

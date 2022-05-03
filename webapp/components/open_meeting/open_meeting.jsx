@@ -23,7 +23,6 @@ const MATTERMOST_PRODUCT_PREFIXES = [
 ];
 
 export default class OpenMeeting extends React.Component {
-	// TODO if we need to check for userID match as well
 	static propTypes = {
 		siteURL: PropTypes.string.isRequired,
 		channelID: PropTypes.string.isRequired,
