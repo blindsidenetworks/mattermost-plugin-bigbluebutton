@@ -23,8 +23,9 @@ import PluginId from './plugin_id';
 import {channelHeaderButtonAction} from './actions';
 import reducer from './reducer';
 import {GetClient, initClient} from './client';
-import {INCOMING_CALL, SET_PLUGIN_CONFIG} from './action_types';
+import {INCOMING_CALL, OPEN_MEETING, SET_PLUGIN_CONFIG} from './action_types';
 import IncomingCallPopup from './components/incoming_call';
+import OpenMeeting from './components/open_meeting';
 
 class PluginClass {
 	async initialize(registry, store) {
@@ -39,6 +40,7 @@ class PluginClass {
 		registry.registerPopoverUserActionsComponent(ProfilePopover);
 		registry.registerRootComponent(Root);
 		registry.registerRootComponent(IncomingCallPopup);
+		registry.registerRootComponent(OpenMeeting);
 		registry.registerReducer(reducer);
 
 		registry.registerWebSocketEventHandler(
@@ -56,6 +58,16 @@ class PluginClass {
 			(payload) => {
 				store.dispatch({
 					type: INCOMING_CALL,
+					data: payload.data,
+				});
+			}
+		);
+
+		registry.registerWebSocketEventHandler(
+			`custom_${PluginId}_open_meeting`,
+			(payload) => {
+				store.dispatch({
+					type: OPEN_MEETING,
 					data: payload.data,
 				});
 			}

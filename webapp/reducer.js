@@ -1,8 +1,8 @@
 import {combineReducers} from 'redux';
 import {
 	CLOSE_ROOT_MODAL,
-	DISMISS_INCOMING_CALL,
-	INCOMING_CALL,
+	DISMISS_INCOMING_CALL, DISMISS_OPEN_MEETING,
+	INCOMING_CALL, OPEN_MEETING,
 	OPEN_ROOT_MODAL,
 	SET_PLUGIN_CONFIG,
 	STATUS_CHANGE
@@ -54,9 +54,23 @@ const incomingCall = (state = {}, action) => {
 	}
 };
 
+const meeting = (state = {}, action) => {
+	switch(action.type) {
+	case OPEN_MEETING:
+		return {
+			...action.data,
+		};
+	case DISMISS_OPEN_MEETING:
+		return {};
+	default:
+		return state;
+	}
+};
+
 export default combineReducers({
 	enabled,
 	rootModalVisible,
 	pluginConfig,
 	incomingCall,
+	meeting,
 });

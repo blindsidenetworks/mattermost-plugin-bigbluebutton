@@ -47,6 +47,8 @@ const (
 	propKeyEndedBy         = "ended_by"
 	propKeyIsDeleted       = "is_deleted"
 	propKeyRecordStatus    = "record_status"
+
+	wsEventJoinOpenMeeting = "open_meeting"
 )
 
 type RequestCreateMeetingJSON struct {
@@ -406,6 +408,7 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 	p.API.SendEphemeralPost(request.UserId, &model.Post{
 		ChannelId: request.ChannelId,
 		Type:      model.POST_EPHEMERAL,
+		RootId:    request.PostId,
 		Message:   "Generating meeting link...",
 	})
 
@@ -425,6 +428,8 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		p.sendOpenMeetingWSEvent(joinURL, request.UserId, request.ChannelId)
+
 		myresp := ButtonResponseJSON{
 			Url: joinURL,
 		}
@@ -432,12 +437,28 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 		p.API.SendEphemeralPost(request.UserId, &model.Post{
 			ChannelId: request.ChannelId,
 			Type:      model.POST_EPHEMERAL,
+			RootId:    request.PostId,
 			Message:   fmt.Sprintf("Join the BBB meeting [here](%s)", joinURL),
 		})
 
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write(userJson)
 	}
+}
+
+func (p *Plugin) sendOpenMeetingWSEvent(joinURL, userID, channelID string) {
+	payload := map[string]interface{}{
+		"joinURL":   joinURL,
+		"channelID": channelID,
+	}
+
+	broadcast := &model.WebsocketBroadcast{
+		UserId:                userID,
+		ChannelId:             channelID,
+		ContainsSensitiveData: true,
+	}
+
+	p.API.PublishWebSocketEvent(wsEventJoinOpenMeeting, payload, broadcast)
 }
 
 func (p *Plugin) handleJoinMeetingExternalUser(w http.ResponseWriter, r *http.Request) {
