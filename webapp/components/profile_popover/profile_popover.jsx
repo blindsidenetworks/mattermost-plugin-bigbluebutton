@@ -46,7 +46,7 @@ export default class ProfilePopover extends React.PureComponent {
 	render() {
 		const user = this.props.user;
 		const myteam = this.props.teamname;
-		const url = '/' + myteam + '/messages/@' + user.username;
+		const url = `${this.props.siteURL}/${myteam}/messages/@${user.username}`;
 
 		if (this.props.user.id === this.props.cur_user.id) {
 			return null;
