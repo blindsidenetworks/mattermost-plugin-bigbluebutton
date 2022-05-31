@@ -29,6 +29,7 @@ export default class IncomingCallPopup extends React.Component {
 		incomingCall: PropTypes.shape({
 			meetingId: PropTypes.string,
 			fromUserID: PropTypes.string,
+			dismissed: PropTypes.bool,
 		}),
 		actions: PropTypes.shape({
 			dismissIncomingCall: PropTypes.func.isRequired,
@@ -52,7 +53,8 @@ export default class IncomingCallPopup extends React.Component {
 	}
 
 	async componentDidUpdate() {
-		if (this.props.show && !this.state.fromUser) {
+		if (!this.props.incomingCall.dismissed && !this.state.fromUser) {
+			Client4.setUrl(this.props.siteURL);
 			const fromUser = await Client4.getUser(this.props.incomingCall.fromUserID);
 			this.setState({
 				fromUser,
@@ -83,7 +85,7 @@ export default class IncomingCallPopup extends React.Component {
 	};
 
 	render() {
-		const show = this.props.show && this.state.fromUser;
+		const show = !this.props.incomingCall.dismissed && this.state.fromUser;
 
 		if (!show) {
 			return null;
