@@ -221,22 +221,6 @@ func (p *Plugin) handleCreateMeeting(w http.ResponseWriter, r *http.Request) {
 	var request RequestCreateMeetingJSON
 	_ = json.Unmarshal(body, &request)
 
-	//if strings.HasPrefix(request.ChannelId, "DM--") {
-	//	userIDs := strings.Split(request.ChannelId[4:], "--")
-	//	if len(userIDs) != 2 {
-	//		http.Error(w, "incorrect channelID sent for DM call "+request.ChannelId, http.StatusBadRequest)
-	//		return
-	//	}
-	//
-	//	channel, err := p.API.GetDirectChannel(userIDs[0], userIDs[1])
-	//	if err != nil {
-	//		http.Error(w, err.Error(), http.StatusBadRequest)
-	//		return
-	//	}
-	//
-	//	request.ChannelId = channel.Id
-	//}
-
 	meetingpointer := new(dataStructs.MeetingRoom)
 	var err error
 	if request.Topic == "" {
