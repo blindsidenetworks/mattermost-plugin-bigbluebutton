@@ -5,6 +5,7 @@ const {bindActionCreators} = window.Redux;
 const {connect} = window.ReactRedux;
 import OpenMeeting from './open_meeting.jsx';
 import {getCurrentChannelId} from 'mattermost-redux/selectors/entities/common';
+import utils from '../../utils/utils';
 
 function mapDispatchTooProps(dispatch) {
 	return {
@@ -15,9 +16,7 @@ function mapDispatchTooProps(dispatch) {
 }
 
 function mapStateToProps(state) {
-	let siteURL = state.entities.general.config.SiteURL;
-	siteURL = siteURL.endsWith('/') ? siteURL.substring(0, siteURL.length - 1) : siteURL;
-	siteURL = siteURL.trim();
+	let siteURL = utils.cleanSiteURL(state.entities.general.config.SiteURL);
 
 	return {
 		siteURL,

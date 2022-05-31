@@ -18,6 +18,7 @@ import React from 'react';
 
 import PropTypes from 'prop-types';
 import * as ChannelActions from 'mattermost-redux/actions/channels';
+import {Client4} from 'mattermost-redux/client';
 
 export default class ProfilePopover extends React.PureComponent {
 	static propTypes = {
@@ -26,6 +27,7 @@ export default class ProfilePopover extends React.PureComponent {
 		state: PropTypes.object.isRequired,
 		actions: PropTypes.shape({startMeeting: PropTypes.func.isRequired}).isRequired,
 		teamname: PropTypes.string.isRequired,
+		siteURL: PropTypes.string.isRequired,
 	};
 
 	constructor(props) {
@@ -35,6 +37,7 @@ export default class ProfilePopover extends React.PureComponent {
 	handleDirectMessage = async (e, href) => {
 		e.preventDefault();
 		const dispatch = window.store.dispatch;
+		Client4.setUrl(this.props.siteURL);
 		const result = await ChannelActions.createDirectChannel(this.props.user.id, this.props.cur_user.id)(dispatch, this.props.state);
 		await this.props.actions.startMeeting(result.data.id, '', this.props.cur_user.username + ' ' + this.props.user.username);
 		window.location = href;

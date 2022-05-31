@@ -14,6 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+import utils from '../../utils/utils';
+
 const {connect} = window.ReactRedux;
 const {bindActionCreators} = window.Redux;
 import {getCurrentTeam} from 'mattermost-redux/selectors/entities/teams';
@@ -26,10 +28,13 @@ function mapStateToProps(state) {
 	let team = getCurrentTeam(state) || {};
 	let teamname = team.name;
 	let cur_user = getCurrentUser(state) || {};
+	let siteURL = utils.cleanSiteURL(state.entities.general.config.SiteURL);
+
 	return {
 		state,
 		cur_user,
 		teamname,
+		siteURL,
 	};
 }
 
