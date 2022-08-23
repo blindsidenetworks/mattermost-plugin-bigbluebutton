@@ -222,7 +222,7 @@ func (p *Plugin) createStartMeetingPost(userId string, channelId string, m *data
 
 	model.ParseSlackAttachment(post, attachments)
 
-	post.AddProp(propKeyFromWebhook, true)
+	post.AddProp(propKeyFromWebhook, "true")
 	post.AddProp(propKeyOverriderUsername, "BigBlueButton")
 	post.AddProp(propKeyOverrideIconURL, "strings.TrimSuffix(*p.API.GetConfig().ServiceSettings.SiteURL, \"/\") + \"/plugins/bigbluebutton/bbb.png\",")
 	post.AddProp(propKeyMeetingID, m.MeetingID_)
