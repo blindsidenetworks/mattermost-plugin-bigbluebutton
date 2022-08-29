@@ -83,7 +83,7 @@ export default class Root extends React.PureComponent {
 
 	render() {
 		const pos_width = (window.innerWidth - 400 + 'px');
-		const style = getStyle(pos_width, this.props.theme);
+		const style = getStyle(this.props.theme);
 
 		let popoverButton = this.props.pluginConfig.ALLOW_RECORDINGS ? (
 			<div className="more-modal__button" style={style.viewRecordingBtn}>

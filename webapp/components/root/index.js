@@ -23,7 +23,7 @@ import {getDirectChannels} from 'mattermost-redux/selectors/entities/channels';
 import {getTheme} from 'mattermost-redux/selectors/entities/preferences';
 import {getPluginState, isRootModalVisible} from '../../selectors';
 import {getSortedDirectChannelWithUnreadsIds} from 'mattermost-redux/selectors/entities/channels';
-import {getJoinURL,startMeeting, showRecordings,closeRootModal} from '../../actions';
+import {startMeeting, showRecordings,closeRootModal} from '../../actions';
 
 import Root from './root.jsx';
 
@@ -31,6 +31,7 @@ import Root from './root.jsx';
 // BigBlueButton meeting started from a direct message
 
 function mapStateToProps(state, ownProps) {
+	console.log('AAA');
 	/* Provide values for any custom props or override any existing props here */
 	let team = getCurrentTeam(state) || {};
 	let teamname = team.name;
