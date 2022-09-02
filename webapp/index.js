@@ -30,13 +30,21 @@ import OpenMeeting from './components/open_meeting';
 class PluginClass {
 	async initialize(registry, store) {
 		window.store = store;
-		initClient(() => store.getState().entities.general.config.SiteURL);
+		const siteURL = store.getState().entities.general.config.SiteURL;
+		initClient(() => siteURL);
 
 		registry.registerChannelHeaderButtonAction(
 			<ChannelHeaderButton/>,
 			() => store.dispatch(channelHeaderButtonAction()),
 			'BigBlueButton',
 		);
+
+		registry.registerAppBarComponent(
+			`${siteURL}/plugins/bigbluebutton/bbb.png`,
+			() => store.dispatch(channelHeaderButtonAction()),
+			'BigBlueButton',
+		);
+
 		registry.registerPopoverUserActionsComponent(ProfilePopover);
 		registry.registerRootComponent(Root);
 		registry.registerRootComponent(IncomingCallPopup);

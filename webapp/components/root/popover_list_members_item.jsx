@@ -51,11 +51,6 @@ export default class PopoverListMembersItem extends React.PureComponent {
 
 	render() {
 		const style = getStyle(this.props.theme);
-
-		console.log(this.props);
-		console.log(this.props.icon);
-		console.log(Svgs[this.props.icon]);
-
 		return (
 			<button
 				aria-label={this.props.ariaLabel}
