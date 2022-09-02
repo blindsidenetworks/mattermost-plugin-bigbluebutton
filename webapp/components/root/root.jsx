@@ -21,7 +21,7 @@ import {makeStyleFromTheme} from 'mattermost-redux/utils/theme_utils';
 import {getChannel} from 'mattermost-redux/selectors/entities/channels';
 
 // eslint-disable-next-line no-unused-vars
-const {Tooltip, Popover, OverlayTrigger, Modal, Overlay} = window.ReactBootstrap;
+const {Popover, Overlay} = window.ReactBootstrap;
 
 export default class Root extends React.PureComponent {
 	static propTypes = {
@@ -36,6 +36,7 @@ export default class Root extends React.PureComponent {
 		pluginConfig: PropTypes.object.isRequired,
 		channelId: PropTypes.string,
 		visible: PropTypes.bool,
+		appBarEnabled: PropTypes.bool.isRequired,
 		actions: PropTypes.shape({
 			startMeeting: PropTypes.func.isRequired,
 			showRecordings: PropTypes.func.isRequired,
@@ -81,8 +82,34 @@ export default class Root extends React.PureComponent {
 		}
 	}
 
+	getPopoverStyle = () => {
+		const style = getStyle(this.props.theme);
+		const popoverStyle = this.props.channel.type === 'D' ? style.popoverDM : style.popover;
+
+		if (this.props.appBarEnabled) {
+			const referenceElement = Array.from(document.querySelectorAll('.app-bar__icon-inner > img')).find(e => e.src.endsWith('bbb.png'));
+			if (!referenceElement) {
+				return popoverStyle;
+			}
+
+			const boundingRect = referenceElement.getBoundingClientRect();
+			popoverStyle.marginTop = `${boundingRect.top - 10}px`;
+			popoverStyle.marginLeft = 'calc(100% - 250px - 48px - 4px)';
+		} else {
+			const referenceElement = document.getElementById('bbbChannelHeaderButton');
+			if (!referenceElement) {
+				return popoverStyle;
+			}
+
+			const boundingRect = referenceElement.getBoundingClientRect();
+			popoverStyle.marginTop = `${boundingRect.top + 30}px`;
+			popoverStyle.marginLeft = `${boundingRect.left - 180}px`;
+		}
+
+		return popoverStyle;
+	}
+
 	render() {
-		const pos_width = (window.innerWidth - 400 + 'px');
 		const style = getStyle(this.props.theme);
 
 		let popoverButton = this.props.pluginConfig.ALLOW_RECORDINGS ? (
@@ -92,9 +119,6 @@ export default class Root extends React.PureComponent {
 				</a>
 			</div>
 		) : null;
-
-		style.popover['marginLeft'] = pos_width;
-		style.popoverDM['marginLeft'] = pos_width;
 
 		const channel = getChannel(this.props.state, this.props.channelId);
 		let channelName = '';
@@ -160,13 +184,15 @@ export default class Root extends React.PureComponent {
 			return null;
 		}
 
+		const popoverStyle = this.getPopoverStyle();
+
 		return (
 			<div>
 				{!ownChannel && //shows popup when not on own channel
 				<Overlay rootClose={true} show={this.props.visible} onHide={this.close_the_popover} placement="bottom">
 					<Popover
 						id="bbbPopover"
-						style={this.props.channel.type === 'D' ? style.popoverDM : style.popover}>
+						style={popoverStyle}>
 						<div style={this.props.channel.type === 'D' ? style.popoverBodyDM : style.popoverBody}>
 							{
 								this.props.channel.type === 'D' ? directMessageListItem : channelListItem
@@ -182,11 +208,8 @@ export default class Root extends React.PureComponent {
 
 /* Define CSS styles here */
 var getStyle = makeStyleFromTheme((theme) => {
-	var x_pos = (window.innerWidth - 400 + 'px'); //shouldn't be set here as it doesn't rerender
 	return {
 		popover: {
-			marginLeft: x_pos,
-			marginTop: '50px',
 			maxWidth: '250px',
 			width: '250px',
 			background: theme.centerChannelBg,
@@ -195,8 +218,6 @@ var getStyle = makeStyleFromTheme((theme) => {
 			paddingTop: '12px',
 		},
 		popoverDM: {
-			marginLeft: x_pos,
-			marginTop: '50px',
 			maxWidth: '220px',
 			height: '105px',
 			width: '220px',

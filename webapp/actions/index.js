@@ -201,7 +201,6 @@ export function getAttendees(channelId, meetingid) {
 }
 
 export function publishRecordings(channelId, recordid, publish, meetingId) {
-	console.log(recordid + ' ' + publish);
 	return async (dispatch, getState) => {
 
 		try {
