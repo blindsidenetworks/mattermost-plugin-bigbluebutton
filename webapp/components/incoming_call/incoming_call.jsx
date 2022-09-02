@@ -53,7 +53,7 @@ export default class IncomingCallPopup extends React.Component {
 	}
 
 	async componentDidUpdate() {
-		if (!this.props.incomingCall.dismissed && !this.state.fromUser) {
+		if (this.props.incomingCall && !this.props.incomingCall.dismissed && !this.state.fromUser) {
 			Client4.setUrl(this.props.siteURL);
 			const fromUser = await Client4.getUser(this.props.incomingCall.fromUserID);
 			this.setState({
@@ -85,7 +85,7 @@ export default class IncomingCallPopup extends React.Component {
 	};
 
 	render() {
-		const show = !this.props.incomingCall.dismissed && this.state.fromUser;
+		const show = this.props.incomingCall && !this.props.incomingCall.dismissed && this.state.fromUser;
 
 		if (!show) {
 			return null;
