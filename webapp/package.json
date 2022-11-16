@@ -33,7 +33,7 @@
     "babel-preset-stage-0": "6.24.1",
     "eslint": "^6.8.0",
     "eslint-plugin-react": "^7.14.3",
-    "webpack": "2.2.1"
+    "webpack": "5.75.0"
   },
   "scripts": {
     "build": "webpack --display-error-details --progress",
