@@ -20,7 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -29,7 +29,7 @@ import (
 
 	bbbAPI "github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/api"
 	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/dataStructs"
-	"github.com/mattermost/mattermost-server/v5/model"
+	"github.com/mattermost/mattermost/server/public/model"
 )
 
 const (
@@ -137,8 +137,8 @@ func (p *Plugin) Loopthroughrecordings() {
 						post.AddProp(propKeyRecordingURL, playback.Url)
 						post.AddProp(propKeyImages, strings.Join(playback.Images, ", "))
 
-						attachments[0].Fields = append(attachments[0].Fields, &model.SlackAttachmentField{
-							Title: "Recordings",
+						attachments[0].Fields = append(attachments[0].Fields, &model.MessageAttachmentField{
+							Title: recordingsFieldTitle,
 							Value: fmt.Sprintf("[Click to view recordings](%s)", playback.Url),
 							Short: true,
 						})
@@ -148,8 +148,8 @@ func (p *Plugin) Loopthroughrecordings() {
 						post.AddProp(propKeyNotes, true)
 						post.AddProp(propKeyNotesURL, playback.Url)
 
-						attachments[0].Fields = append(attachments[0].Fields, &model.SlackAttachmentField{
-							Title: "Notes",
+						attachments[0].Fields = append(attachments[0].Fields, &model.MessageAttachmentField{
+							Title: notesFieldTitle,
 							Value: fmt.Sprintf("[Click to view notes](%s)", playback.Url),
 						})
 
@@ -159,13 +159,13 @@ func (p *Plugin) Loopthroughrecordings() {
 
 				if recordingsAdded {
 					meetingAttachment := attachments[0]
-					attachments = []*model.SlackAttachment{
+					attachments = []*model.MessageAttachment{
 						meetingAttachment,
 						{
 							Actions: []*model.PostAction{
 								{
 									Id:    "toggleRecordingVisibility",
-									Type:  "button",
+									Type:  postActionTypeButton,
 									Name:  "Make Recording Invisible",
 									Style: "primary",
 									Integration: &model.PostActionIntegration{
@@ -179,7 +179,7 @@ func (p *Plugin) Loopthroughrecordings() {
 								},
 								{
 									Id:    "deleteRecordings",
-									Type:  "button",
+									Type:  postActionTypeButton,
 									Name:  "Delete Recordings",
 									Style: "danger",
 									Integration: &model.PostActionIntegration{
@@ -195,7 +195,7 @@ func (p *Plugin) Loopthroughrecordings() {
 					}
 				}
 
-				model.ParseSlackAttachment(post, attachments)
+				model.ParseMessageAttachment(post, attachments)
 
 				if _, err := p.API.UpdatePost(post); err == nil {
 					_ = p.RemoveMeetingWaitingForRecording(meeting.MeetingID_)
@@ -216,7 +216,7 @@ func (p *Plugin) Loopthroughrecordings() {
 func (p *Plugin) handleCreateMeeting(w http.ResponseWriter, r *http.Request) {
 	// reads in information to create a meeting from client inside
 	// whats being read in is the stuff in RequestCreateMeetingJSON
-	body, _ := ioutil.ReadAll(r.Body)
+	body, _ := io.ReadAll(r.Body)
 	defer r.Body.Close()
 	var request RequestCreateMeetingJSON
 	_ = json.Unmarshal(body, &request)
@@ -252,7 +252,7 @@ func (p *Plugin) handleCreateMeeting(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *Plugin) handleJoinInvite(w http.ResponseWriter, r *http.Request) {
-	body, _ := ioutil.ReadAll(r.Body)
+	body, _ := io.ReadAll(r.Body)
 	defer r.Body.Close()
 
 	var payload *joinInviteRequest
@@ -269,7 +269,7 @@ func (p *Plugin) handleJoinInvite(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := map[string]string{
-		"joinURL": joinURL,
+		joinURLContextKey: joinURL,
 	}
 	data, err := json.Marshal(response)
 	if err != nil {
@@ -370,7 +370,7 @@ func (p *Plugin) foo(meetingID, userID string) (string, error) {
 		uniqueAttendees[user] = true
 	}
 
-	if slackAttachments[0].Fields[0].Value != "*There are no attendees in this session*" {
+	if slackAttachments[0].Fields[0].Value != emptyAttendeesMessage {
 		for _, user := range strings.Split(slackAttachments[0].Fields[0].Value.(string), ", ") {
 			username := strings.TrimLeft(user, "@")
 			uniqueAttendees[username] = true
@@ -385,7 +385,7 @@ func (p *Plugin) foo(meetingID, userID string) (string, error) {
 	post.AddProp(propKeyAttendees, strings.Join(uniqueAttendeesList, ","))
 	slackAttachments[0].Fields[0].Title = fmt.Sprintf("Attendees (%d)", len(uniqueAttendeesList))
 	slackAttachments[0].Fields[0].Value = "@" + strings.Join(uniqueAttendeesList, ", @")
-	model.ParseSlackAttachment(post, slackAttachments)
+	model.ParseMessageAttachment(post, slackAttachments)
 
 	if _, appErr := p.API.UpdatePost(post); appErr != nil {
 		p.API.LogError("Error occurred updating meeting post during user joining it. Error: " + appErr.Error())
@@ -396,7 +396,7 @@ func (p *Plugin) foo(meetingID, userID string) (string, error) {
 }
 
 func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
-	body, _ := ioutil.ReadAll(r.Body)
+	body, _ := io.ReadAll(r.Body)
 	defer r.Body.Close()
 
 	var request *model.PostActionIntegrationRequest
@@ -407,12 +407,12 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 
 	p.API.SendEphemeralPost(request.UserId, &model.Post{
 		ChannelId: request.ChannelId,
-		Type:      model.POST_EPHEMERAL,
+		Type:      model.PostTypeEphemeral,
 		RootId:    request.PostId,
 		Message:   "Generating meeting link...",
 	})
 
-	meetingID := request.Context["meetingId"].(string)
+	meetingID := request.Context[meetingIDContextKey].(string)
 	meetingpointer := p.FindMeeting(meetingID)
 	if meetingpointer == nil {
 		myresp := ButtonResponseJSON{
@@ -436,7 +436,7 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 		userJson, _ := json.Marshal(myresp)
 		p.API.SendEphemeralPost(request.UserId, &model.Post{
 			ChannelId: request.ChannelId,
-			Type:      model.POST_EPHEMERAL,
+			Type:      model.PostTypeEphemeral,
 			RootId:    request.PostId,
 			Message:   fmt.Sprintf("Join the BBB meeting [here](%s)", joinURL),
 		})
@@ -448,8 +448,8 @@ func (p *Plugin) handleJoinMeeting(w http.ResponseWriter, r *http.Request) {
 
 func (p *Plugin) sendOpenMeetingWSEvent(joinURL, userID, channelID string) {
 	payload := map[string]interface{}{
-		"joinURL":   joinURL,
-		"channelID": channelID,
+		joinURLContextKey: joinURL,
+		"channelID":       channelID,
 	}
 
 	broadcast := &model.WebsocketBroadcast{
@@ -467,7 +467,7 @@ func (p *Plugin) handleJoinMeetingExternalUser(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	body, _ := ioutil.ReadAll(r.Body)
+	body, _ := io.ReadAll(r.Body)
 	defer r.Body.Close()
 
 	var request map[string]string
@@ -476,7 +476,7 @@ func (p *Plugin) handleJoinMeetingExternalUser(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	meetingID := request["meetingId"]
+	meetingID := request[meetingIDContextKey]
 
 	meetingpointer := p.FindMeeting(meetingID)
 
@@ -552,7 +552,7 @@ func (p *Plugin) handleJoinMeetingExternalUser(w http.ResponseWriter, r *http.Re
 		uniqueAttendees[user] = true
 	}
 
-	if slackAttachments[0].Fields[0].Value != "*There are no attendees in this session*" {
+	if slackAttachments[0].Fields[0].Value != emptyAttendeesMessage {
 		for _, user := range strings.Split(slackAttachments[0].Fields[0].Value.(string), ", ") {
 			username := strings.TrimLeft(user, "@")
 			uniqueAttendees[username] = true
@@ -567,7 +567,7 @@ func (p *Plugin) handleJoinMeetingExternalUser(w http.ResponseWriter, r *http.Re
 	post.AddProp(propKeyAttendees, strings.Join(uniqueAttendeesList, ","))
 	slackAttachments[0].Fields[0].Title = fmt.Sprintf("Attendees (%d)", len(uniqueAttendeesList))
 	slackAttachments[0].Fields[0].Value = strings.Join(uniqueAttendeesList, ", @")
-	model.ParseSlackAttachment(post, slackAttachments)
+	model.ParseMessageAttachment(post, slackAttachments)
 
 	if _, err := p.API.UpdatePost(post); err != nil {
 		p.API.LogError("Error occurred updating meeting post during user joining it. Error: " + err.Error())
@@ -576,7 +576,7 @@ func (p *Plugin) handleJoinMeetingExternalUser(w http.ResponseWriter, r *http.Re
 	}
 
 	response := map[string]string{
-		"joinURL": joinURL,
+		joinURLContextKey: joinURL,
 	}
 	responseData, _ := json.Marshal(response)
 
@@ -627,10 +627,10 @@ func (p *Plugin) handleImmediateEndMeetingCallback(w http.ResponseWriter, r *htt
 	durationstring := FormatSeconds(timediff)
 	post.AddProp(propKeyDuration, durationstring)
 
-	attachments := []*model.SlackAttachment{
+	attachments := []*model.MessageAttachment{
 		{
 			Title: "**Meeting Ended**",
-			Fields: []*model.SlackAttachmentField{
+			Fields: []*model.MessageAttachmentField{
 				{
 					Title: "Date Started At",
 					Value: time.Unix(meetingpointer.CreatedAt, 0).Format("Jan _2 at 3:04 PM"),
@@ -661,7 +661,7 @@ func (p *Plugin) handleImmediateEndMeetingCallback(w http.ResponseWriter, r *htt
 		}
 
 		attachments[0].Fields = append(
-			[]*model.SlackAttachmentField{
+			[]*model.MessageAttachmentField{
 				{
 					Title: "Ended By",
 					Value: "@" + user.Username,
@@ -671,7 +671,7 @@ func (p *Plugin) handleImmediateEndMeetingCallback(w http.ResponseWriter, r *htt
 		)
 	}
 
-	model.ParseSlackAttachment(post, attachments)
+	model.ParseMessageAttachment(post, attachments)
 	if _, err := p.API.UpdatePost(post); err != nil {
 		p.API.LogError(fmt.Sprintf("Unable to update post. Error: {%s}", err.Error()))
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -686,12 +686,12 @@ func (p *Plugin) handleImmediateEndMeetingCallback(w http.ResponseWriter, r *htt
 func (p *Plugin) handleEndMeeting(w http.ResponseWriter, r *http.Request) {
 	mattermost.API.LogInfo("Processing End Meeting Request")
 
-	body, _ := ioutil.ReadAll(r.Body)
+	body, _ := io.ReadAll(r.Body)
 	defer r.Body.Close()
 	var request *model.PostActionIntegrationRequest
 	_ = json.Unmarshal(body, &request)
 
-	meetingID := request.Context["meetingId"].(string)
+	meetingID := request.Context[meetingIDContextKey].(string)
 	meetingpointer := p.FindMeeting(meetingID)
 
 	post, err := p.API.GetPost(meetingpointer.PostId)
@@ -793,7 +793,7 @@ func (p *Plugin) handleEndMeeting(w http.ResponseWriter, r *http.Request) {
 func (p *Plugin) cleanupForEndMeeting(post *model.Post) error {
 	attachments := post.Attachments()
 	attachments[0].Fields = append(
-		[]*model.SlackAttachmentField{{
+		[]*model.MessageAttachmentField{{
 			Title: "Meeting Ended",
 			Value: "",
 			Short: false,
@@ -801,7 +801,7 @@ func (p *Plugin) cleanupForEndMeeting(post *model.Post) error {
 		attachments[0].Fields...,
 	)
 	attachments[0].Actions = nil
-	model.ParseSlackAttachment(post, attachments)
+	model.ParseMessageAttachment(post, attachments)
 	if _, err := p.API.UpdatePost(post); err != nil {
 		msg := "Error occurred updating post for cleaning up actions on manual end. PostID: " + post.Id + " error: " + err.Error()
 		p.API.LogError(msg)
@@ -812,7 +812,7 @@ func (p *Plugin) cleanupForEndMeeting(post *model.Post) error {
 }
 
 func (p *Plugin) handleIsMeetingRunning(w http.ResponseWriter, r *http.Request) {
-	body, _ := ioutil.ReadAll(r.Body)
+	body, _ := io.ReadAll(r.Body)
 	defer r.Body.Close()
 
 	var request ButtonRequestJSON
@@ -835,7 +835,7 @@ func (p *Plugin) handleRecordingReady(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *Plugin) handleGetAttendeesInfo(w http.ResponseWriter, r *http.Request) {
-	body, _ := ioutil.ReadAll(r.Body)
+	body, _ := io.ReadAll(r.Body)
 	defer r.Body.Close()
 
 	var request AttendeesRequestJSON
@@ -876,7 +876,7 @@ func (p *Plugin) handleGetAttendeesInfo(w http.ResponseWriter, r *http.Request) 
 }
 
 func (p *Plugin) handlePublishRecordings(w http.ResponseWriter, r *http.Request) {
-	body, _ := ioutil.ReadAll(r.Body)
+	body, _ := io.ReadAll(r.Body)
 	defer r.Body.Close()
 
 	var request *model.PostActionIntegrationRequest
@@ -918,16 +918,12 @@ func (p *Plugin) handlePublishRecordings(w http.ResponseWriter, r *http.Request)
 	post.AddProp(propKeyIsPublished, publish)
 
 	originalAttachments := post.Attachments()
-	newAttachments := []*model.SlackAttachment{
-		{},
-	}
-
-	newAttachments = append(newAttachments, originalAttachments[1])
+	newAttachments := []*model.MessageAttachment{{}, originalAttachments[1]}
 
 	for i := range originalAttachments[0].Fields {
 		field := originalAttachments[0].Fields[i]
 
-		if field.Title != "Notes" && field.Title != "Recordings" {
+		if field.Title != notesFieldTitle && field.Title != recordingsFieldTitle {
 			newAttachments[0].Fields = append(newAttachments[0].Fields, field)
 		}
 	}
@@ -938,16 +934,16 @@ func (p *Plugin) handlePublishRecordings(w http.ResponseWriter, r *http.Request)
 		newAttachments[1].Actions[0].Integration.Context["publish"] = "false"
 
 		if recordingURL := post.GetProp(propKeyRecordingURL); recordingURL != nil {
-			newAttachments[0].Fields = append(newAttachments[0].Fields, &model.SlackAttachmentField{
-				Title: "Recordings",
+			newAttachments[0].Fields = append(newAttachments[0].Fields, &model.MessageAttachmentField{
+				Title: recordingsFieldTitle,
 				Value: fmt.Sprintf("[Click to view recordings](%s)", recordingURL),
 				Short: false,
 			})
 		}
 
 		if notesURL := post.GetProp(propKeyNotesURL); notesURL != nil {
-			newAttachments[0].Fields = append(newAttachments[0].Fields, &model.SlackAttachmentField{
-				Title: "Notes",
+			newAttachments[0].Fields = append(newAttachments[0].Fields, &model.MessageAttachmentField{
+				Title: notesFieldTitle,
 				Value: fmt.Sprintf("[Click to view notes](%s)", notesURL),
 				Short: false,
 			})
@@ -958,7 +954,7 @@ func (p *Plugin) handlePublishRecordings(w http.ResponseWriter, r *http.Request)
 		newAttachments[1].Actions[0].Integration.Context["publish"] = "true"
 	}
 
-	model.ParseSlackAttachment(post, newAttachments)
+	model.ParseMessageAttachment(post, newAttachments)
 
 	if _, err := p.API.UpdatePost(post); err != nil {
 		p.API.LogError(
@@ -976,7 +972,7 @@ func (p *Plugin) handlePublishRecordings(w http.ResponseWriter, r *http.Request)
 }
 
 func (p *Plugin) handleDeleteRecordingsConfirmation(w http.ResponseWriter, r *http.Request) {
-	body, _ := ioutil.ReadAll(r.Body)
+	body, _ := io.ReadAll(r.Body)
 	defer r.Body.Close()
 
 	var request *model.PostActionIntegrationRequest
@@ -1037,7 +1033,7 @@ func (p *Plugin) handleDeleteRecordingsConfirmation(w http.ResponseWriter, r *ht
 }
 
 func (p *Plugin) handleDeleteRecordings(w http.ResponseWriter, r *http.Request) {
-	body, _ := ioutil.ReadAll(r.Body)
+	body, _ := io.ReadAll(r.Body)
 	defer r.Body.Close()
 
 	var request *model.SubmitDialogRequest
@@ -1076,16 +1072,16 @@ func (p *Plugin) handleDeleteRecordings(w http.ResponseWriter, r *http.Request) 
 	post.AddProp(propKeyRecordingStatus, "Recording Deleted")
 
 	post.Message = strings.ReplaceAll(post.Message, "#recording", "")
-	attachments := make([]*model.SlackAttachment, 1)
-	attachments[0] = &model.SlackAttachment{}
+	attachments := make([]*model.MessageAttachment, 1)
+	attachments[0] = &model.MessageAttachment{}
 
 	for _, field := range post.Attachments()[0].Fields {
-		if field.Title != "Notes" && field.Title != "Recordings" {
+		if field.Title != notesFieldTitle && field.Title != recordingsFieldTitle {
 			attachments[0].Fields = append(attachments[0].Fields, field)
 		}
 	}
 
-	model.ParseSlackAttachment(post, attachments)
+	model.ParseMessageAttachment(post, attachments)
 
 	if _, err := p.API.UpdatePost(post); err != nil {
 		http.Error(w, "Error: could not update post \n"+err.Error(), err.StatusCode)
@@ -1098,9 +1094,7 @@ func (p *Plugin) handleDeleteRecordings(w http.ResponseWriter, r *http.Request) 
 func (p *Plugin) handleGetConfig(w http.ResponseWriter, r *http.Request) {
 	config := p.config()
 
-	sanitizedConfig := &Configuration{
-		AllowRecordings: config.AllowRecordings,
-	}
+	sanitizedConfig := config.AsMap()
 
 	data, err := json.Marshal(sanitizedConfig)
 	if err != nil {

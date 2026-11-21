@@ -85,7 +85,15 @@ Using the [bbb-install.sh](https://github.com/bigbluebutton/bbb-install) script 
 ## Contributing
 
 Plugin is written in Golang for server side and Javascript and React for client side. Use `make build` to build the plugin. You can also use `make quickbuild` following first build for faster builds.
-The dependencies are managed with Glide for Go and NPM for javascript.
+Dependencies are managed with Go modules (`go.mod`/`go.sum`) and npm (`webapp/package-lock.json`).
+
+The upgraded plugin targets Mattermost 11.9 or later. Its webapp uses Mattermost's shared React, Redux, ReactRedux and ReactBootstrap globals; the React and Redux packages in `devDependencies` are used for development and tests. Upgrading this plugin does not replace those libraries inside Mattermost.
+
+Use Go 1.27.4 (selected automatically by `go.mod`), Node 26.13.1 (`nvm install && nvm use`) and npm 12.2.3 (`npm install -g npm@12.2.3`). Install golangci-lint 2.15.0 with `go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.15.0`.
+
+Run `make install-dependencies`, `make check-style` and `make test` before building. `make dist` creates archives for macOS and Linux on amd64/arm64 and Windows on amd64 under `dist/`. The build uses `go build` directly and no longer needs GOPATH mode, vendoring or gox.
+
+Automated regression tests cover SDK activation/deactivation, meeting callbacks and attachment serialization, Redux containers and websocket handlers, API request payloads, and meeting controls rendered with React. Host UI widgets and the HTTP transport are stubbed in the webapp tests. Before release, install the bundle on a running Mattermost instance and verify `/bbb`, channel and direct calls, join/end actions, recording search/publish/delete, external guest links, and settings changes against a real BigBlueButton server.
 
 The plugin should be placed in a directory such as `~/go/src/github.com/blindsidenetworks/mattermost-plugin-bigbluebutton`
 

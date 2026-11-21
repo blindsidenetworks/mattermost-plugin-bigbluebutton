@@ -35,7 +35,7 @@ export default class IncomingCallPopup extends React.Component {
 			dismissIncomingCall: PropTypes.func.isRequired,
 			getJoinURL: PropTypes.func.isRequired,
 		}).isRequired,
-	}
+	};
 
 	constructor(props) {
 		super(props);

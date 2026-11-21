@@ -33,7 +33,7 @@ export default class OpenMeeting extends React.Component {
 		actions: PropTypes.shape({
 			dismissOpenMeeting: PropTypes.func.isRequired,
 		}),
-	}
+	};
 
 	constructor(props) {
 		super(props);

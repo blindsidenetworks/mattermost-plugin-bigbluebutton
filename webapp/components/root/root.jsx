@@ -20,7 +20,7 @@ import PropTypes from 'prop-types';
 import {makeStyleFromTheme} from 'mattermost-redux/utils/theme_utils';
 import {getChannel} from 'mattermost-redux/selectors/entities/channels';
 
-// eslint-disable-next-line no-unused-vars
+
 const {Popover, Overlay} = window.ReactBootstrap;
 
 export default class Root extends React.PureComponent {
@@ -28,8 +28,6 @@ export default class Root extends React.PureComponent {
 		cur_user: PropTypes.object.isRequired,
 		state: PropTypes.object.isRequired,
 		teamname: PropTypes.string.isRequired,
-		lastpostperchannel: PropTypes.object.isRequired,
-		unreadChannelIds: PropTypes.array.isRequired,
 		theme: PropTypes.object.isRequired,
 		channelName: PropTypes.string.isRequired,
 		channel: PropTypes.object.isRequired,
@@ -107,7 +105,7 @@ export default class Root extends React.PureComponent {
 		}
 
 		return popoverStyle;
-	}
+	};
 
 	render() {
 		const style = getStyle(this.props.theme);

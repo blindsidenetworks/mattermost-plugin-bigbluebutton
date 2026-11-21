@@ -1,30 +1,32 @@
+const path = require('node:path');
+
 module.exports = {
 	entry: './index.js',
 	output: {
-		filename: 'dist/bigbluebutton_bundle.js'
+		path: path.resolve(__dirname, 'dist'),
+		filename: 'bigbluebutton_bundle.js',
+		clean: true,
 	},
 	externals: {
 		react: 'React',
+		'react-dom': 'ReactDOM',
 		redux: 'Redux',
 		'react-redux': 'ReactRedux',
-		'react-bootstrap': 'ReactBootstrap',
-
 	},
+	resolve: {extensions: ['.js', '.jsx']},
 	module: {
-		loaders: [
-			{
-				test: /\.(js|jsx)?$/,
+		rules: [{
+			test: /\.jsx?$/,
+			exclude: /node_modules/,
+			use: {
 				loader: 'babel-loader',
-				exclude: /(node_modules|non_npm_dependencies)/,
-				query: {
+				options: {
 					presets: [
-						'react',
-						['es2015', {modules: false}],
-						'stage-0'
+						['@babel/preset-env', {targets: 'defaults', modules: false}],
+						['@babel/preset-react', {runtime: 'classic'}],
 					],
-					plugins: ['transform-runtime']
-				}
-			}
-		]
-	}
+				},
+			},
+		}],
+	},
 };

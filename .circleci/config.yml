@@ -4,29 +4,28 @@ version: 2.1
 jobs:
   build:
     docker:
-      - image: circleci/golang:1.16-node
+      - image: cimg/go:1.27.4-node
     working_directory: /go/src/github.com/blindsidenetworks/mattermost-plugin-bigbluebutton
     steps:
       - checkout
       - run:
           name: Swap node versions
           command: |
-            set +e
-            wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.1/install.sh | bash
+            set -e
+            wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.41.0/install.sh | bash
             export NVM_DIR="$HOME/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
             [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
-            nvm install v10
-            nvm alias default 10
+            nvm install
+            nvm alias default "$(cat .nvmrc)"
+            npm install --global npm@12.2.3
 
             echo 'export NVM_DIR="$HOME/.nvm"' >> $BASH_ENV
             echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
-      - run:
-          name: Install golangci-lint
-          command: |
-            curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.39.0
-            golangci-lint --version
+      - run: make install-dependencies
+      - run: go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.15.0
       - run: make check-style
+      - run: make test
       - run: make dist
       - store_artifacts:
           path: ./dist
@@ -37,7 +36,7 @@ jobs:
             - dist
   release:
     docker:
-      - image: circleci/golang:1.16-node
+      - image: cimg/go:1.27.4-node
     working_directory: /go/src/github.com/blindsidenetworks/mattermost-plugin-bigbluebutton
     steps:
       - checkout
@@ -46,13 +45,14 @@ jobs:
       - run:
           name: Swap node versions
           command: |
-            set +e
-            wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.1/install.sh | bash
+            set -e
+            wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.41.0/install.sh | bash
             export NVM_DIR="$HOME/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
             [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
-            nvm install v10
-            nvm alias default 10
+            nvm install
+            nvm alias default "$(cat .nvmrc)"
+            npm install --global npm@12.2.3
 
             echo 'export NVM_DIR="$HOME/.nvm"' >> $BASH_ENV
             echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV

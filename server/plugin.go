@@ -17,6 +17,7 @@ limitations under the License.
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -25,18 +26,15 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/pkg/errors"
-
 	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/helpers"
-	"github.com/mattermost/mattermost-plugin-api/cluster"
+	"github.com/mattermost/mattermost/server/public/pluginapi/cluster"
 
 	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/mattermost"
 
 	bbbAPI "github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/api"
 	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/dataStructs"
-	"github.com/mattermost/mattermost-server/v5/model"
-	"github.com/mattermost/mattermost-server/v5/plugin"
-	"github.com/robfig/cron"
+	"github.com/mattermost/mattermost/server/public/model"
+	"github.com/mattermost/mattermost/server/public/plugin"
 )
 
 var PluginVersion string
@@ -56,7 +54,6 @@ const (
 type Plugin struct {
 	plugin.MattermostPlugin
 
-	c             *cron.Cron
 	configuration atomic.Value
 	job           *cluster.Job
 	handler       http.Handler
@@ -97,12 +94,12 @@ func (p *Plugin) OnActivate() error {
 		AutocompleteData: &model.AutocompleteData{
 			Trigger:  "bbb",
 			HelpText: "Start a new BigBlueButton recording",
-			RoleID:   model.SYSTEM_USER_ROLE_ID,
+			RoleID:   model.SystemUserRoleId,
 			SubCommands: []*model.AutocompleteData{
 				{
 					Trigger:  "no_recording",
 					HelpText: "Start a new meeting with recording disabled",
-					RoleID:   model.SYSTEM_USER_ROLE_ID,
+					RoleID:   model.SystemUserRoleId,
 				},
 			},
 		},
@@ -167,7 +164,7 @@ func (p *Plugin) shouldShowCallPopup(fromUserID, channelID string) (string, bool
 		return "", false, errors.New(appErr.Error())
 	}
 
-	if channel.Type != model.CHANNEL_DIRECT {
+	if channel.Type != model.ChannelTypeDirect {
 		return "", false, nil
 	}
 
@@ -190,8 +187,8 @@ func (p *Plugin) sendCallAlert(meetingID, fromUserID, toUserID string) {
 	p.API.PublishWebSocketEvent(
 		"incoming_call",
 		map[string]interface{}{
-			"meetingId":  meetingID,
-			"fromUserID": fromUserID,
+			meetingIDContextKey: meetingID,
+			"fromUserID":        fromUserID,
 		},
 		&model.WebsocketBroadcast{
 			UserId: toUserID,
@@ -225,7 +222,9 @@ func (p *Plugin) setupStaticFileServer() error {
 
 func (p *Plugin) OnDeactivate() error {
 	// on deactivate, save meetings details, stop check recordings looper, destroy webhook.
-	p.c.Stop()
+	if p.job != nil {
+		return p.job.Close()
+	}
 	return nil
 }
 
