@@ -19,6 +19,7 @@ import PopoverListMembersItem from './popover_list_members_item.jsx';
 import PropTypes from 'prop-types';
 import {makeStyleFromTheme} from 'mattermost-redux/utils/theme_utils';
 import {getChannel} from 'mattermost-redux/selectors/entities/channels';
+import PluginId from '../../plugin_id';
 
 
 const {Popover, Overlay} = window.ReactBootstrap;
@@ -34,7 +35,6 @@ export default class Root extends React.PureComponent {
 		pluginConfig: PropTypes.object.isRequired,
 		channelId: PropTypes.string,
 		visible: PropTypes.bool,
-		appBarEnabled: PropTypes.bool.isRequired,
 		actions: PropTypes.shape({
 			startMeeting: PropTypes.func.isRequired,
 			showRecordings: PropTypes.func.isRequired,
@@ -80,32 +80,11 @@ export default class Root extends React.PureComponent {
 		}
 	}
 
-	getPopoverStyle = () => {
-		const style = getStyle(this.props.theme);
-		const popoverStyle = this.props.channel.type === 'D' ? style.popoverDM : style.popover;
-
-		if (this.props.appBarEnabled) {
-			const referenceElement = Array.from(document.querySelectorAll('.app-bar__icon-inner > img')).find(e => e.src.endsWith('bbb.png'));
-			if (!referenceElement) {
-				return popoverStyle;
-			}
-
-			const boundingRect = referenceElement.getBoundingClientRect();
-			popoverStyle.marginTop = `${boundingRect.top - 10}px`;
-			popoverStyle.marginLeft = 'calc(100% - 250px - 48px - 4px)';
-		} else {
-			const referenceElement = document.getElementById('bbbChannelHeaderButton');
-			if (!referenceElement) {
-				return popoverStyle;
-			}
-
-			const boundingRect = referenceElement.getBoundingClientRect();
-			popoverStyle.marginTop = `${boundingRect.top + 30}px`;
-			popoverStyle.marginLeft = `${boundingRect.left - 180}px`;
-		}
-
-		return popoverStyle;
-	};
+	// Use the rendered controls rather than the removed EnableAppBar setting.
+	// Anchor to the plugin button instead of manually offsetting an unanchored
+	// popover from the top-left of the page.
+	getPopoverTarget = () => document.getElementById(`app-bar-icon-${PluginId}`) ||
+		document.getElementById('bbbChannelHeaderButton');
 
 	render() {
 		const style = getStyle(this.props.theme);
@@ -182,12 +161,21 @@ export default class Root extends React.PureComponent {
 			return null;
 		}
 
-		const popoverStyle = this.getPopoverStyle();
+		const popoverStyle = this.props.channel.type === 'D' ? style.popoverDM : style.popover;
+		const target = this.getPopoverTarget();
+		const placement = target?.id === `app-bar-icon-${PluginId}` ? 'left' : 'bottom';
 
 		return (
 			<div>
 				{!ownChannel && //shows popup when not on own channel
-				<Overlay rootClose={true} show={this.props.visible} onHide={this.close_the_popover} placement="bottom">
+				<Overlay
+					rootClose={true}
+					show={this.props.visible && Boolean(target)}
+					onHide={this.close_the_popover}
+					target={this.getPopoverTarget}
+					container={document.body}
+					containerPadding={8}
+					placement={placement}>
 					<Popover
 						id="bbbPopover"
 						style={popoverStyle}>

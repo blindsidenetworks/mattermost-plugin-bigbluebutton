@@ -48,19 +48,49 @@ export default class IncomingCallPopup extends React.Component {
 		this.props.actions.dismissIncomingCall();
 	};
 
-	async componentDidMount() {
-
+	componentDidMount() {
+		this.loadCaller();
 	}
 
-	async componentDidUpdate() {
-		if (this.props.incomingCall && !this.props.incomingCall.dismissed && !this.state.fromUser) {
-			Client4.setUrl(this.props.siteURL);
-			const fromUser = await Client4.getUser(this.props.incomingCall.fromUserID);
-			this.setState({
-				fromUser,
-			});
+	componentDidUpdate(prevProps) {
+		if (prevProps.incomingCall !== this.props.incomingCall || prevProps.siteURL !== this.props.siteURL) {
+			this.loadCaller();
 		}
 	}
+
+	componentWillUnmount() {
+		this.callerRequest = null;
+	}
+
+	loadCaller = async () => {
+		const call = this.props.incomingCall;
+		const request = {};
+		this.callerRequest = request;
+
+		if (this.state.fromUser) {
+			this.setState({fromUser: null});
+		}
+
+		// Redux starts with an empty object, and websocket payloads may be incomplete.
+		if (!call || call.dismissed || typeof call.fromUserID !== 'string' || !call.fromUserID.trim() ||
+			typeof call.meetingId !== 'string' || !call.meetingId.trim()) {
+			return;
+		}
+
+		try {
+			Client4.setUrl(this.props.siteURL);
+			const fromUser = await Client4.getUser(call.fromUserID);
+			// A newer call, dismissal, or unmount invalidates this response.
+			if (this.callerRequest === request) {
+				this.setState({fromUser});
+			}
+		} catch {
+			if (this.callerRequest === request) {
+				// The caller may have been deleted, or the connection may have failed.
+				this.props.actions.dismissIncomingCall();
+			}
+		}
+	};
 
 	getJoinURL = async () => {
 		let myurl;
@@ -85,7 +115,9 @@ export default class IncomingCallPopup extends React.Component {
 	};
 
 	render() {
-		const show = this.props.incomingCall && !this.props.incomingCall.dismissed && this.state.fromUser;
+		const show = Boolean(this.props.incomingCall && !this.props.incomingCall.dismissed &&
+			this.props.incomingCall.meetingId && this.state.fromUser &&
+			this.state.fromUser.id === this.props.incomingCall.fromUserID);
 
 		if (!show) {
 			return null;

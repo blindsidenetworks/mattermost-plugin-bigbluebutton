@@ -46,8 +46,6 @@ function mapStateToProps(state, ownProps) {
 		};
 	}
 
-	const appBarEnabled = state.entities.general.config.EnableAppBar === 'true';
-
 	return {
 		visible: isRootModalVisible(state),
 		channelId,
@@ -59,7 +57,6 @@ function mapStateToProps(state, ownProps) {
 		state,
 		theme: getTheme(state),
 		pluginConfig,
-		appBarEnabled,
 		...ownProps
 	};
 }

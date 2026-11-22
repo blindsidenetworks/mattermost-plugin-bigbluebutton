@@ -86,7 +86,7 @@ test('Redux 5 preserves meeting state and React renders meeting controls', async
 	const channel = {id: 'channel', name: 'town-square', display_name: 'Town Square', type: 'O'};
 	const html = renderToStaticMarkup(React.createElement(Root, {
 		state: {entities: {channels: {channels: {channel}}}},
-		channel, channelId: 'channel', visible: true, appBarEnabled: false,
+		channel, channelId: 'channel', visible: true,
 		pluginConfig: {ALLOW_RECORDINGS: true},
 		theme: {centerChannelBg: '#ffffff', centerChannelColor: '#333333', linkColor: '#0055aa'},
 		actions: {startMeeting: vi.fn(), showRecordings: vi.fn(), closePopover: vi.fn()},
