@@ -1,60 +1,86 @@
+version: "2"
 run:
   modules-download-mode: readonly
-
-linters-settings:
-  gofmt:
-    simplify: true
-  govet:
-    check-shadowing: true
-    enable-all: true
-    disable:
-      - fieldalignment
-  lll:
-    line-length: 150
-  revive:
-    enableAllRules: true
-    rules:
-      - name: exported
-        disabled: true
-
 linters:
-  disable-all: true
+  default: none
   enable:
-    - gofmt
-    - goimports
-    - deadcode
-    - ineffassign
-    - structcheck
-    - varcheck
-    - errcheck
-    - govet
-    - bodyclose
-    - durationcheck
-    - errorlint
-    - exhaustive
-    - exportloopref
-    - gosec
-    - makezero
-    - staticcheck
-    - prealloc
     - asciicheck
+    - bodyclose
     - depguard
     - dogsled
     - dupl
+    - durationcheck
+    - errcheck
+    - errorlint
+    - exhaustive
     - goconst
     - gocritic
+    - gocyclo
     - godot
     - goheader
-    - revive
-    - nakedret
-    - gomodguard
+    - gomodguard_v2
     - goprintffuncname
-    - gosimple
+    - gosec
+    - govet
+    - ineffassign
     - lll
+    - makezero
     - misspell
+    - nakedret
     - nolintlint
-    - typecheck
+    - prealloc
+    - revive
+    - staticcheck
     - unconvert
     - unused
     - whitespace
-    - gocyclo
+  settings:
+    depguard:
+      rules:
+        main:
+          allow:
+            - $gostd
+            - github.com/blindsidenetworks/mattermost-plugin-bigbluebutton
+            - github.com/mattermost/mattermost/server/public
+            - github.com/segmentio/ksuid
+            - github.com/thoas/go-funk
+    govet:
+      disable:
+        - fieldalignment
+      enable-all: true
+    lll:
+      line-length: 150
+    revive:
+      # The old enableAllRules key was invalid. Keep the default rules rather
+      # than enabling hundreds of new style checks in this dependency upgrade.
+      enable-all-rules: false
+      rules:
+        - name: exported
+          disabled: true
+        # The legacy BBB wrapper uses protocol-derived names with underscores.
+        - name: var-naming
+          disabled: true
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    gofmt:
+      simplify: true
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

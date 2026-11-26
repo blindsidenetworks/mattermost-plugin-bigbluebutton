@@ -20,7 +20,7 @@ import (
 	"crypto/sha1" //nolint:gosec
 	"encoding/hex"
 	"encoding/xml"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/mattermost"
@@ -46,7 +46,7 @@ func HttpGet(url string) (string, error) {
 
 	defer response.Body.Close()
 
-	body, err := ioutil.ReadAll(response.Body)
+	body, err := io.ReadAll(response.Body)
 	if nil != err {
 		mattermost.API.LogError("HTTP GET ERROR: " + err.Error())
 		return "", err

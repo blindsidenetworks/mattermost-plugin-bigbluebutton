@@ -17,11 +17,11 @@ limitations under the License.
 package main
 
 import (
-	"encoding/json"
 	"strings"
 
-	"github.com/mattermost/mattermost-server/v5/model"
-	"github.com/pkg/errors"
+	"errors"
+
+	"github.com/mattermost/mattermost/server/public/model"
 )
 
 type Configuration struct {
@@ -34,10 +34,13 @@ type Configuration struct {
 }
 
 func (c Configuration) AsMap() map[string]interface{} {
-	data, _ := json.Marshal(c)
-	var asMap *map[string]interface{}
-	_ = json.Unmarshal(data, &asMap)
-	return *asMap
+	// Only public flags may be sent to browser clients over websocket events.
+	return map[string]interface{}{
+		"ADMINONLY":            c.AdminOnly,
+		"PROCESS_RECORDINGS":   c.ProcessRecordings,
+		"ALLOW_RECORDINGS":     c.AllowRecordings,
+		"ALLOW_EXTERNAL_USERS": c.AllowExternalUsers,
+	}
 }
 
 func (p *Plugin) OnConfigurationChange() error {
@@ -83,9 +86,9 @@ func (p *Plugin) config() *Configuration {
 
 func (c *Configuration) IsValid() error {
 	if len(c.BaseURL) == 0 {
-		return errors.New("BASE URL is not configured.")
+		return errors.New("base URL is not configured")
 	} else if len(c.Secret) == 0 {
-		return errors.New("Secret is not configured.")
+		return errors.New("secret is not configured")
 	}
 
 	return nil

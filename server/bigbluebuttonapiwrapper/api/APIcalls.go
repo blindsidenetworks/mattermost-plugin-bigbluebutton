@@ -20,10 +20,11 @@ import (
 	"net/url"
 	"strconv"
 
+	"errors"
+
 	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/dataStructs"
 	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/helpers"
 	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/mattermost"
-	"github.com/pkg/errors"
 )
 
 const SUCCESS_STATUS_CODE = "SUCCESS"
@@ -133,23 +134,23 @@ func GetJoinURL(participants *dataStructs.Participants) (string, error) {
 	var redirect string
 	var clientURL string
 
-	if "" != participants.CreateTime {
+	if participants.CreateTime != "" {
 		createTime = "&createTime=" + url.QueryEscape(participants.CreateTime)
 	}
 
-	if "" != participants.UserID {
+	if participants.UserID != "" {
 		userID = "&userID=" + url.QueryEscape(participants.UserID)
 	}
 
-	if "" != participants.ConfigToken {
+	if participants.ConfigToken != "" {
 		configToken = "&configToken=" + url.QueryEscape(participants.ConfigToken)
 	}
 
-	if "" != participants.AvatarURL {
+	if participants.AvatarURL != "" {
 		avatarURL = "&avatarURL=" + url.QueryEscape(participants.AvatarURL)
 	}
 
-	if "" != participants.ClientURL {
+	if participants.ClientURL != "" {
 		redirect = "&redirect=true"
 		clientURL = "&clientURL=" + url.QueryEscape(participants.ClientURL)
 	}
@@ -232,7 +233,7 @@ func GetMeetingInfo(meetingId string, modPw string, responseXML *dataStructs.Get
 		mattermost.API.LogInfo("Successfully got meeting info")
 		return "Successfully got meeting info" + meetingId, nil
 	} else {
-		return "", errors.New("Could not get meeting info ")
+		return "", errors.New("could not get meeting info")
 	}
 }
 
@@ -288,7 +289,7 @@ func GetRecordings(meetingId string, recordId string, metachannelid string) (dat
 	}
 
 	if SUCCESS_STATUS_CODE != XMLResp.ReturnCode {
-		return dataStructs.GetRecordingsResponse{}, "", errors.New("Could not get recordings info")
+		return dataStructs.GetRecordingsResponse{}, "", errors.New("could not get recordings info")
 	}
 	return XMLResp, response, nil
 }

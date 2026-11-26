@@ -37,7 +37,7 @@ export default class Client {
 			description: description,
 			allow_recording: allowRecording,
 		});
-	}
+	};
 
 	getJoinURL = async (userid, meetingid, ismod) => {
 		var body = await this.doPost(`${this.baseUrl}/joininvite`, {
@@ -46,22 +46,22 @@ export default class Client {
 			is_mod: ismod
 		});
 		return body;
-	}
+	};
 	endMeeting = async (userid, meetingid) => {
 		var body = await this.doPost(`${this.baseUrl}/endmeeting`, {
 			user_id: userid,
 			meeting_id: meetingid
 		});
 		return body;
-	}
+	};
 	isMeetingRunning = async (meetingid) => {
 		var body = await this.doPost(`${this.baseUrl}/ismeetingrunning`, {meeting_id: meetingid});
 		return body;
-	}
+	};
 	getAttendees = async (meetingid) => {
 		var body = await this.doPost(`${this.baseUrl}/getattendees`, {meeting_id: meetingid});
 		return body;
-	}
+	};
 
 	publishRecordings = async (recordid, publish, meetingId) => {
 		return await this.doPost(`${this.baseUrl}/publishrecordings`, {
@@ -69,18 +69,18 @@ export default class Client {
 			publish: publish,
 			meeting_id: meetingId
 		});
-	}
+	};
 
 	deleteRecordings = async (recordid, meetingId) => {
 		return await this.doPost(`${this.baseUrl}/deleterecordings`, {
 			record_id: recordid,
 			meeting_id: meetingId
 		});
-	}
+	};
 
 	getPluginConfig = async () => {
 		return await this.doPost(`${this.baseUrl}/config`);
-	}
+	};
 
 	doPost = async (url, body, headers = {}) => {
 		const options = Client4.getOptions({
@@ -96,5 +96,5 @@ export default class Client {
 			console.log(err);
 			throw err;
 		}
-	}
+	};
 }

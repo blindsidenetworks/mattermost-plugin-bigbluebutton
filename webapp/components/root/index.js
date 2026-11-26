@@ -18,11 +18,8 @@ const {connect} = window.ReactRedux;
 const {bindActionCreators} = window.Redux;
 import {getCurrentTeam} from 'mattermost-redux/selectors/entities/teams';
 import {getCurrentUser} from 'mattermost-redux/selectors/entities/users';
-import {getLastPostPerChannel} from 'mattermost-redux/selectors/entities/posts';
-import {getDirectChannels} from 'mattermost-redux/selectors/entities/channels';
 import {getTheme} from 'mattermost-redux/selectors/entities/preferences';
 import {getPluginState, isRootModalVisible} from '../../selectors';
-import {getSortedDirectChannelWithUnreadsIds} from 'mattermost-redux/selectors/entities/channels';
 import {startMeeting, showRecordings,closeRootModal} from '../../actions';
 
 import Root from './root.jsx';
@@ -34,7 +31,6 @@ function mapStateToProps(state, ownProps) {
 	let team = getCurrentTeam(state) || {};
 	let teamname = team.name;
 	let cur_user = getCurrentUser(state) || {};
-	const keepChannelIdAsUnread = state.views.channel.keepChannelIdAsUnread;
 
 	let channelId = state.entities.channels.currentChannelId;
 	const channel = state.entities.channels.channels[channelId] || {};
@@ -50,23 +46,17 @@ function mapStateToProps(state, ownProps) {
 		};
 	}
 
-	const appBarEnabled = state.entities.general.config.EnableAppBar === 'true';
-
 	return {
 		visible: isRootModalVisible(state),
 		channelId,
 		channel: channel,
 		channelName: channel.name,
-		directChannels: getDirectChannels(state),
 		teamId,
 		cur_user,
 		teamname,
 		state,
 		theme: getTheme(state),
-		lastpostperchannel: getLastPostPerChannel(state),
-		unreadChannelIds: getSortedDirectChannelWithUnreadsIds(state, keepChannelIdAsUnread),
 		pluginConfig,
-		appBarEnabled,
 		...ownProps
 	};
 }

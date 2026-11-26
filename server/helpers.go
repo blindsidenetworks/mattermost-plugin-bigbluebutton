@@ -25,12 +25,11 @@ import (
 	"strings"
 
 	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/helpers"
-	"github.com/mattermost/mattermost-server/v5/utils"
 
 	bbbAPI "github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/api"
 	"github.com/blindsidenetworks/mattermost-plugin-bigbluebutton/server/bigbluebuttonapiwrapper/dataStructs"
 
-	"github.com/mattermost/mattermost-server/v5/model"
+	"github.com/mattermost/mattermost/server/public/model"
 	"github.com/segmentio/ksuid"
 )
 
@@ -110,14 +109,18 @@ func (p *Plugin) PopulateMeeting(
 	m.Meta_bbb_origin = "Mattermost"
 	m.Meta_bbb_origin_version = helpers.PluginVersion
 	if siteConfig.ServiceSettings.SiteURL != nil {
-		m.Meta_bbb_origin_server_name = utils.GetHostnameFromSiteURL(*siteConfig.ServiceSettings.SiteURL)
+		siteURL, parseErr := url.Parse(*siteConfig.ServiceSettings.SiteURL)
+		if parseErr != nil {
+			return parseErr
+		}
+		m.Meta_bbb_origin_server_name = siteURL.Hostname()
 	} else {
 		return errors.New("SiteURL not set")
 	}
 
 	user, err := p.API.GetUser(userId)
 	if err != nil {
-		return errors.New("Error resolving userId")
+		return errors.New("error resolving userId")
 	}
 	m.Meta_dc_creator = user.Email
 
@@ -155,13 +158,13 @@ func (p *Plugin) createStartMeetingPost(userId string, channelId string, m *data
 		titlePrefix = ":warning: **External Users Allowed**\n\n"
 	}
 
-	attachments := []*model.SlackAttachment{
+	attachments := []*model.MessageAttachment{
 		{
 			Text: titlePrefix + "Meeting created by @" + user.Username + "\n\n",
-			Fields: []*model.SlackAttachmentField{
+			Fields: []*model.MessageAttachmentField{
 				{
 					Title: "Attendees",
-					Value: "*There are no attendees in this session*",
+					Value: emptyAttendeesMessage,
 					Short: false,
 				},
 				{
@@ -178,25 +181,25 @@ func (p *Plugin) createStartMeetingPost(userId string, channelId string, m *data
 			Actions: []*model.PostAction{
 				{
 					Id:    "bigBlueButtonJoinMeeting",
-					Type:  "button",
+					Type:  postActionTypeButton,
 					Name:  "Join Meeting",
 					Style: "primary",
 					Integration: &model.PostActionIntegration{
 						URL: "/plugins/bigbluebutton/joinmeeting",
 						Context: map[string]interface{}{
-							"meetingId": m.MeetingID_,
+							meetingIDContextKey: m.MeetingID_,
 						},
 					},
 				},
 				{
 					Id:    "bigBlueButtonEndMeeting",
-					Type:  "button",
+					Type:  postActionTypeButton,
 					Name:  "End Meeting",
 					Style: "danger",
 					Integration: &model.PostActionIntegration{
 						URL: "/plugins/bigbluebutton/endmeeting",
 						Context: map[string]interface{}{
-							"meetingId": m.MeetingID_,
+							meetingIDContextKey: m.MeetingID_,
 						},
 					},
 				},
@@ -212,7 +215,7 @@ func (p *Plugin) createStartMeetingPost(userId string, channelId string, m *data
 
 	if p.config().AllowExternalUsers {
 		attachments[0].Fields = append(attachments[0].Fields,
-			&model.SlackAttachmentField{
+			&model.MessageAttachmentField{
 				Title: "Share URL",
 				Value: fmt.Sprintf("%s/plugins/bigbluebutton/?id=%s", *p.API.GetConfig().ServiceSettings.SiteURL, m.MeetingID_),
 				Short: false,
@@ -220,7 +223,7 @@ func (p *Plugin) createStartMeetingPost(userId string, channelId string, m *data
 		)
 	}
 
-	model.ParseSlackAttachment(post, attachments)
+	model.ParseMessageAttachment(post, attachments)
 
 	post.AddProp(propKeyFromWebhook, "true")
 	post.AddProp(propKeyOverriderUsername, "BigBlueButton")
@@ -367,3 +370,12 @@ func IsItemInArray(name string, array []string) bool {
 	}
 	return false
 }
+
+const (
+	emptyAttendeesMessage = "*There are no attendees in this session*"
+	postActionTypeButton  = "button"
+	meetingIDContextKey   = "meetingId"
+	recordingsFieldTitle  = "Recordings"
+	notesFieldTitle       = "Notes"
+	joinURLContextKey     = "joinURL"
+)
